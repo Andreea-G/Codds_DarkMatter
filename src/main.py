@@ -36,6 +36,10 @@ def even():
 def prime():
     print "n is a prime number\n"
 
+def myfunc2(exp):
+    print "Calling myfunc2"
+    print exp.name          
+
 options = {0 : zero,
            1 : sqr,
            4 : sqr,
@@ -45,31 +49,63 @@ options = {0 : zero,
            5 : prime,
            7 : prime,
            'x' : lambda : "ha",
+           'me' : myfunc2,
 }
  
-        
+
+def CrossSectionFactors_SI(exper):
+    print exper.name, "SI"
+
+def CrossSectionFactors_SD66(exper):
+    print exper.name, "SID66"
+
+def CrossSectionFactors_SD44(exper):
+    print exper.name, "SD44"
+
+CrossSectionFactors_options = {'SI' : CrossSectionFactors_SI,
+           'SD66' : CrossSectionFactors_SD66,
+           'SD44' : CrossSectionFactors_SD44,
+}
+
 class Experiment:
-    def __init__(self, expername):
+    def __init__(self, expername, scattering_type):
         module = import_file(INPUT_DIR + expername + ".py")
         self.name = expername
+        self.scattering_type = scattering_type
         self.var = module.myvar
         self.fnc = options[self.var]
+        self.energy_resolution_type = module.energy_resolution_type
+        self.target_nuclide_AZC_list = module.target_nuclide_AZC_list
+        self.target_nuclide_JSnSp_list = module.target_nuclide_JSnSp_list
+
     def getvar(self):
         return self.var
+
     def myfnc(self):
-        print options[self.var]()
+        print options[self.var](self)
         
+    def CrossSectionFactors(self):
+        CrossSectionFactors_options[self.scattering_type](self)
+              
+                
         
 def main():
-    exper = "LUX"
-    cl1 = Experiment(exper)
+    exper = "superCDMS"
+    scattering_type = 'SD66'
+    
+    
+    cl1 = Experiment(exper, scattering_type)
     print 'var = ', cl1.var
     print 'name = ', cl1.name
     print 'getvar = ', cl1.getvar()
     print 'myfunc: '
-    cl1.myfnc()
-    print cl1.fnc()    
-
+    cl1.myfnc()   
+    print cl1.target_nuclide_AZC_list
+    print cl1.target_nuclide_JSnSp_list
+    print cl1.energy_resolution_type    
+    cl1.CrossSectionFactors()
+    
+    #myfunc2(cl1)    
     
 if __name__ == '__main__':
     main()
