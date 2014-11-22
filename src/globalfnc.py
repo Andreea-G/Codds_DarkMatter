@@ -18,9 +18,11 @@ v0bar = 220.
 vesc = 533.
 
 import numpy as np
+from math import erf
+import math
 
 def HelmFF(ER, A, mT):
-    print 'HelmFF'
+    #print 'HelmFF'
     q = np.sqrt(2e-6 * mT * ER)
     s = 0.9
     ha = 0.52
@@ -37,7 +39,7 @@ def HelmFF(ER, A, mT):
     return f**2 * np.exp(-y**2)
 
 def GaussianFFSD(ER, A, mT):
-    print 'GaussianFFSD'
+    #print 'GaussianFFSD'
     q = np.sqrt(2e-6 * mT * ER)
     R = 0.92 * A**(1./3) + 2.68 - 0.78 * np.sqrt((A**(1./3) - 3.8)**2 + 0.2)
     x = np.abs(q * R * fermiGeV)
@@ -51,3 +53,34 @@ FFSD_options = {'GaussianFFSD' : GaussianFFSD,
 FF_options = {'SI' : FFSI_options,
               'SD66' : FFSD_options,
 }
+
+def VMin(ER, mT, mx, delta):
+    muT = (mx * mT)/(mx + mT)
+    return SpeedOfLight / np.sqrt(2.e6 * ER * mT) * np.abs(delta + ER * mT / muT)
+    
+def ERecoilBranch(vmin, mT, mx, delta, sign):
+    muT = (mx * mT)/(mx + mT)
+    return 1e6 / SpeedOfLight**2 * muT**2 * vmin**2 / (2.*mT) * \
+        (1. + sign * np.sqrt(1. - 2.*delta / (muT * vmin**2 * SpeedOfLight**2 * 1e-6)))**2
+
+def eta0Maxwellian(vmin, vobs, v0bar, vesc):
+    x = vmin/v0bar
+    y = vobs/v0bar
+    z = vesc/v0bar
+    eta = map(lambda i: -2. * np.exp(-z**2) / np.sqrt(np.pi) - erf(i-y) / (2.*y) + erf(i+y) / (2.*y) \
+        if i + y < z \
+        else np.exp(-z**2) * (i - y - z) / (np.sqrt(np.pi) * y) - erf(i-y) / (2.*y) + erf(z) / (2.*y) \
+        if i - y <= z < i + y else 0, x)
+    return eta / (-2 * np.exp(-z**2 * z) / np.sqrt(np.pi) + erf(z)) / v0bar
+        
+        
+def MaximumGapC0scaled(x, mu_over_x):
+    if mu_over_x < 1.:
+        return 1.
+    elif 1. <= mu_over_x < 2.:
+        return 1. - np.exp(-x) * (1. + mu_over_x * x - x)
+    else:
+        l = np.array([ ((k - mu_over_x)*x)**(k-1) * np.exp(-k * x) / math.factorial(k) * \
+            (x * (mu_over_x - k) + k) for k in range(math.trunc(np.floor(mu_over_x)))])
+        return 1. - l.sum()
+        
