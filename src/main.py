@@ -76,11 +76,9 @@ class Experiment:
         
     def FormFactor(self, ER):
         result = self.FF(ER, self.A, self.mT)
-        #print("FF ", result)
         return result
     
     def CrossSectionFactors_SI(self, ER, mx, fp, fn, delta):
-        #print(exper.name, "SI")
         mu_p = ProtonMass * mx / (ProtonMass + mx)
         return self.mass_fraction * 1./(2.*mu_p**2) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2. * self.mT))**2) * \
@@ -88,7 +86,6 @@ class Experiment:
 
 
     def CrossSectionFactors_SD66(self, ER, mx, fp, fn, delta):
-        #print(exper.name, "SID66")
         ffelemQ = FFElementQ(self.Z)
         mu_p = ProtonMass * mx / (ProtonMass + mx)
                 
@@ -113,9 +110,7 @@ class Experiment:
         q = np.array(self.QuenchingFactor(ER))
         qER = q * ER
         vmin = VMin(ER, self.mT, mx, delta)
-        #print("vmin = ",vmin)
         efficiency = map(self.Efficiency,qER)
-        #print("eta0 = ", eta0Maxwellian(vmin, vobs, v0bar, vesc))
         r_list = 1e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * efficiency * \
             eta0Maxwellian(vmin, vobs, v0bar, vesc)
         return r_list.sum()
@@ -124,9 +119,7 @@ class Experiment:
         q = np.array(self.QuenchingFactor(ER))
         qER = q * ER
         vmin = VMin(ER, self.mT, mx, delta)
-        #print("vmin = ",vmin)
         efficiency = map(self.Efficiency,qER)
-        #print("eta0 = ", eta0Maxwellian(vmin, vobs, v0bar, vesc))
         integrated_delta = map(lambda e: 1. if Eee1 <= e < Eee2 else 0., qER)
         r_list = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * efficiency * \
             integrated_delta * eta0Maxwellian(vmin, vobs, v0bar, vesc)
