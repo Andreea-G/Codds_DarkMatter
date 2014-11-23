@@ -4,6 +4,8 @@
 #Files starting with del are probably meant to be deleted.
 del*
 
+*profile*
+*Output*
 
 ##########files to ignore from Andreea (with 2 "e"s unlike Andrea from The Walking Dead)
 .DS_Store

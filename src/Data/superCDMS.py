@@ -10,15 +10,17 @@ import numpy as np
 pi = np.pi
 from scipy.interpolate import interp1d
 
-myvar = 'me'
+name = "superCDMS"
 
+#energy_resolution_type = "Dirac"
+#EnergyResolution = lambda e: 1.
+energy_resolution_type = "Gaussian"
+EnergyResolution = lambda e: np.sqrt(0.293**2 + 0.056**2 * e)
 FFSD = 'GaussianFFSD'
 FFSI = 'HelmFF'
 FF = {'SI' : FFSI,
       'SD66' : FFSD, 
 }
-
-energy_resolution_type = "Dirac"
 target_nuclide_AZC_list = np.array([[70., 32., 0.19608], [72., 32., 0.27040], [73., 32., 0.07790], \
     [74., 32., 0.37378], [76., 32., 0.08184]])
 target_nuclide_JSpSn_list = np.array([[0., 0., 0.], [0., 0., 0.], \
@@ -31,6 +33,7 @@ num_target_nuclides = target_nuclide_mass_list.size
 QuenchingFactorList = np.array([lambda x: 1] * num_target_nuclides)
 Ethreshold = 1.63799
 Emaximum = 10.0011
+
 Efficiency_interp = interp1d(np.array([1.63799, 1.93525, 2.35928, 2.37871, 3.12938, 3.15831, 3.8895, 3.90877, \
     4.2841, 4.30358, 4.63016, 4.64942, 5.38539, 5.4095, 5.78968, 6.15036, 6.16481, 6.8911, 6.92511, \
     9.16257, 9.18213, 10.0011]), \
@@ -39,6 +42,7 @@ Efficiency_interp = interp1d(np.array([1.63799, 1.93525, 2.35928, 2.37871, 3.129
     0.544292, 0.529854, 0.532668]))
 Efficiency = lambda e: Efficiency_interp(e) if Ethreshold <= e < Emaximum else np.array(0.)
 
-ERecoilList = np.array([1.7, 1.8, 1.9, 1.9, 2.3, 2.7, 3.0, 5.8, 7.0, 7.8, 9.4])
 Exposure = 577.
+ERecoilList = np.array([1.7, 1.8, 1.9, 1.9, 2.3, 2.7, 3.0, 5.8, 7.0, 7.8, 9.4])
+
             

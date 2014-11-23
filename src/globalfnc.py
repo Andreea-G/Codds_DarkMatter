@@ -9,7 +9,7 @@ from __future__ import division
 import numpy as np
 from math import erf
 import math
-
+pi = np.pi
 
 fermiGeV = 1./0.1973269602 #Natural[GeV femto Meter]
 kilogram = 1e-9/1.782661758e-36
@@ -27,21 +27,21 @@ def FileNameTail(fp, fn):
     fnfp_string = "_fnfp"
     if fnfp == 1.:
         fnfp_string = "_fnfp1"
-    elif np.abs(fnfp) < 1:
+    elif abs(fnfp) < 1:
         if fnfp < 0:
-            fnfp_string += "_neg0" + str(math.trunc(round(10 * np.abs(fnfp))))
+            fnfp_string += "_neg0" + str(math.trunc(round(10 * abs(fnfp))))
         else:
-            fnfp_string += "0" + str(math.trunc(round(10 * np.abs(fnfp))))
+            fnfp_string += "0" + str(math.trunc(round(10 * abs(fnfp))))
     else:
         if fnfp < 0:
-            fnfp_string += "_neg" + str(math.trunc(round(np.abs(fnfp))))
+            fnfp_string += "_neg" + str(math.trunc(round(abs(fnfp))))
         else:
-            fnfp_string += str(math.trunc(round(np.abs(fnfp))))
+            fnfp_string += str(math.trunc(round(abs(fnfp))))
     return fnfp_string
       
 
 def Gaussian(x, mu, sigma):
-    return np.exp(-(x-mu)**2) / (2 * sigma**2) / (np.sqrt(2 * np.pi) * sigma)
+    return np.exp(-(x-mu)**2) / (2 * sigma**2) / (np.sqrt(2 * pi) * sigma)
 
 def HelmFF(ER, A, mT):
     #print 'HelmFF'
@@ -49,7 +49,7 @@ def HelmFF(ER, A, mT):
     s = 0.9
     ha = 0.52
     hc = 1.23 * A**(1./3) - 0.6 #half-density radius
-    cpa = 7./3. * (np.pi * ha)**2
+    cpa = 7./3. * (pi * ha)**2
     rsq = hc**2 + cpa
     r1tmp = rsq - 5. * s**2
     r1 = map(lambda r,s: np.sqrt(r) if r > 0 else np.sqrt(s), r1tmp, rsq)
@@ -77,7 +77,7 @@ FF_options = {'SI' : FFSI_options,
 
 def VMin(ER, mT, mx, delta):
     muT = mx * mT / (mx + mT)
-    return SpeedOfLight / np.sqrt(2.e6 * ER * mT) * np.abs(delta + ER * mT / muT)
+    return SpeedOfLight / np.sqrt(2.e6 * ER * mT) * abs(delta) + ER * mT / muT
     
 def ERecoilBranch(vmin, mT, mx, delta, sign):
     muT = mx * mT /(mx + mT)
@@ -88,12 +88,12 @@ def eta0Maxwellian(vmin, vobs, v0bar, vesc):
     x = vmin/v0bar
     y = vobs/v0bar
     z = vesc/v0bar
-    eta = map(lambda i: -2. * np.exp(-z**2) / np.sqrt(np.pi) - erf(i-y) / (2.*y) + erf(i+y) / (2.*y) \
+    eta = map(lambda i: -2. * np.exp(-z**2) / np.sqrt(pi) - erf(i-y) / (2.*y) + erf(i+y) / (2.*y) \
         if i + y <= z \
-        else np.exp(-z**2) * (i - y - z) / (np.sqrt(np.pi) * y) - erf(i-y) / (2.*y) + erf(z) / (2.*y) \
+        else np.exp(-z**2) * (i - y - z) / (np.sqrt(pi) * y) - erf(i-y) / (2.*y) + erf(z) / (2.*y) \
         if i - y <= z < i + y \
         else 0, x)
-    return eta / (-2. * np.exp(-z**2 * z) / np.sqrt(np.pi) + erf(z)) / v0bar
+    return eta / (-2. * np.exp(-z**2 * z) / np.sqrt(pi) + erf(z)) / v0bar
         
 def MaximumGapC0scaled(x, mu_over_x):
     if mu_over_x < 1.:
