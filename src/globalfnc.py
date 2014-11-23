@@ -60,7 +60,7 @@ def HelmFF(ER, A, mT):
     return f**2 * np.exp(-y**2)
 
 def GaussianFFSD(ER, A, mT):
-    #print 'GaussianFFSD'
+    print('GaussianFFSD')
     q = np.sqrt(2e-6 * mT * ER)
     R = 0.92 * A**(1./3) + 2.68 - 0.78 * np.sqrt((A**(1./3) - 3.8)**2 + 0.2)
     x = np.abs(q * R * fermiGeV)
@@ -77,7 +77,7 @@ FF_options = {'SI' : FFSI_options,
 
 def VMin(ER, mT, mx, delta):
     muT = mx * mT / (mx + mT)
-    return SpeedOfLight / np.sqrt(2.e6 * ER * mT) * abs(delta) + ER * mT / muT
+    return SpeedOfLight * 1.e-3 / np.sqrt(2. * ER * mT) * abs(delta) + ER * mT / muT
     
 def ERecoilBranch(vmin, mT, mx, delta, sign):
     muT = mx * mT /(mx + mT)
@@ -88,12 +88,16 @@ def eta0Maxwellian(vmin, vobs, v0bar, vesc):
     x = vmin/v0bar
     y = vobs/v0bar
     z = vesc/v0bar
-    eta = map(lambda i: -2. * np.exp(-z**2) / np.sqrt(pi) - erf(i-y) / (2.*y) + erf(i+y) / (2.*y) \
+    erfz = erf(z)
+    sqrt_pi = np.sqrt(pi)
+    exp_z_sq = np.exp(-z**2)
+    exp_z_sq_z = np.exp(-z**2 * z)
+    eta = map(lambda i: -2. * exp_z_sq / sqrt_pi - erf(i-y) / (2.*y) + erf(i+y) / (2.*y) \
         if i + y <= z \
-        else np.exp(-z**2) * (i - y - z) / (np.sqrt(pi) * y) - erf(i-y) / (2.*y) + erf(z) / (2.*y) \
+        else exp_z_sq * (i - y - z) / (sqrt_pi * y) - erf(i-y) / (2.*y) + erfz / (2.*y) \
         if i - y <= z < i + y \
         else 0, x)
-    return eta / (-2. * np.exp(-z**2 * z) / np.sqrt(pi) + erf(z)) / v0bar
+    return eta / (-2. * exp_z_sq_z / sqrt_pi + erfz) / v0bar
         
 def MaximumGapC0scaled(x, mu_over_x):
     if mu_over_x < 1.:

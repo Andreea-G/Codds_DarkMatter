@@ -90,8 +90,15 @@ class Experiment:
 
 
     def CrossSectionFactors_SD66(self, ER, mx, fp, fn, delta):
-        ffelemQ = FFElementQ(self.Z)
+        #ffelemQ = FFElementQ(self.Z)
         mu_p = ProtonMass * mx / (ProtonMass + mx)
+        return self.mass_fraction * 3./(8.*mu_p**6) * self.mT**2 * 1e-12 * ER**2 * \
+            (SpeedOfLight/v0bar)**4 * \
+            mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
+            (FF66normlalized(ER, self.A, self.Z, self.mT, 0, 0) + \
+            FF66normlalized(ER, self.A, self.Z, self.mT, 0, 1) * 2 * fn/fp + \
+            FF66normlalized(ER, self.A, self.Z, self.mT, 1, 1) * (fn/fp)**2) 
+        '''
         return self.mass_fraction * 3./(8.*mu_p**6) * self.mT**2 * 1e-12 * ER**2 * \
             (SpeedOfLight/v0bar)**4 * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
@@ -100,7 +107,8 @@ class Experiment:
             FF66normlalized(ER, self.A, self.Z, self.mT, 1, 1) * (fn/fp)**2) + \
             (1 - ffelemQ) * (4./3. * (4. * pi)/(2 * self.J + 1.)) * \
             (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
- 
+        '''
+        
     #TODO
     def CrossSectionFactors_SD44(self, ER, mx, fp, fn, delta):
         #print(exper.name, "SD44")
@@ -196,14 +204,15 @@ class Experiment:
         ER_minus = np.max(ER_minus_list)
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Other, ER_minus, ER_plus, \
-                args=(Eee1, Eee2, mx, fp, fn, delta), epsrel = 1e-3, epsabs = 0)
-            #print(integr)
+                args=(Eee1, Eee2, mx, fp, fn, delta), epsrel = 1e-2, epsabs = 0)
+            print(integr)
             return integr[0]
         else:
             return 0.
     
             
     def MaximumGapUpperBoundSHM(self, mx, fp, fn, delta):
+        print("mx = ", mx)
         xtable = np.array(map(lambda i, j: self.IntegratedResponseSHM(i, j, mx, fp, fn, delta), \
             self.ElistMaxGap[:-1], self.ElistMaxGap[1:]))
         mu_scaled = xtable.sum()
@@ -219,6 +228,8 @@ class Experiment:
     def MaximumGapLimit(self, fp, fn, delta, mx_min, mx_max, num_steps):
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
         upper_limit = np.array(map(lambda mx: self.MaximumGapUpperBoundSHM(mx, fp, fn, delta), mx_list))
+        print(mx_list)
+        print(upper_limit)
         return np.log10(np.transpose([mx_list, upper_limit.flatten()]))
         
 def main():
@@ -233,7 +244,7 @@ def main():
     print('name = ', exper.name)
     
     
-    '''    
+    '''
     ER = 6.
     mx = 10.
     Eee1 = 2
@@ -247,19 +258,19 @@ def main():
     print("response calls = " , exper.count_response_calls)
     '''
 
-    mx_min = 3.5
+    mx_min = 4
     mx_max = 100.
-    num_steps = 30
+    num_steps = 5
         
     max_gap = exper.MaximumGapLimit(fp, fn, delta, mx_min, mx_max, num_steps)
     print("max gap = ", max_gap)
     output_file = "./" + OUTPUT_DIR + "UpperLimitSHM_" + exper_name + "_mxsigma" \
-        + FileNameTail(fp, fn) + "_py2.dat" 
+        + FileNameTail(fp, fn) + "_py.dat" 
     print(output_file)
-    np.savetxt(output_file, max_gap)
-
+#    np.savetxt(output_file, max_gap)
+    
     
 if __name__ == '__main__':
-#    main()
-    profile.run("main()")
+    main()
+#    profile.run("main()")
 

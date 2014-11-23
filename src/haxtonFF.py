@@ -41,10 +41,11 @@ def FFElementQ(Z):
     #return np.array([1 if c else 0 for c in check])
     return np.array([1] * Z.size)
 
+FFdef = np.array([[lambda y: 0]*2]*2)
+
 def FF66normlalized(ER, A, Z, mT, N1, N2):
     bsq = 41.467/(45. * A**(-1./3) - 25. * A**(-2./3)) * fermiGeV**2
     y = 2.e-6 * mT * ER * bsq / 4.
-    FFdef = np.array([[lambda y: 0]*2]*2)
     l =  map(lambda a, z, i: FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), FFdef)[N1, N2](i), A, Z, y)
     return np.array(l) * np.exp(-2. * y)
 
