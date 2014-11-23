@@ -27,38 +27,13 @@ def import_file(full_path_to_module):
         
         
 from globalfnc import *
+from haxtonFF import *
 import numpy as np
 from numpy import pi
 from scipy import integrate
 from scipy.optimize import fsolve
 from scipy.special import lambertw
 
-def CrossSectionFactors_SI(exper, ER, mx, fp, fn, delta):
-    #print(exper.name, "SI")
-    mu_p = ProtonMass * mx / (ProtonMass + mx)
-    return exper.mass_fraction * 1./(2.*mu_p**2) * \
-        mPhiRef**4 / (4. * exper.mT**2 * (ER + exper.mPhi**2/(2. * exper.mT))**2) * \
-        ((exper.Z + (exper.A - exper.Z) * fn/fp)**2) * exper.FormFactor(ER) 
-
-
-def CrossSectionFactors_SD66(exper, ER, mx, fp, fn, delta):
-    #print(exper.name, "SID66")
-    mu_p = ProtonMass * mx / (ProtonMass + mx)
-    return exper.mass_fraction * 3./(8.*mu_p**6) * exper.mT**2 * 1e-12 * ER**2 * \
-        (SpeedOfLight/v0bar)**4 * \
-        mPhiRef**4 / (4. * exper.mT**2 * (ER + exper.mPhi**2/(2 * exper.mT))**2) * \
-        (4./3. * (4. * pi)/(2 * exper.J + 1.)) * (exper.SpScaled + exper.SnScaled * fn/fp)**2 * \
-        exper.FormFactor(ER) 
-
-#TODO
-def CrossSectionFactors_SD44(exper, ER, mx, fp, fn, delta):
-    #print(exper.name, "SD44")
-    return 0
-
-CrossSectionFactors_options = {'SI' : CrossSectionFactors_SI,
-           'SD66' : CrossSectionFactors_SD66,
-           'SD44' : CrossSectionFactors_SD44,
-}
 
 class Experiment:
     def __init__(self, expername, scattering_type, mPhi = mPhiRef):
@@ -66,7 +41,6 @@ class Experiment:
         self.name = expername
         self.scattering_type = scattering_type
         self.energy_resolution_type = module.energy_resolution_type       
-        self.FF = module.FF[scattering_type]
         
         self.mPhi = mPhi
         self.numT = module.num_target_nuclides
@@ -78,6 +52,18 @@ class Experiment:
         self.SpScaled = module.target_nuclide_JSpSn_list[:,1]
         self.SnScaled = module.target_nuclide_JSpSn_list[:,2]
 
+        self.FF = FF_options[self.scattering_type][module.FF[scattering_type]]
+
+        CrossSectionFactors_options = {'SI' : self.CrossSectionFactors_SI,
+           'SD66' : self.CrossSectionFactors_SD66,
+           'SD44' : self.CrossSectionFactors_SD44,
+        }
+        self.CrossSectionFactors = CrossSectionFactors_options[self.scattering_type]
+        if self.energy_resolution_type == "Dirac":
+            self.IntegratedResponseSHM = self.IntegratedResponseSHM_Dirac
+        else:
+            self.IntegratedResponseSHM = self.IntegratedResponseSHM_Other
+            
         self.QuenchingFactorList = module.QuenchingFactorList  
         self.Efficiency = module.Efficiency
         self.Ethreshold = module.Ethreshold
@@ -89,14 +75,36 @@ class Experiment:
         self.Exposure = module.Exposure
         
     def FormFactor(self, ER):
-        result = FF_options[self.scattering_type][self.FF](ER, self.A, self.mT)
+        result = self.FF(ER, self.A, self.mT)
         #print("FF ", result)
         return result
+    
+    def CrossSectionFactors_SI(self, ER, mx, fp, fn, delta):
+        #print(exper.name, "SI")
+        mu_p = ProtonMass * mx / (ProtonMass + mx)
+        return self.mass_fraction * 1./(2.*mu_p**2) * \
+            mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2. * self.mT))**2) * \
+            ((self.Z + (self.A - self.Z) * fn/fp)**2) * self.FormFactor(ER) 
 
-    def CrossSectionFactors(self, ER, mx, fp, fn, delta):
-        result = CrossSectionFactors_options[self.scattering_type](self, ER, mx, fp, fn, delta)
-        #print("CS ", result)
-        return result
+
+    def CrossSectionFactors_SD66(self, ER, mx, fp, fn, delta):
+        #print(exper.name, "SID66")
+        ffelemQ = FFElementQ(self.Z)
+        mu_p = ProtonMass * mx / (ProtonMass + mx)
+                
+        return self.mass_fraction * 3./(8.*mu_p**6) * self.mT**2 * 1e-12 * ER**2 * \
+            (SpeedOfLight/v0bar)**4 * \
+            mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
+            (ffelemQ * (FF66normlalized(ER, self.A, self.Z, self.mT, 0, 0) + \
+            FF66normlalized(ER, self.A, self.Z, self.mT, 0, 1) * 2 * fn/fp + \
+            FF66normlalized(ER, self.A, self.Z, self.mT, 1, 1) * (fn/fp)**2) + \
+            (1 - ffelemQ) * (4./3. * (4. * pi)/(2 * self.J + 1.)) * \
+            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
+ 
+    #TODO
+    def CrossSectionFactors_SD44(self, ER, mx, fp, fn, delta):
+        #print(exper.name, "SD44")
+        return 0    
 
     def QuenchingFactor(self,ER):
         return [self.QuenchingFactorList[i](ER) for i in range(self.numT)]        
@@ -124,7 +132,23 @@ class Experiment:
             integrated_delta * eta0Maxwellian(vmin, vobs, v0bar, vesc)
         return r_list.sum()
         
-    def IntegratedResponseSHM(self, Eee1, Eee2, mx, fp, fn, delta):
+    def IntegratedResponseSHM_Dirac(self, Eee1, Eee2, mx, fp, fn, delta):
+        vmax = vesc + vobs
+        muT = self.mT * mx / (self.mT + mx)
+        vdelta = SpeedOfLight / 500. * np.sqrt(delta / 2. / muT) if delta > 0 \
+            else np.array([0] * self.numT)
+        ER_plus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, 1) \
+            if j < vmax else 0., self.mT, vdelta)
+        ER_minus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1) \
+            if j < vmax else 1.e6, self.mT, vdelta)
+        ER_plus = np.max(ER_plus_list)
+        ER_minus = np.max(ER_minus_list)
+        if ER_minus < ER_plus:
+            return integrate.quad(self.ResponseSHM, ER_minus, ER_plus, args=(Eee1, Eee2, mx, fp, fn, delta))[0]
+        else:
+            return 0.
+            
+    def IntegratedResponseSHM_Other(self, Eee1, Eee2, mx, fp, fn, delta):
         vmax = vesc + vobs
         muT = self.mT * mx / (self.mT + mx)
         vdelta = SpeedOfLight / 500. * np.sqrt(delta / 2. / muT) if delta > 0 \
@@ -159,34 +183,43 @@ class Experiment:
         return np.log10(np.transpose([mx_list, upper_limit.flatten()]))
         
 def main():
-    exper = "superCDMS"
+    exper_name = "superCDMS"
     scattering_type = 'SD66'
     mPhi = 1000.
     
-    cl1 = Experiment(exper, scattering_type, mPhi)
-    print('name = ', cl1.name)
-    print(cl1.mass_fraction)
-    print("A = ", cl1.A)
-    print(cl1.J)
-    print(cl1.SpScaled)
-    print(cl1.SnScaled)
+    exper = Experiment(exper_name, scattering_type, mPhi)
+    print('name = ', exper.name)
+    print(exper.mass_fraction)
+    print("A = ", exper.A)
+    print(exper.J)
+    print(exper.SpScaled)
+    print(exper.SnScaled)
     
-    #ER = 6.
-    #mx = 10.
+#    ER = 6.
+#    mx = 10.
     fp = 1.
     fn = 0.
     delta = 0.
-    #Eee1 = 2
-    #Eee2 = 3
+#    Eee1 = 2
+#    Eee2 = 3
     #print("diff response = ", cl1.DifferentialResponseSHM(ER, Eee1, mx, fp, fn, delta))
     #print("response = ", cl1.ResponseSHM(ER, Eee1, Eee2, mx, fp, fn, delta))
-    #print("int response = ", cl1.IntegratedResponseSHM(Eee1, Eee2, mx, fp, fn, delta))
+#    print("int response = ", exper.IntegratedResponseSHM(Eee1, Eee2, mx, fp, fn, delta))
     #print("max gap = ", cl1.MaximumGapUpperBoundSHM(mx, fp, fn, delta))
 
-    mx_min = 6.
-    mx_max = 100.
-    num_steps = 30
-    print("max gap = ", cl1.MaximumGapLimit(fp, fn, delta, mx_min, mx_max, num_steps))
+    mx_min = 3.5
+    mx_max = 50.
+    num_steps = 40
+    
+    
+    max_gap = exper.MaximumGapLimit(fp, fn, delta, mx_min, mx_max, num_steps)
+    print("max gap = ", max_gap)
+
+    output_file = "./" + OUTPUT_DIR + "UpperLimitSHM_" + exper_name + "_mxsigma" \
+        + FileNameTail(fp, fn) + "_py1.dat" 
+    print(output_file)
+    np.savetxt(output_file, max_gap)
+    
     
 if __name__ == '__main__':
     main()

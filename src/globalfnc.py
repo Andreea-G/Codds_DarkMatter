@@ -22,6 +22,27 @@ vobs = 232.
 v0bar = 220.
 vesc = 533.
 
+def FileNameTail(fp, fn):
+    fnfp = fn/fp
+    fnfp_string = "_fnfp"
+    if fnfp == 1.:
+        fnfp_string = "_fnfp1"
+    elif np.abs(fnfp) < 1:
+        if fnfp < 0:
+            fnfp_string += "_neg0" + str(math.trunc(round(10 * np.abs(fnfp))))
+        else:
+            fnfp_string += "0" + str(math.trunc(round(10 * np.abs(fnfp))))
+    else:
+        if fnfp < 0:
+            fnfp_string += "_neg" + str(math.trunc(round(np.abs(fnfp))))
+        else:
+            fnfp_string += str(math.trunc(round(np.abs(fnfp))))
+    return fnfp_string
+      
+
+def Gaussian(x, mu, sigma):
+    return np.exp(-(x-mu)**2) / (2 * sigma**2) / (np.sqrt(2 * np.pi) * sigma)
+
 def HelmFF(ER, A, mT):
     #print 'HelmFF'
     q = np.sqrt(2e-6 * mT * ER)
