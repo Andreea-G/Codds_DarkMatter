@@ -5,6 +5,7 @@ Created on Wed Nov 19 00:18:55 2014
 @author: Andreea
 """
 from __future__ import absolute_import
+from __future__ import division
 import numpy as np
 pi = np.pi
 from scipy.interpolate import interp1d
@@ -24,6 +25,7 @@ target_nuclide_JSpSn_list = np.array([[0., 0., 0.], [0., 0., 0.], \
     [9./2, 0.0392517 * np.sqrt(((2*9./2 + 1)*(9./2 + 1))/(4*pi*9./2)), .375312 * np.sqrt(((2*9./2 + 1)*(9./2 + 1))/(4*pi*9./2))], \
     [0., 0., 0.], [0., 0., 0.]])
 target_nuclide_mass_list = np.array([65.134, 66.995, 67.9278, 68.8571, 70.7203])
+
 num_target_nuclides = target_nuclide_mass_list.size
 
 QuenchingFactorList = np.array([lambda x: 1] * num_target_nuclides)

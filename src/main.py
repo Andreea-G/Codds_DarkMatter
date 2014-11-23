@@ -35,18 +35,18 @@ from scipy.special import lambertw
 
 def CrossSectionFactors_SI(exper, ER, mx, fp, fn, delta):
     #print(exper.name, "SI")
-    mu_p = ProtonMass*mx/(ProtonMass + mx)
+    mu_p = ProtonMass * mx / (ProtonMass + mx)
     return exper.mass_fraction * 1./(2.*mu_p**2) * \
-        mPhiRef**4 / (4 * exper.mT**2 * (ER + exper.mPhi**2/(2 * exper.mT))**2) * \
+        mPhiRef**4 / (4. * exper.mT**2 * (ER + exper.mPhi**2/(2. * exper.mT))**2) * \
         ((exper.Z + (exper.A - exper.Z) * fn/fp)**2) * exper.FormFactor(ER) 
 
 
 def CrossSectionFactors_SD66(exper, ER, mx, fp, fn, delta):
     #print(exper.name, "SID66")
-    mu_p = ProtonMass*mx/(ProtonMass + mx)
+    mu_p = ProtonMass * mx / (ProtonMass + mx)
     return exper.mass_fraction * 3./(8.*mu_p**6) * exper.mT**2 * 1e-12 * ER**2 * \
         (SpeedOfLight/v0bar)**4 * \
-        mPhiRef**4 / (4 * exper.mT**2 * (ER + exper.mPhi**2/(2 * exper.mT))**2) * \
+        mPhiRef**4 / (4. * exper.mT**2 * (ER + exper.mPhi**2/(2 * exper.mT))**2) * \
         (4./3. * (4. * pi)/(2 * exper.J + 1.)) * (exper.SpScaled + exper.SnScaled * fn/fp)**2 * \
         exper.FormFactor(ER) 
 
@@ -67,6 +67,7 @@ class Experiment:
         self.scattering_type = scattering_type
         self.energy_resolution_type = module.energy_resolution_type       
         self.FF = module.FF[scattering_type]
+        
         self.mPhi = mPhi
         self.numT = module.num_target_nuclides
         self.mT = module.target_nuclide_mass_list
@@ -76,6 +77,7 @@ class Experiment:
         self.J = module.target_nuclide_JSpSn_list[:,0]
         self.SpScaled = module.target_nuclide_JSpSn_list[:,1]
         self.SnScaled = module.target_nuclide_JSpSn_list[:,2]
+
         self.QuenchingFactorList = module.QuenchingFactorList  
         self.Efficiency = module.Efficiency
         self.Ethreshold = module.Ethreshold
@@ -101,7 +103,7 @@ class Experiment:
         
     def DifferentialResponseSHM(self, ER, Eee, mx, fp, fn, delta): 
         q = np.array(self.QuenchingFactor(ER))
-        qER = q*ER
+        qER = q * ER
         vmin = VMin(ER, self.mT, mx, delta)
         #print("vmin = ",vmin)
         efficiency = map(self.Efficiency,qER)
@@ -112,14 +114,14 @@ class Experiment:
         
     def ResponseSHM(self, ER, Eee1, Eee2, mx, fp, fn, delta): 
         q = np.array(self.QuenchingFactor(ER))
-        qER = q*ER
+        qER = q * ER
         vmin = VMin(ER, self.mT, mx, delta)
         #print("vmin = ",vmin)
         efficiency = map(self.Efficiency,qER)
         #print("eta0 = ", eta0Maxwellian(vmin, vobs, v0bar, vesc))
-        integr_delta = map(lambda e: 1. if Eee1 <= e < Eee2 else 0., qER)
-        r_list = 1e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * efficiency * \
-            integr_delta * eta0Maxwellian(vmin, vobs, v0bar, vesc)
+        integrated_delta = map(lambda e: 1. if Eee1 <= e < Eee2 else 0., qER)
+        r_list = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * efficiency * \
+            integrated_delta * eta0Maxwellian(vmin, vobs, v0bar, vesc)
         return r_list.sum()
         
     def IntegratedResponseSHM(self, Eee1, Eee2, mx, fp, fn, delta):
@@ -127,14 +129,17 @@ class Experiment:
         muT = self.mT * mx / (self.mT + mx)
         vdelta = SpeedOfLight / 500. * np.sqrt(delta / 2. / muT) if delta > 0 \
             else np.array([0] * self.numT)
-        ER_plus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, 1) if j < vmax else 0., self.mT, vdelta)
-        ER_minus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1) if j < vmax else 1.e6, self.mT, vdelta)
+        ER_plus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, 1) \
+            if j < vmax else 0., self.mT, vdelta)
+        ER_minus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1) \
+            if j < vmax else 1.e6, self.mT, vdelta)
         ER_plus = np.max(ER_plus_list)
         ER_minus = np.max(ER_minus_list)
         if ER_minus < ER_plus:
             return integrate.quad(self.ResponseSHM, ER_minus, ER_plus, args=(Eee1, Eee2, mx, fp, fn, delta))[0]
         else:
             return 0.
+            
     def MaximumGapUpperBoundSHM(self, mx, fp, fn, delta):
         xtable = np.array(map(lambda i, j: self.IntegratedResponseSHM(i, j, mx, fp, fn, delta), \
             self.ElistMaxGap[:-1], self.ElistMaxGap[1:]))
@@ -156,8 +161,8 @@ class Experiment:
 def main():
     exper = "superCDMS"
     scattering_type = 'SD66'
-
     mPhi = 1000.
+    
     cl1 = Experiment(exper, scattering_type, mPhi)
     print('name = ', cl1.name)
     print(cl1.mass_fraction)
@@ -178,9 +183,9 @@ def main():
     #print("int response = ", cl1.IntegratedResponseSHM(Eee1, Eee2, mx, fp, fn, delta))
     #print("max gap = ", cl1.MaximumGapUpperBoundSHM(mx, fp, fn, delta))
 
-    mx_min = 4.
-    mx_max = 5.
-    num_steps = 2
+    mx_min = 6.
+    mx_max = 100.
+    num_steps = 30
     print("max gap = ", cl1.MaximumGapLimit(fp, fn, delta, mx_min, mx_max, num_steps))
     
 if __name__ == '__main__':
