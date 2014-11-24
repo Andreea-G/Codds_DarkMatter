@@ -52,7 +52,22 @@ def OutputDirectory(output_main_dir, scattering_type, mPhi, delta):
     return out_dir
 
 def Gaussian(x, mu, sigma):
-    return np.exp(-(x-mu)**2) / (2 * sigma**2) / (np.sqrt(2 * pi) * sigma)
+    return np.exp(-(x-mu)**2 / (2 * sigma**2)) / (np.sqrt(2 * pi) * sigma)
+
+def GPoisson(x, nu, sigma):
+    eps = 1e-8
+    n = 1
+    add = nu * np.exp(-(x-1)**2 / (2 * sigma**2))
+    summation = add
+    nfact = 1 #factorial
+    while add > eps * summation:
+        summation += add
+        n += 1
+        nfact *= n
+        add = nu**n / nfact * np.exp(-(x-n)**2 / (2 * n * sigma**2)) / np.sqrt(n)
+    result = summation * np.exp(-nu) / np.sqrt(2) / sigma
+#    print("GPoisson: ", result)
+    return result
 
 def HelmFF(ER, A, mT):
     #print 'HelmFF'

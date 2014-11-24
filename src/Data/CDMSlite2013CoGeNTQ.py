@@ -36,6 +36,7 @@ Ethreshold = 0.17
 Emaximum = 7.
 
 Efficiency = lambda e: np.array(0.985) if Ethreshold <= e < Emaximum else np.array(0.)
+Efficiency_ER = lambda er: 1
 
 Exposure = 577.
 ERecoilList = np.array([0.10142857142857144, 0.10285714285714286, 0.10428571428571429, \

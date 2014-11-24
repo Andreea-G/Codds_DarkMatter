@@ -11,6 +11,7 @@ from __future__ import division
 
 INPUT_DIR = "Data/"
 OUTPUT_MAIN_DIR = "Output/"
+PRECISSION = 1e-3
 
 def import_file(full_path_to_module):
     import os, sys
@@ -34,6 +35,8 @@ from scipy import integrate
 from scipy.optimize import fsolve
 from scipy.special import lambertw
 
+FFdef = np.array([[lambda y: 0]*2]*2)
+
 class Experiment:
     def __init__(self, expername, scattering_type, mPhi = mPhiRef):
         module = import_file(INPUT_DIR + expername + ".py")
@@ -41,6 +44,8 @@ class Experiment:
         self.scattering_type = scattering_type
         self.energy_resolution_type = module.energy_resolution_type
         self.EnergyResolution = module.EnergyResolution
+        self.ResolutionFunction = Gaussian if \
+            self.energy_resolution_type == "Gaussian" else GPoisson  
         
         self.mPhi = mPhi
         self.numT = module.num_target_nuclides
@@ -51,6 +56,10 @@ class Experiment:
         self.J = module.target_nuclide_JSpSn_list[:,0]
         self.SpScaled = module.target_nuclide_JSpSn_list[:,1]
         self.SnScaled = module.target_nuclide_JSpSn_list[:,2]
+
+        self.bsq = 41.467/(45. * self.A**(-1./3) - 25. * self.A**(-2./3)) * fermiGeV**2
+        self.FF66_function_list = np.array(map(lambda a, z: \
+            FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), FFdef), self.A, self.Z))
 
         self.FF = FF_options[self.scattering_type][module.FF[scattering_type]]
 
@@ -66,6 +75,7 @@ class Experiment:
             
         self.QuenchingFactorList = module.QuenchingFactorList  
         self.Efficiency = module.Efficiency
+        self.Efficiency_ER = module.Efficiency_ER
         self.Ethreshold = module.Ethreshold
         self.Emaximum = module.Emaximum
         self.ERecoilList = module.ERecoilList
@@ -88,15 +98,20 @@ class Experiment:
             ((self.Z + (self.A - self.Z) * fn/fp)**2) * self.FormFactor(ER) 
 
 
+    def FF66normlalized(self, ER, N1, N2):
+        y = 2.e-6 * self.mT * ER * self.bsq / 4.
+        l = np.array([self.FF66_function_list[:, N1, N2][i](y[i]) for i in range(self.numT)])
+        return np.array(l) * np.exp(-2. * y)
+
     def CrossSectionFactors_SD66(self, ER, mx, fp, fn, delta):
         #ffelemQ = FFElementQ(self.Z)
         mu_p = ProtonMass * mx / (ProtonMass + mx)
         return self.mass_fraction * 3./(8.*mu_p**6) * self.mT**2 * 1e-12 * ER**2 * \
             (SpeedOfLight/v0bar)**4 * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
-            (FF66normlalized(ER, self.A, self.Z, self.mT, 0, 0) + \
-            FF66normlalized(ER, self.A, self.Z, self.mT, 0, 1) * 2 * fn/fp + \
-            FF66normlalized(ER, self.A, self.Z, self.mT, 1, 1) * (fn/fp)**2) 
+            (self.FF66normlalized(ER, 0, 0) + \
+            self.FF66normlalized(ER, 0, 1) * 2 * fn/fp + \
+            self.FF66normlalized(ER, 1, 1) * (fn/fp)**2) 
         '''
         return self.mass_fraction * 3./(8.*mu_p**6) * self.mT**2 * 1e-12 * ER**2 * \
             (SpeedOfLight/v0bar)**4 * \
@@ -113,21 +128,19 @@ class Experiment:
         #print(exper.name, "SD44")
         return 0    
 
-    def QuenchingFactor(self,ER):
+    def QuenchingFactor(self, ER):
         return [self.QuenchingFactorList[i](ER) for i in range(self.numT)]        
         
-    #TODO extend to other than Gaussian
     def Resolution(self, Eee, qER):
-        return map(lambda mu: Gaussian(Eee, mu, self.EnergyResolution(mu)), qER)
+        return map(lambda mu: self.ResolutionFunction(Eee, mu, self.EnergyResolution(mu)), qER)
         
     def DifferentialResponseSHM(self, Eee, ER, mx, fp, fn, delta): 
         self.count_diffresponse_calls += 1
         q = np.array(self.QuenchingFactor(ER))
         qER = q * ER
         vmin = VMin(ER, self.mT, mx, delta)
-        efficiency = np.array(map(self.Efficiency, qER))
-        r_list = 1e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
-            efficiency * \
+        r_list = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
+            self.Efficiency(Eee) * self.Efficiency_ER(ER) * \
             self.Resolution(Eee, qER) * eta0Maxwellian(vmin, vobs, v0bar, vesc)
         return r_list.sum()
         
@@ -135,10 +148,10 @@ class Experiment:
         q = np.array(self.QuenchingFactor(ER))
         qER = q * ER
         vmin = VMin(ER, self.mT, mx, delta)
-        efficiency = map(self.Efficiency,qER)
+        efficiency_ER = map(lambda e: self.Efficiency_ER(e), qER)
         integrated_delta = map(lambda e: 1. if Eee1 <= e < Eee2 else 0., qER)
         r_list = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
-            efficiency * \
+            efficiency_ER * \
             integrated_delta * eta0Maxwellian(vmin, vobs, v0bar, vesc)
         self.count_response_calls += 1
         return r_list.sum()
@@ -148,10 +161,10 @@ class Experiment:
     def ResponseSHM_Other(self, ER, Eee1, Eee2, mx, fp, fn, delta):
         self.count_response_calls += 1
         return integrate.quad(self.DifferentialResponseSHM, Eee1, Eee2, \
-            args=(ER, mx, fp, fn, delta), epsrel = 1e-3, epsabs = 0)[0]
+            args=(ER, mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)[0]
 #        print(ER, " ", r)
 #        return r
-  
+
     def IntegratedResponseSHM_Dirac(self, Eee1, Eee2, mx, fp, fn, delta):
         vmax = vesc + vobs
         muT = self.mT * mx / (self.mT + mx)
@@ -164,8 +177,10 @@ class Experiment:
         ER_plus = np.max(ER_plus_list)
         ER_minus = np.max(ER_minus_list)
         if ER_minus < ER_plus:
-            return integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus, \
-                args=(Eee1, Eee2, mx, fp, fn, delta))[0]
+            integr = integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus, \
+                args=(Eee1, Eee2, mx, fp, fn, delta))
+#            print("integr = ", integr)
+            return integr[0]
         else:
             return 0.
             
@@ -184,12 +199,12 @@ class Experiment:
         if ER_minus < ER_plus:
             integr = integrate.dblquad(self.DifferentialResponseSHM, ER_minus, ER_plus, \
                 lambda Eee: Eee1, lambda Eee: Eee2, \
-                args=(mx, fp, fn, delta), epsrel = 1e-3, epsabs = 0)
+                args=(mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
             print(integr)
             return integr[0]
         else:
             return 0.
-    '''      
+    '''
     def IntegratedResponseSHM_Other(self, Eee1, Eee2, mx, fp, fn, delta):
         vmax = vesc + vobs
         muT = self.mT * mx / (self.mT + mx)
@@ -203,7 +218,7 @@ class Experiment:
         ER_minus = np.max(ER_minus_list)
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Other, ER_minus, ER_plus, \
-                args=(Eee1, Eee2, mx, fp, fn, delta), epsrel = 1e-2, epsabs = 0)
+                args=(Eee1, Eee2, mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
             print(integr)
             return integr[0]
         else:

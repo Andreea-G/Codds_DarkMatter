@@ -40,7 +40,9 @@ Efficiency_interp = interp1d(np.array([1.63799, 1.93525, 2.35928, 2.37871, 3.129
     np.array([0.044225, 0.071339, 0.086737, 0.105692, 0.112107, 0.196045, 0.19975, 0.260222, 0.26388, \
     0.268395, 0.275658, 0.339739, 0.366008, 0.43731, 0.44819, 0.459066, 0.506, 0.514216, 0.543101, \
     0.544292, 0.529854, 0.532668]))
-Efficiency = lambda e: Efficiency_interp(e) if Ethreshold <= e < Emaximum else np.array(0.)
+    
+Efficiency = lambda e: 1
+Efficiency_ER = lambda e: Efficiency_interp(e) if Ethreshold <= e < Emaximum else np.array(0.)
 
 Exposure = 577.
 ERecoilList = np.array([1.7, 1.8, 1.9, 1.9, 2.3, 2.7, 3.0, 5.8, 7.0, 7.8, 9.4])
