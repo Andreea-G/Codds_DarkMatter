@@ -10,7 +10,7 @@ from __future__ import division
 
 
 INPUT_DIR = "Data/"
-OUTPUT_DIR = "Output/"
+OUTPUT_MAIN_DIR = "Output/"
 
 def import_file(full_path_to_module):
     import os, sys
@@ -33,7 +33,6 @@ from numpy import pi
 from scipy import integrate
 from scipy.optimize import fsolve
 from scipy.special import lambertw
-import profile
 
 class Experiment:
     def __init__(self, expername, scattering_type, mPhi = mPhiRef):
@@ -211,7 +210,7 @@ class Experiment:
             return 0.
     
             
-    def MaximumGapUpperBoundSHM(self, mx, fp, fn, delta):
+    def MaximumGapUpperBoundSHM(self, mx, fp, fn, delta, output_file):
         print("mx = ", mx)
         xtable = np.array(map(lambda i, j: self.IntegratedResponseSHM(i, j, mx, fp, fn, delta), \
             self.ElistMaxGap[:-1], self.ElistMaxGap[1:]))
@@ -221,13 +220,17 @@ class Experiment:
         print("mx = ", mx, "   mu_over_x = ", mu_over_x)
         print("xtable = ", xtable)
         y_guess = np.real(-lambertw(-0.1 / mu_over_x, -1))
-        print("y_guess = ", y_guess)
+#        print("y_guess = ", y_guess)
         y = fsolve(lambda x: MaximumGapC0scaled(x, mu_over_x) - 0.9, y_guess)
-        return y / x_scaled / self.Exposure
+        result =  y / x_scaled / self.Exposure
+        to_print = np.log10(np.array([[mx, result[0]]]))
+        with open(output_file,'a') as f_handle:
+            np.savetxt(f_handle, to_print)
+        return result
         
-    def MaximumGapLimit(self, fp, fn, delta, mx_min, mx_max, num_steps):
+    def MaximumGapLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
-        upper_limit = np.array(map(lambda mx: self.MaximumGapUpperBoundSHM(mx, fp, fn, delta), mx_list))
+        upper_limit = np.array(map(lambda mx: self.MaximumGapUpperBoundSHM(mx, fp, fn, delta, output_file), mx_list))
         print(mx_list)
         print(upper_limit)
         return np.log10(np.transpose([mx_list, upper_limit.flatten()]))

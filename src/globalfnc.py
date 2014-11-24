@@ -39,6 +39,17 @@ def FileNameTail(fp, fn):
             fnfp_string += str(math.trunc(round(abs(fnfp))))
     return fnfp_string
       
+def OutputDirectory(output_main_dir, scattering_type, mPhi, delta):
+    out_dir = output_main_dir
+    if mPhi == 1000.:
+        out_dir += "Contact"
+    else:
+        out_dir += "LongRange"
+    out_dir += scattering_type + "_delta_"
+    if delta < 0:
+        out_dir += "neg"
+    out_dir += str(math.trunc(abs(delta))) + "/"
+    return out_dir
 
 def Gaussian(x, mu, sigma):
     return np.exp(-(x-mu)**2) / (2 * sigma**2) / (np.sqrt(2 * pi) * sigma)
