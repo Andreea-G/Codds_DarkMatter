@@ -55,7 +55,7 @@ def Gaussian(x, mu, sigma):
     return np.exp(-(x-mu)**2 / (2 * sigma**2)) / (np.sqrt(2 * pi) * sigma)
 
 def GPoisson(x, nu, sigma):
-    eps = 1e-8
+    eps = 1.e-4
     n = 1
     add = nu * np.exp(-(x-1.)**2 / (2 * sigma**2))
     summation = 0

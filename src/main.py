@@ -44,8 +44,8 @@ def Plot_Upper_Limit(max_gap, plot_close = True, plot_show = True):
      
 def main():
 #    exper_name = "CDMSlite2013CoGeNTQ"
-    exper_name = "superCDMS"
-#    exper_name = "LUX2013zero"
+#    exper_name = "superCDMS"
+    exper_name = "LUX2013zero"
     scattering_type = 'SD66'
     mPhi = 1000.
     fp = 1.
@@ -57,7 +57,7 @@ def main():
     
     output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
     output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper.name + "_mxsigma" \
-        + FileNameTail(fp, fn) + "_test"
+        + FileNameTail(fp, fn)# + "_test"
     print(output_file_no_extension)
     
 
@@ -65,9 +65,9 @@ def main():
     MAKE_PLOT = False
 
     if RUN_PROGRAM:          
-        mx_min = 3.5
-        mx_max = 55.
-        num_steps = 30
+        mx_min = 6.
+        mx_max = 100.
+        num_steps = 40
         output_file = output_file_no_extension + "_py_temp.dat" 
         f_handle = open(output_file, 'w')   # clear the file first
         f_handle.close()
