@@ -8,7 +8,6 @@ import numpy as np
 import math
 from globalfnc import *
 
-#TODO Add XE
 FFdefault = np.array([[lambda y: 0]*2]*2)
 FFSigmaPPJ = {(19, 9): np.array([[lambda y: 0.90278 - 2.37144 * y + 2.3531 * y**2 - 1.04517 * y**3 + 0.175359 * y**4, \
                         lambda y: -0.0165506 + 0.050948 * y - 0.0510308 * y**2 + 0.0199287 * y**3 - 0.00236734 * y*4], \

@@ -11,7 +11,7 @@ from __future__ import division
 
 INPUT_DIR = "Data/"
 OUTPUT_MAIN_DIR = "Output/"
-PRECISSION = 1e-8
+PRECISSION = 1e-3
 
 def import_file(full_path_to_module):
     import os, sys
@@ -97,7 +97,6 @@ class Experiment:
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2. * self.mT))**2) * \
             ((self.Z + (self.A - self.Z) * fn/fp)**2) * self.FormFactor(ER) 
 
-
     def FF66normlalized(self, ER, N1, N2):
         y = 2.e-6 * self.mT * ER * self.bsq / 4.
         l = np.array([self.FF66_function_list[:, N1, N2][i](y[i]) for i in range(self.numT)])
@@ -132,7 +131,7 @@ class Experiment:
         return [self.QuenchingFactorList[i](ER) for i in range(self.numT)]        
         
     def Resolution(self, Eee, qER):
-        return map(lambda mu: self.ResolutionFunction(Eee, mu, self.EnergyResolution), qER)
+        return map(lambda mu: self.ResolutionFunction(Eee, mu, self.EnergyResolution(mu)), qER)
         
     def DifferentialResponseSHM(self, Eee, ER, mx, fp, fn, delta): 
         self.count_diffresponse_calls += 1
@@ -147,9 +146,11 @@ class Experiment:
     def ResponseSHM_Dirac(self, ER, Eee1, Eee2, mx, fp, fn, delta): 
         q = np.array(self.QuenchingFactor(ER))
         qER = q * ER
+        #print("self.Efficiency_ER = ", self.Efficiency_ER)
         vmin = VMin(ER, self.mT, mx, delta)
-        efficiency_ER = map(lambda e: self.Efficiency_ER(e), qER)
+        efficiency_ER = np.array(map(self.Efficiency_ER, qER))
         integrated_delta = map(lambda e: 1. if Eee1 <= e < Eee2 else 0., qER)
+        #print("efficiency_ER = ", efficiency_ER)
         r_list = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
             efficiency_ER * \
             integrated_delta * eta0Maxwellian(vmin, vobs, v0bar, vesc)
@@ -175,7 +176,7 @@ class Experiment:
         ER_minus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1) \
             if j < vmax else 1.e6, self.mT, vdelta)
         ER_plus = np.max(ER_plus_list)
-        ER_minus = np.max(ER_minus_list)
+        ER_minus = np.min(ER_minus_list)
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus, \
                 args=(Eee1, Eee2, mx, fp, fn, delta))
@@ -199,7 +200,7 @@ class Experiment:
         ER_minus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1) \
             if j < vmax else 1.e6, self.mT, vdelta)
         ER_plus = np.max(ER_plus_list)
-        ER_minus = np.max(ER_minus_list)
+        ER_minus = np.min(ER_minus_list)
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Other, ER_minus, ER_plus, \
                 args=(Eee1, Eee2, mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)

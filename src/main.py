@@ -40,7 +40,7 @@ def main():
     
     output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
     output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper.name + "_mxsigma" \
-        + FileNameTail(fp, fn) + "_Dirac"
+        + FileNameTail(fp, fn)# + "_Dirac"
     print(output_file_no_extension)
     
 
@@ -48,9 +48,9 @@ def main():
     MAKE_PLOT = True
 
     if RUN_PROGRAM:          
-        mx_min = 6.
+        mx_min = 3.5
         mx_max = 100.
-        num_steps = 20
+        num_steps = 30
         output_file = output_file_no_extension + "_py_temp.dat" 
         f_handle = open(output_file, 'w')   # clear the file first
         f_handle.close()

@@ -103,7 +103,7 @@ FF_options = {'SI' : FFSI_options,
 
 def VMin(ER, mT, mx, delta):
     muT = mx * mT / (mx + mT)
-    return SpeedOfLight * 1.e-3 / np.sqrt(2. * ER * mT) * abs(delta) + ER * mT / muT
+    return SpeedOfLight * 1.e-3 / np.sqrt(2. * ER * mT) * abs(delta + ER * mT / muT)
     
 def ERecoilBranch(vmin, mT, mx, delta, sign):
     muT = mx * mT /(mx + mT)
