@@ -5,7 +5,7 @@
 del*
 
 *profile*
-.src/Output/*
+src/Output/*
 output*
 
 ##########files to ignore from Andreea (with 2 "e"s unlike Andrea from The Walking Dead)
