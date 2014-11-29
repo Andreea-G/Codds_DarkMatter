@@ -10,19 +10,36 @@ from __future__ import division
 from experiment import *
 import profile
      
-def Plot_Upper_Limit(max_gap):
+def Plot_Upper_Limit(max_gap, plot_close = True, plot_show = True):
     import matplotlib.pyplot as plt
     from scipy.interpolate import interp1d
     
-    x = max_gap[:,0]
-    y = -np.log10(3.*SpeedOfLight**2*1e4*3600*24) + max_gap[:,0] + max_gap[:,1]
-    interp = interp1d(x, y, kind = "linear")
-    plt.close
-    x1 = np.linspace(x[0],x[-1],50)
-    plt.plot(x, y, "o", x1, interp(x1))
+    if plot_close:
+        plt.close()
+        
+    if max_gap.size == 0:
+        print("max_gap is empty!")
+    elif max_gap.ndim == 1:
+        x = [max_gap[0]]
+        y = [-np.log10(3.*SpeedOfLight**2*1e4*3600*24) + max_gap[0] + max_gap[1]]
+        plt.plot(x, y, "o")
+    else:
+        x = max_gap[:,0]
+        y = -np.log10(3.*SpeedOfLight**2*1e4*3600*24) + max_gap[:,0] + max_gap[:,1]
+        num_points = x.size
+        if num_points == 2:
+            interp_kind = "linear"
+        elif num_points == 3:
+            interp_kind = "quadratic"
+        else:
+            interp_kind = "cubic"
+        interp = interp1d(x, y, kind = interp_kind)
+        x1 = np.linspace(x[0], x[-1], 50)
+        plt.plot(x, y, "o", x1, interp(x1))
     plt.xlabel('Log10(m [GeV])')
     plt.ylabel('Log10(sigma)')
-    plt.show()
+    if plot_show:
+        plt.show()
 
      
 def main():
