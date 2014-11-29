@@ -26,8 +26,8 @@ def Plot_Upper_Limit(max_gap):
      
 def main():
 #    exper_name = "CDMSlite2013CoGeNTQ"
-#    exper_name = "superCDMS"
-    exper_name = "LUX2013zero"
+    exper_name = "superCDMS"
+#    exper_name = "LUX2013zero"
     scattering_type = 'SD66'
     mPhi = 1000.
     fp = 1.
@@ -39,10 +39,34 @@ def main():
     
     output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
     output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper.name + "_mxsigma" \
-        + FileNameTail(fp, fn)# + "_test"
+        + FileNameTail(fp, fn) + "_Dirac"
     print(output_file_no_extension)
+    
 
+    RUN_PROGRAM = False
+    MAKE_PLOT = True
 
+    if RUN_PROGRAM:          
+        mx_min = 6.
+        mx_max = 100.
+        num_steps = 20
+        output_file = output_file_no_extension + "_py_temp.dat" 
+        f_handle = open(output_file, 'w')   # clear the file first
+        f_handle.close()
+        
+        max_gap = exper.MaximumGapLimit(fp, fn, delta, mx_min, mx_max, num_steps, output_file)
+        print("max gap = ", max_gap)
+        output_file = output_file_no_extension + "_py.dat" 
+        print(output_file)
+        np.savetxt(output_file, max_gap)
+
+    if MAKE_PLOT:
+        output_file = output_file_no_extension + "_py.dat" 
+        max_gap = np.loadtxt(output_file)
+        print("max_gap = ", max_gap)    
+        Plot_Upper_Limit(max_gap)
+
+    
     TEST_INT_RESPONSE = False
     if TEST_INT_RESPONSE:
         mx = 10.
@@ -56,32 +80,6 @@ def main():
         print("diff response calls = " , exper.count_diffresponse_calls)
         print("response calls = " , exper.count_response_calls)
 
-    
-
-    RUN_PROGRAM = False
-    MAKE_PLOT = True
-
-    if RUN_PROGRAM:          
-        mx_min = 6.
-        mx_max = 100.
-        num_steps = 30
-        output_file = output_file_no_extension + "_py_temp.dat" 
-        f_handle = open(output_file, 'w')   # clear the file first
-        f_handle.close()
-        
-        max_gap = exper.MaximumGapLimit(fp, fn, delta, mx_min, mx_max, num_steps, output_file)
-        print("max gap = ", max_gap)
-        output_file = output_file_no_extension + "_py.dat" 
-        print(output_file)
-        np.savetxt(output_file, max_gap)
-
-    if MAKE_PLOT:
-        output_file = output_file_no_extension + "_py_temp.dat" 
-        max_gap = np.loadtxt(output_file)
-        print("max_gap = ", max_gap)    
-        Plot_Upper_Limit(max_gap)
-
-    
     
 if __name__ == '__main__':
 #    main()

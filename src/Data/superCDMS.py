@@ -16,6 +16,7 @@ energy_resolution_type = "Dirac"
 EnergyResolution = lambda e: 1.
 #energy_resolution_type = "Gaussian"
 #EnergyResolution = lambda e: np.sqrt(0.293**2 + 0.056**2 * e)
+#EnergyResolution = 0.001
 FFSD = 'GaussianFFSD'
 FFSI = 'HelmFF'
 FF = {'SI' : FFSI,

@@ -5,7 +5,7 @@
 del*
 
 *profile*
-*Output*
+src/Output/*
 
 ##########files to ignore from Andreea (with 2 "e"s unlike Andrea from The Walking Dead)
 .DS_Store

@@ -6,7 +6,6 @@ Created on Thu Nov 20 22:52:11 2014
 """
 
 from __future__ import print_function
-from __future__ import division
 from experiment import *
 import profile
      
@@ -42,15 +41,29 @@ def main():
     output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper.name + "_mxsigma" \
         + FileNameTail(fp, fn) + "_Dirac"
     print(output_file_no_extension)
+
+    TEST_INT_RESPONSE = False
+    if TEST_INT_RESPONSE:
+        mx = 10.
+        Eee1 = 2
+        Eee2 = 30
+    #    ER = 5.
+    #    diff_resp = exper.DifferentialResponseSHM(ER, Eee1, mx, fp, fn, delta)
+    #    print("diff response = ", diff_resp)
+    #    print("response = ", exper.ResponseSHM(ER, Eee1, Eee2, mx, fp, fn, delta))
+        print("int response = ", exper.IntegratedResponseSHM(Eee1, Eee2, mx, fp, fn, delta))
+        print("diff response calls = " , exper.count_diffresponse_calls)
+        print("response calls = " , exper.count_response_calls)
+
     
 
-    RUN_PROGRAM = True
+    RUN_PROGRAM = False
     MAKE_PLOT = True
 
     if RUN_PROGRAM:          
-        mx_min = 6.
+        mx_min = 7.
         mx_max = 100.
-        num_steps = 20
+        num_steps = 50
         output_file = output_file_no_extension + "_py_temp.dat" 
         f_handle = open(output_file, 'w')   # clear the file first
         f_handle.close()
@@ -68,19 +81,6 @@ def main():
         Plot_Upper_Limit(max_gap)
 
     
-    TEST_INT_RESPONSE = False
-    if TEST_INT_RESPONSE:
-        mx = 10.
-        Eee1 = 2
-        Eee2 = 30
-    #    ER = 5.
-    #    diff_resp = exper.DifferentialResponseSHM(ER, Eee1, mx, fp, fn, delta)
-    #    print("diff response = ", diff_resp)
-    #    print("response = ", exper.ResponseSHM(ER, Eee1, Eee2, mx, fp, fn, delta))
-        print("int response = ", exper.IntegratedResponseSHM(Eee1, Eee2, mx, fp, fn, delta))
-        print("diff response calls = " , exper.count_diffresponse_calls)
-        print("response calls = " , exper.count_response_calls)
-
     
 if __name__ == '__main__':
 #    main()

@@ -11,7 +11,7 @@ from __future__ import division
 
 INPUT_DIR = "Data/"
 OUTPUT_MAIN_DIR = "Output/"
-PRECISSION = 1e-3
+PRECISSION = 1e-8
 
 def import_file(full_path_to_module):
     import os, sys
@@ -132,7 +132,7 @@ class Experiment:
         return [self.QuenchingFactorList[i](ER) for i in range(self.numT)]        
         
     def Resolution(self, Eee, qER):
-        return map(lambda mu: self.ResolutionFunction(Eee, mu, self.EnergyResolution(mu)), qER)
+        return map(lambda mu: self.ResolutionFunction(Eee, mu, self.EnergyResolution), qER)
         
     def DifferentialResponseSHM(self, Eee, ER, mx, fp, fn, delta): 
         self.count_diffresponse_calls += 1
@@ -179,32 +179,16 @@ class Experiment:
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus, \
                 args=(Eee1, Eee2, mx, fp, fn, delta))
-#            print("integr = ", integr)
+            '''
+            integr = integrate.dblquad(self.DifferentialResponseSHM, ER_minus, ER_plus, \
+                lambda Eee: Eee1, lambda Eee: Eee2, \
+                args=(mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
+            '''
+            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr,)
             return integr[0]
         else:
             return 0.
             
-    '''
-    def IntegratedResponseSHM_Other(self, Eee1, Eee2, mx, fp, fn, delta):
-        vmax = vesc + vobs
-        muT = self.mT * mx / (self.mT + mx)
-        vdelta = SpeedOfLight / 500. * np.sqrt(delta / 2. / muT) if delta > 0 \
-            else np.array([0] * self.numT)
-        ER_plus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, 1) \
-            if j < vmax else 0., self.mT, vdelta)
-        ER_minus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1) \
-            if j < vmax else 1.e6, self.mT, vdelta)
-        ER_plus = np.max(ER_plus_list)
-        ER_minus = np.max(ER_minus_list)
-        if ER_minus < ER_plus:
-            integr = integrate.dblquad(self.DifferentialResponseSHM, ER_minus, ER_plus, \
-                lambda Eee: Eee1, lambda Eee: Eee2, \
-                args=(mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
-            print(integr)
-            return integr[0]
-        else:
-            return 0.
-    '''
     def IntegratedResponseSHM_Other(self, Eee1, Eee2, mx, fp, fn, delta):
         vmax = vesc + vobs
         muT = self.mT * mx / (self.mT + mx)
@@ -219,7 +203,7 @@ class Experiment:
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Other, ER_minus, ER_plus, \
                 args=(Eee1, Eee2, mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
-            print(integr)
+            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr,)
             return integr[0]
         else:
             return 0.

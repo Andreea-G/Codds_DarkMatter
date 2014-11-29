@@ -29,7 +29,7 @@ def FileNameTail(fp, fn):
         fnfp_string = "_fnfp1"
     elif abs(fnfp) < 1:
         if fnfp < 0:
-            fnfp_string += "_neg0" + str(math.trunc(round(10 * abs(fnfp))))
+            fnfp_string += "_neg0" + str(math.trunc(round(10 * abs(fnfp)))) # TODO: int(.)
         else:
             fnfp_string += "0" + str(math.trunc(round(10 * abs(fnfp))))
     else:
@@ -57,15 +57,15 @@ def Gaussian(x, mu, sigma):
 def GPoisson(x, nu, sigma):
     eps = 1e-8
     n = 1
-    add = nu * np.exp(-(x-1)**2 / (2 * sigma**2))
-    summation = add
+    add = nu * np.exp(-(x-1.)**2 / (2 * sigma**2))
+    summation = 0
     nfact = 1 #factorial
-    while add > eps * summation:
+    while add > eps * (summation+add):
         summation += add
         n += 1
         nfact *= n
-        add = nu**n / nfact * np.exp(-(x-n)**2 / (2 * n * sigma**2)) / np.sqrt(n)
-    result = summation * np.exp(-nu) / np.sqrt(2) / sigma
+        add = 1. * nu**n / nfact * np.exp(-(x-n)**2 / (2. * n * sigma**2)) / np.sqrt(n)
+    result = summation * np.exp(-nu) / np.sqrt(2 * np.pi) / sigma
 #    print("GPoisson: ", result)
     return result
 

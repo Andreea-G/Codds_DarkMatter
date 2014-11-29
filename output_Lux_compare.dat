@@ -1,0 +1,172 @@
+name =  superCDMS
+./Output/ContactSD66_delta_0/UpperLimitSHM_superCDMS_mxsigma_fnfp00_Dirac
+mx =  7.0
+Eee1, Eee2, integr =  1.63799   1.7   (0.0, 0.0)
+Eee1, Eee2, integr =  1.7   1.8   (0.0, 0.0)
+Eee1, Eee2, integr =  1.8   1.9   (0.0, 0.0)
+Eee1, Eee2, integr =  1.9   1.9   (0.0, 0.0)
+/Applications/Spyder.app/Contents/Resources/lib/python2.7/scipy/integrate/quadpack.py:321: IntegrationWarning: The maximum number of subdivisions (50) has been achieved.
+  If increasing the limit yields no improvement it is advised to analyze 
+  the integrand in order to determine the difficulties.  If the position of a 
+  local difficulty can be determined (singularity, discontinuity) one will 
+  probably gain from splitting up the interval and calling the integrator 
+  on the subranges.  Perhaps a special-purpose integrator should be used.
+  warnings.warn(msg, IntegrationWarning)
+Eee1, Eee2, integr =  1.9   2.3   (3.8309777536726344e+16, 76966229889.12929)
+Eee1, Eee2, integr =  2.3   2.7   (0.0, 0.0)
+Eee1, Eee2, integr =  2.7   3.0   (7.185423188166271e+16, 23979192874.63286)
+Eee1, Eee2, integr =  3.0   5.8   (4.321112320633625e+18, 2737789881280106.0)
+Eee1, Eee2, integr =  5.8   7.0   (5.39133167983101e+18, 1620307307092992.0)
+Eee1, Eee2, integr =  7.0   7.8   (4.92044533246956e+18, 19038749696.0)
+Eee1, Eee2, integr =  7.8   9.4   (1.2749854287137523e+18, 13426.25)
+Eee1, Eee2, integr =  9.4   10.0011   (0.0, 0.0)
+mx =  7.0    mu_over_x =  2.97107277428
+xtable =  [  0.00000000e+00   0.00000000e+00   0.00000000e+00   0.00000000e+00
+   3.83097775e+16   0.00000000e+00   7.18542319e+16   4.32111232e+18
+   5.39133168e+18   4.92044533e+18   1.27498543e+18   0.00000000e+00]
+/Applications/Spyder.app/Contents/Resources/lib/python2.7/scipy/optimize/minpack.py:237: RuntimeWarning: The iteration is not making good progress, as measured by the 
+  improvement from the last ten iterations.
+  warnings.warn(msg, RuntimeWarning)
+mx =  7.39039188061
+Eee1, Eee2, integr =  1.63799   1.7   (0.0, 0.0)
+Eee1, Eee2, integr =  1.7   1.8   (0.0, 0.0)
+Eee1, Eee2, integr =  1.8   1.9   (0.0, 0.0)
+Eee1, Eee2, integr =  1.9   1.9   (0.0, 0.0)
+Eee1, Eee2, integr =  1.9   2.3   (3.691358536693167e+16, 68079196342.10281)
+Eee1, Eee2, integr =  2.3   2.7   (6.850794350127507e+16, 3037497196473.7285)
+Eee1, Eee2, integr =  2.7   3.0   (0.0, 0.0)
+Eee1, Eee2, integr =  3.0   5.8   (4.17705391652954e+18, 7508906936310784.0)
+Eee1, Eee2, integr =  5.8   7.0   (5.212171113338934e+18, 2286688614881912.5)
+Eee1, Eee2, integr =  7.0   7.8   (4.765884045559101e+18, 424966237124.8395)
+Eee1, Eee2, integr =  7.8   9.4   (7.150380252978021e+18, 74437544960.0)
+Eee1, Eee2, integr =  9.4   10.0011   (0.0, 0.0)
+mx =  7.39039188061    mu_over_x =  2.99437373954
+xtable =  [  0.00000000e+00   0.00000000e+00   0.00000000e+00   0.00000000e+00
+   3.69135854e+16   6.85079435e+16   0.00000000e+00   4.17705392e+18
+   5.21217111e+18   4.76588405e+18   7.15038025e+18   0.00000000e+00]
+mx =  7.80255602129
+Eee1, Eee2, integr =  1.63799   1.7   (0.0, 0.0)
+Eee1, Eee2, integr =  1.7   1.8   (0.0, 0.0)
+Eee1, Eee2, integr =  1.8   1.9   (0.0, 0.0)
+Eee1, Eee2, integr =  1.9   1.9   (0.0, 0.0)
+Eee1, Eee2, integr =  1.9   2.3   (3.5629589740783496e+16, 58257980615.524864)
+Eee1, Eee2, integr =  2.3   2.7   (0.0, 0.0)
+Eee1, Eee2, integr =  2.7   3.0   (6.687431426271988e+16, 10735350360.0)
+Eee1, Eee2, integr =  3.0   5.8   (4.033598655830533e+18, 9285010564544318.0)
+Eee1, Eee2, integr =  5.8   7.0   (5.049782901241273e+18, 1247809257719808.0)
+Eee1, Eee2, integr =  7.0   7.8   (4.621722092639323e+18, 1067533390752.5754)
+Eee1, Eee2, integr =  7.8   9.4   (1.1556070399149885e+19, 115036529776240.94)
+Eee1, Eee2, integr =  9.4   10.0011   (2.5266994331149834e+18, 34500207059.305916)
+mx =  7.80255602129    mu_over_x =  2.41348282095
+xtable =  [  0.00000000e+00   0.00000000e+00   0.00000000e+00   0.00000000e+00
+   3.56295897e+16   0.00000000e+00   6.68743143e+16   4.03359866e+18
+   5.04978290e+18   4.62172209e+18   1.15560704e+19   2.52669943e+18]
+mx =  8.23770666683
+Eee1, Eee2, integr =  1.63799   1.7   (0.0, 0.0)
+Eee1, Eee2, integr =  1.7   1.8   (0.0, 0.0)
+Eee1, Eee2, integr =  1.8   1.9   (0.0, 0.0)
+Eee1, Eee2, integr =  1.9   1.9   (0.0, 0.0)
+Eee1, Eee2, integr =  1.9   2.3   (0.0, 0.0)
+Eee1, Eee2, integr =  2.3   2.7   (6.395163776576721e+16, 4685396912752.0)
+Eee1, Eee2, integr =  2.7   3.0   (0.0, 0.0)
+Eee1, Eee2, integr =  3.0   5.8   (3.9064470015659924e+18, 4599702862444990.0)
+Eee1, Eee2, integr =  5.8   7.0   (4.895743835659311e+18, 534929675822080.0)
+
+
+
+
+
+
+name =  superCDMS
+./Output/ContactSD66_delta_0/UpperLimitSHM_superCDMS_mxsigma_fnfp00_Gaussian
+mx =  7.0
+Eee1, Eee2, integr =  1.63799   1.7   (0.0, 0.0)
+Eee1, Eee2, integr =  1.7   1.8   (4739121195660199.0, 2050549720.4535065)
+Eee1, Eee2, integr =  1.8   1.9   (0.0, 0.0)
+Eee1, Eee2, integr =  1.9   1.9   (0.0, 0.0)
+Eee1, Eee2, integr =  1.9   2.3   (3.830977156729008e+16, 20108549436.678535)
+Eee1, Eee2, integr =  2.3   2.7   (7.108583626577486e+16, 34851562136.0)
+Eee1, Eee2, integr =  2.7   3.0   (7.185424301730142e+16, 6867669637.715027)
+/Applications/Spyder.app/Contents/Resources/lib/python2.7/scipy/integrate/quadpack.py:321: IntegrationWarning: The maximum number of subdivisions (50) has been achieved.
+  If increasing the limit yields no improvement it is advised to analyze 
+  the integrand in order to determine the difficulties.  If the position of a 
+  local difficulty can be determined (singularity, discontinuity) one will 
+  probably gain from splitting up the interval and calling the integrator 
+  on the subranges.  Perhaps a special-purpose integrator should be used.
+  warnings.warn(msg, IntegrationWarning)
+Eee1, Eee2, integr =  3.0   5.8   (9.541112964766386e+17, 1.489838429535012e+17)
+Eee1, Eee2, integr =  5.8   7.0   (4.3380309251737364e+18, 4.8646719651585126e+17)
+Eee1, Eee2, integr =  7.0   7.8   (4.799101121835705e+18, 1.7671755445527552e+16)
+Eee1, Eee2, integr =  7.8   9.4   (1.0657882941711224e+18, 9390331247242240.0)
+Eee1, Eee2, integr =  9.4   10.0011   (0.0, 0.0)
+mx =  7.0    mu_over_x =  2.36357191102
+xtable =  [  0.00000000e+00   4.73912120e+15   0.00000000e+00   0.00000000e+00
+   3.83097716e+16   7.10858363e+16   7.18542430e+16   9.54111296e+17
+   4.33803093e+18   4.79910112e+18   1.06578829e+18   0.00000000e+00]
+/Applications/Spyder.app/Contents/Resources/lib/python2.7/scipy/optimize/minpack.py:237: RuntimeWarning: The iteration is not making good progress, as measured by the 
+  improvement from the last ten iterations.
+  warnings.warn(msg, RuntimeWarning)
+mx =  7.39039188061
+Eee1, Eee2, integr =  1.63799   1.7   (0.0, 0.0)
+Eee1, Eee2, integr =  1.7   1.8   (0.0, 0.0)
+Eee1, Eee2, integr =  1.8   1.9   (5926522555257014.0, 1208613096.546238)
+Eee1, Eee2, integr =  1.9   1.9   (0.0, 0.0)
+Eee1, Eee2, integr =  1.9   2.3   (3.6913583535029736e+16, 8499270145.490967)
+Eee1, Eee2, integr =  2.3   2.7   (6.8507897949421864e+16, 33547597448.19091)
+Eee1, Eee2, integr =  2.7   3.0   (0.0, 0.0)
+Eee1, Eee2, integr =  3.0   5.8   (1.1129289429358779e+18, 2.30849251001765e+17)
+Eee1, Eee2, integr =  5.8   7.0   (4.2577686828525235e+18, 5.16885880837206e+17)
+Eee1, Eee2, integr =  7.0   7.8   (4.617023288805365e+18, 8.294087095168333e+16)
+Eee1, Eee2, integr =  7.8   9.4   (4.1020889076083855e+18, 3.885355973726249e+17)
+Eee1, Eee2, integr =  9.4   10.0011   (0.0, 0.0)
+mx =  7.39039188061    mu_over_x =  3.07582546977
+xtable =  [  0.00000000e+00   0.00000000e+00   5.92652256e+15   0.00000000e+00
+   3.69135835e+16   6.85078979e+16   0.00000000e+00   1.11292894e+18
+   4.25776868e+18   4.61702329e+18   4.10208891e+18   0.00000000e+00]
+mx =  7.80255602129
+Eee1, Eee2, integr =  1.63799   1.7   (0.0, 0.0)
+Eee1, Eee2, integr =  1.7   1.8   (0.0, 0.0)
+Eee1, Eee2, integr =  1.8   1.9   (0.0, 0.0)
+Eee1, Eee2, integr =  1.9   1.9   (0.0, 0.0)
+Eee1, Eee2, integr =  1.9   2.3   (3.562958578735741e+16, 2729928302.8130264)
+Eee1, Eee2, integr =  2.3   2.7   (0.0, 0.0)
+Eee1, Eee2, integr =  2.7   3.0   (6.687433306988483e+16, 54284165825.30768)
+/Applications/Spyder.app/Contents/Resources/lib/python2.7/scipy/integrate/quadpack.py:321: IntegrationWarning: The integral is probably divergent, or slowly convergent.
+  warnings.warn(msg, IntegrationWarning)
+Eee1, Eee2, integr =  3.0   5.8   (3.609622485402998e-11, 0.0)
+Eee1, Eee2, integr =  5.8   7.0   (4.421081543927697e+18, 7.269482011593503e+17)
+Eee1, Eee2, integr =  7.0   7.8   (4.386071926335137e+18, 1.7221751328280934e+17)
+Eee1, Eee2, integr =  7.8   9.4   (6.825946820696123e+18, 2.643615511273079e+18)
+Eee1, Eee2, integr =  9.4   10.0011   (2.5266988426214205e+18, 44604474003.66016)
+mx =  7.80255602129    mu_over_x =  2.67542416197
+xtable =  [  0.00000000e+00   0.00000000e+00   0.00000000e+00   0.00000000e+00
+   3.56295858e+16   0.00000000e+00   6.68743331e+16   3.60962249e-11
+   4.42108154e+18   4.38607193e+18   6.82594682e+18   2.52669884e+18]
+mx =  8.23770666683
+Eee1, Eee2, integr =  1.63799   1.7   (0.0, 0.0)
+Eee1, Eee2, integr =  1.7   1.8   (0.0, 0.0)
+Eee1, Eee2, integr =  1.8   1.9   (0.0, 0.0)
+Eee1, Eee2, integr =  1.9   1.9   (0.0, 0.0)
+Eee1, Eee2, integr =  1.9   2.3   (3.444715891223597e+16, 7954343954.676567)
+Eee1, Eee2, integr =  2.3   2.7   (6.395088339966986e+16, 39007726536.0)
+Eee1, Eee2, integr =  2.7   3.0   (6.467446553859854e+16, 13145658.540283203)
+Eee1, Eee2, integr =  3.0   5.8   (2.7411284409152627e+17, 2.3037496364364e+16)
+Eee1, Eee2, integr =  5.8   7.0   (3.9362268591568993e+18, 2.3486763166698394e+17)
+Eee1, Eee2, integr =  7.0   7.8   (4.3916228528433705e+18, 6.351137219937024e+16)
+Eee1, Eee2, integr =  7.8   9.4   (6.661732340162185e+18, 7.353778454407025e+17)
+Eee1, Eee2, integr =  9.4   10.0011   (4.887745781541921e+18, 59607764878828.72)
+mx =  8.23770666683    mu_over_x =  3.04943401331
+xtable =  [  0.00000000e+00   0.00000000e+00   0.00000000e+00   0.00000000e+00
+   3.44471589e+16   6.39508834e+16   6.46744655e+16   2.74112844e+17
+   3.93622686e+18   4.39162285e+18   6.66173234e+18   4.88774578e+18]
+mx =  8.69712578077
+Eee1, Eee2, integr =  1.63799   1.7   (0.0, 0.0)
+Eee1, Eee2, integr =  1.7   1.8   (0.0, 0.0)
+Eee1, Eee2, integr =  1.8   1.9   (0.0, 0.0)
+Eee1, Eee2, integr =  1.9   1.9   (0.0, 0.0)
+Eee1, Eee2, integr =  1.9   2.3   (3.3356846192391364e+16, 21654117651.04889)
+Eee1, Eee2, integr =  2.3   2.7   (6.1935188180068536e+16, 38577720960.206055)
+Eee1, Eee2, integr =  2.7   3.0   (0.0, 0.0)
+Eee1, Eee2, integr =  3.0   5.8   (9.308967740699031e+17, 2.1158382731585024e+16)
+Eee1, Eee2, integr =  5.8   7.0   (3.786426788832428e+18, 3.240344005134121e+17)
+
