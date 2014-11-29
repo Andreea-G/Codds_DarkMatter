@@ -72,7 +72,7 @@ def main():
     if TEST_INT_RESPONSE:
         mx = 10.
         Eee1 = 2
-        Eee2 = 30
+        Eee2 = 
     #    ER = 5.
     #    diff_resp = exper.DifferentialResponseSHM(ER, Eee1, mx, fp, fn, delta)
     #    print("diff response = ", diff_resp)
@@ -86,3 +86,4 @@ if __name__ == '__main__':
 #    main()
     profile.run("main()")
 
+import num

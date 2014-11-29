@@ -16,7 +16,7 @@ def Plot_Upper_Limit(max_gap):
     
     x = max_gap[:,0]
     y = -np.log10(3.*SpeedOfLight**2*1e4*3600*24) + max_gap[:,0] + max_gap[:,1]
-    interp = interp1d(x, y, kind = "cubic")
+    interp = interp1d(x, y, kind = "linear")
     plt.close
     x1 = np.linspace(x[0],x[-1],50)
     plt.plot(x, y, "o", x1, interp(x1))
@@ -40,7 +40,7 @@ def main():
     
     output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
     output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper.name + "_mxsigma" \
-        + FileNameTail(fp, fn)# + "_Dirac"
+        + FileNameTail(fp, fn) + "_highprec"
     print(output_file_no_extension)
     
 
@@ -49,8 +49,8 @@ def main():
 
     if RUN_PROGRAM:          
         mx_min = 3.5
-        mx_max = 100.
-        num_steps = 30
+        mx_max = 55
+        num_steps = 20
         output_file = output_file_no_extension + "_py_temp.dat" 
         f_handle = open(output_file, 'w')   # clear the file first
         f_handle.close()

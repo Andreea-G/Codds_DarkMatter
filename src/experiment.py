@@ -144,6 +144,7 @@ class Experiment:
         return r_list.sum()
         
     def ResponseSHM_Dirac(self, ER, Eee1, Eee2, mx, fp, fn, delta): 
+        #print("stuff = ", ER, " ", Eee1, " ", Eee2)
         q = np.array(self.QuenchingFactor(ER))
         qER = q * ER
         #print("self.Efficiency_ER = ", self.Efficiency_ER)
@@ -177,9 +178,10 @@ class Experiment:
             if j < vmax else 1.e6, self.mT, vdelta)
         ER_plus = np.max(ER_plus_list)
         ER_minus = np.min(ER_minus_list)
+        #print("ER_pm = ", ER_plus, " ", ER_minus, " ", Eee1, " ", Eee2)
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus, \
-                args=(Eee1, Eee2, mx, fp, fn, delta))
+                args=(Eee1, Eee2, mx, fp, fn, delta)) #, vec_func=False
             '''
             integr = integrate.dblquad(self.DifferentialResponseSHM, ER_minus, ER_plus, \
                 lambda Eee: Eee1, lambda Eee: Eee2, \
@@ -216,13 +218,18 @@ class Experiment:
             self.ElistMaxGap[:-1], self.ElistMaxGap[1:]))
         mu_scaled = xtable.sum()
         x_scaled = np.max(xtable)
-        mu_over_x = mu_scaled / x_scaled
+        if x_scaled == 0:
+            mu_over_x = np.inf
+            result = [np.inf]
+        else:
+            mu_over_x = mu_scaled / x_scaled
+            y_guess = np.real(-lambertw(-0.1 / mu_over_x, -1))
+#            print("y_guess = ", y_guess)
+            y = fsolve(lambda x: MaximumGapC0scaled(x, mu_over_x) - 0.9, y_guess)
+            result =  y / x_scaled / self.Exposure
         print("mx = ", mx, "   mu_over_x = ", mu_over_x)
         print("xtable = ", xtable)
-        y_guess = np.real(-lambertw(-0.1 / mu_over_x, -1))
-#        print("y_guess = ", y_guess)
-        y = fsolve(lambda x: MaximumGapC0scaled(x, mu_over_x) - 0.9, y_guess)
-        result =  y / x_scaled / self.Exposure
+        print("result = ", result)
         to_print = np.log10(np.array([[mx, result[0]]]))
         with open(output_file,'a') as f_handle:
             np.savetxt(f_handle, to_print)
