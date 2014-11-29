@@ -31,7 +31,7 @@ target_nuclide_mass_list = np.array([65.134, 66.995, 67.9278, 68.8571, 70.7203])
 
 num_target_nuclides = target_nuclide_mass_list.size
 
-QuenchingFactorList = np.array([lambda x: 1] * num_target_nuclides)
+QuenchingFactor = lambda e: 1
 Ethreshold = 1.63799
 Emaximum = 10.0011
 

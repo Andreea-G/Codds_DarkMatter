@@ -16,7 +16,7 @@ def Plot_Upper_Limit(max_gap):
     
     x = max_gap[:,0]
     y = -np.log10(3.*SpeedOfLight**2*1e4*3600*24) + max_gap[:,0] + max_gap[:,1]
-    interp = interp1d(x, y, kind = "cubic")
+    interp = interp1d(x, y, kind = "quadratic")
     plt.close
     x1 = np.linspace(x[0],x[-1],50)
     plt.plot(x, y, "o", x1, interp(x1))
@@ -40,7 +40,7 @@ def main():
     
     output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
     output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper.name + "_mxsigma" \
-        + FileNameTail(fp, fn)# + "_Dirac"
+        + FileNameTail(fp, fn) + "_test"
     print(output_file_no_extension)
     
 
@@ -49,7 +49,7 @@ def main():
 
     if RUN_PROGRAM:          
         mx_min = 3.5
-        mx_max = 100.
+        mx_max = 55.
         num_steps = 30
         output_file = output_file_no_extension + "_py_temp.dat" 
         f_handle = open(output_file, 'w')   # clear the file first
@@ -57,6 +57,8 @@ def main():
         
         max_gap = exper.MaximumGapLimit(fp, fn, delta, mx_min, mx_max, num_steps, output_file)
         print("max gap = ", max_gap)
+        print("diff response calls = " , exper.count_diffresponse_calls)
+        print("response calls = " , exper.count_response_calls)
         output_file = output_file_no_extension + "_py.dat" 
         print(output_file)
         np.savetxt(output_file, max_gap)
@@ -72,7 +74,7 @@ def main():
     if TEST_INT_RESPONSE:
         mx = 10.
         Eee1 = 2
-        Eee2 = 
+        Eee2 = 30
     #    ER = 5.
     #    diff_resp = exper.DifferentialResponseSHM(ER, Eee1, mx, fp, fn, delta)
     #    print("diff response = ", diff_resp)
@@ -86,4 +88,3 @@ if __name__ == '__main__':
 #    main()
     profile.run("main()")
 
-import num

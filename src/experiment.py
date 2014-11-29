@@ -73,7 +73,7 @@ class Experiment:
         else:
             self.IntegratedResponseSHM = self.IntegratedResponseSHM_Other
             
-        self.QuenchingFactorList = module.QuenchingFactorList  
+        self.QuenchingFactor = module.QuenchingFactor  
         self.Efficiency = module.Efficiency
         self.Efficiency_ER = module.Efficiency_ER
         self.Ethreshold = module.Ethreshold
@@ -125,17 +125,14 @@ class Experiment:
     #TODO
     def CrossSectionFactors_SD44(self, ER, mx, fp, fn, delta):
         #print(exper.name, "SD44")
-        return 0    
-
-    def QuenchingFactor(self, ER):
-        return [self.QuenchingFactorList[i](ER) for i in range(self.numT)]        
+        return 0        
         
     def Resolution(self, Eee, qER):
-        return map(lambda mu: self.ResolutionFunction(Eee, mu, self.EnergyResolution(mu)), qER)
+        return self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
         
     def DifferentialResponseSHM(self, Eee, ER, mx, fp, fn, delta): 
         self.count_diffresponse_calls += 1
-        q = np.array(self.QuenchingFactor(ER))
+        q = self.QuenchingFactor(ER)
         qER = q * ER
         vmin = VMin(ER, self.mT, mx, delta)
         r_list = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
@@ -144,14 +141,11 @@ class Experiment:
         return r_list.sum()
         
     def ResponseSHM_Dirac(self, ER, Eee1, Eee2, mx, fp, fn, delta): 
-        #print("stuff = ", ER, " ", Eee1, " ", Eee2)
-        q = np.array(self.QuenchingFactor(ER))
+        q = self.QuenchingFactor(ER)
         qER = q * ER
-        #print("self.Efficiency_ER = ", self.Efficiency_ER)
         vmin = VMin(ER, self.mT, mx, delta)
-        efficiency_ER = np.array(map(self.Efficiency_ER, qER))
+        efficiency_ER = self.Efficiency_ER(qER)
         integrated_delta = map(lambda e: 1. if Eee1 <= e < Eee2 else 0., qER)
-        #print("efficiency_ER = ", efficiency_ER)
         r_list = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
             efficiency_ER * \
             integrated_delta * eta0Maxwellian(vmin, vobs, v0bar, vesc)
@@ -162,10 +156,10 @@ class Experiment:
         
     def ResponseSHM_Other(self, ER, Eee1, Eee2, mx, fp, fn, delta):
         self.count_response_calls += 1
-        return integrate.quad(self.DifferentialResponseSHM, Eee1, Eee2, \
+        result = integrate.quad(self.DifferentialResponseSHM, Eee1, Eee2, \
             args=(ER, mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)[0]
-#        print(ER, " ", r)
-#        return r
+#        print(ER, " ", result)
+        return result
 
     def IntegratedResponseSHM_Dirac(self, Eee1, Eee2, mx, fp, fn, delta):
         vmax = vesc + vobs
@@ -178,15 +172,15 @@ class Experiment:
             if j < vmax else 1.e6, self.mT, vdelta)
         ER_plus = np.max(ER_plus_list)
         ER_minus = np.min(ER_minus_list)
-        #print("ER_pm = ", ER_plus, " ", ER_minus, " ", Eee1, " ", Eee2)
         if ER_minus < ER_plus:
+            '''
             integr = integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus, \
                 args=(Eee1, Eee2, mx, fp, fn, delta)) #, vec_func=False
             '''
             integr = integrate.dblquad(self.DifferentialResponseSHM, ER_minus, ER_plus, \
                 lambda Eee: Eee1, lambda Eee: Eee2, \
                 args=(mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
-            '''
+            
             print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr,)
             return integr[0]
         else:
@@ -229,7 +223,7 @@ class Experiment:
             result =  y / x_scaled / self.Exposure
         print("mx = ", mx, "   mu_over_x = ", mu_over_x)
         print("xtable = ", xtable)
-        print("result = ", result)
+        print("result = ", result[0])
         to_print = np.log10(np.array([[mx, result[0]]]))
         with open(output_file,'a') as f_handle:
             np.savetxt(f_handle, to_print)
