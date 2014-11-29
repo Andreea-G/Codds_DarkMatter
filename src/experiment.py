@@ -145,7 +145,7 @@ class Experiment:
         qER = q * ER
         vmin = VMin(ER, self.mT, mx, delta)
         efficiency_ER = self.Efficiency_ER(qER)
-        integrated_delta = map(lambda e: 1. if Eee1 <= e < Eee2 else 0., qER)
+        integrated_delta = 1. if Eee1 <= qER < Eee2 else 0.
         r_list = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
             efficiency_ER * \
             integrated_delta * eta0Maxwellian(vmin, vobs, v0bar, vesc)
@@ -173,14 +173,8 @@ class Experiment:
         ER_plus = np.max(ER_plus_list)
         ER_minus = np.min(ER_minus_list)
         if ER_minus < ER_plus:
-            '''
             integr = integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus, \
                 args=(Eee1, Eee2, mx, fp, fn, delta)) #, vec_func=False
-            '''
-            integr = integrate.dblquad(self.DifferentialResponseSHM, ER_minus, ER_plus, \
-                lambda Eee: Eee1, lambda Eee: Eee2, \
-                args=(mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
-            
             print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr,)
             return integr[0]
         else:
@@ -200,6 +194,11 @@ class Experiment:
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Other, ER_minus, ER_plus, \
                 args=(Eee1, Eee2, mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
+            '''
+            integr = integrate.dblquad(self.DifferentialResponseSHM, ER_minus, ER_plus, \
+                lambda Eee: Eee1, lambda Eee: Eee2, \
+                args=(mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
+            '''
             print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr,)
             return integr[0]
         else:
