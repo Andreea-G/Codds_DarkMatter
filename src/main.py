@@ -9,9 +9,9 @@ from __future__ import print_function
 from __future__ import division
 from experiment import *
 import profile
+import matplotlib.pyplot as plt
      
-def Plot_Upper_Limit(max_gap, plot_close = True, plot_show = True):
-    import matplotlib.pyplot as plt
+def Plot_Upper_Limit(max_gap, plot_close = True, plot_show = True, plot_dots = True):
     from scipy.interpolate import interp1d
     
     if plot_close:
@@ -35,37 +35,26 @@ def Plot_Upper_Limit(max_gap, plot_close = True, plot_show = True):
             interp_kind = "cubic"
         interp = interp1d(x, y, kind = interp_kind)
         x1 = np.linspace(x[0], x[-1], 50)
-        plt.plot(x, y, "o", x1, interp(x1))
+        if plot_dots:
+            plt.plot(x, y, "o")    
+        plt.plot(x1, interp(x1))
     plt.xlabel('Log10(m [GeV])')
     plt.ylabel('Log10(sigma)')
     if plot_show:
         plt.show()
 
-     
-def main():
-#    exper_name = "CDMSlite2013CoGeNTQ"
-#    exper_name = "superCDMS"
-    exper_name = "LUX2013zero"
-    scattering_type = 'SD66'
-    mPhi = 1000.
-    fp = 1.
-    fn = 0.
-    delta = 0.
-    
+
+def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max, num_steps, \
+    RUN_PROGRAM, MAKE_PLOT):
     exper = Experiment(exper_name, scattering_type, mPhi)
     print('name = ', exper.name)
-    
     output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
     output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper.name + "_mxsigma" \
         + FileNameTail(fp, fn)# + "_test"
     print(output_file_no_extension)
-    
-
-    RUN_PROGRAM = True
-    MAKE_PLOT = False
 
     if RUN_PROGRAM:          
-        mx_min = 42.
+        mx_min = 10.
         mx_max = 100.
         num_steps = 1
         output_file = output_file_no_extension + "_py_temp.dat" 
@@ -81,25 +70,36 @@ def main():
         np.savetxt(output_file, max_gap)
 
     if MAKE_PLOT:
-        output_file = output_file_no_extension + "_py.dat" 
+        output_file = output_file_no_extension + ".dat" 
         max_gap = np.loadtxt(output_file)
         print("max_gap = ", max_gap)    
-        Plot_Upper_Limit(max_gap)
-
+        Plot_Upper_Limit(max_gap, plot_close = False, plot_show = False, plot_dots = False)
+        
     
-    TEST_INT_RESPONSE = False
-    if TEST_INT_RESPONSE:
-        mx = 10.
-        Eee1 = 2
-        Eee2 = 30
-    #    ER = 5.
-    #    diff_resp = exper.DifferentialResponseSHM(ER, Eee1, mx, fp, fn, delta)
-    #    print("diff response = ", diff_resp)
-    #    print("response = ", exper.ResponseSHM(ER, Eee1, Eee2, mx, fp, fn, delta))
-        print("int response = ", exper.IntegratedResponseSHM(Eee1, Eee2, mx, fp, fn, delta))
-        print("diff response calls = " , exper.count_diffresponse_calls)
-        print("response calls = " , exper.count_response_calls)
+    
+def main():
+#    exper_name = "CDMSlite2013CoGeNTQ"
+#    exper_name = "superCDMS"
+#    exper_name = "LUX2013zero"
+    scattering_type = 'SD66'
+    mPhi = 1000.
+    fp = 1.
+    fn = 0.
+    delta = -50.
 
+    mx_min = 3.197
+    mx_max = 100.
+    num_steps = 30 
+        
+    RUN_PROGRAM = True
+    MAKE_PLOT = False
+
+    exper_list = ["LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many"]
+    plt.close()
+    for exper_name in exper_list:
+        run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max, num_steps, \
+            RUN_PROGRAM, MAKE_PLOT)
+    plt.show()
     
 if __name__ == '__main__':
 #    main()
