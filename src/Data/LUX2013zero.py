@@ -8,7 +8,8 @@ from __future__ import absolute_import
 from __future__ import division
 import numpy as np
 pi = np.pi
-from scipy.interpolate import interp1d
+#from scipy.interpolate import interp1d
+from interp import interp1d
 
 name = "LUX2013zero"
 
@@ -30,13 +31,13 @@ target_nuclide_mass_list = np.array([115.418, 117.279, 119.141, 120.074, 121.004
     124.732, 126.597])
 num_target_nuclides = target_nuclide_mass_list.size
 
-QuenchingFactor = interp1d(np.array([0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 100]), \
-    np.array([-0.20529702777777736, 0.394922, 0.714621, 0.861934, 0.944993, 1.01551, 1.08134, 1.13507, 1.19417, \
-    1.23701, 1.28068, 1.31812, 1.35872, 20.38284081068904]))
+QuenchingFactor = interp1d(np.array([0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36]), \
+    np.array([0, 0.394922, 0.714621, 0.861934, 0.944993, 1.01551, 1.08134, 1.13507, 1.19417, \
+    1.23701, 1.28068, 1.31812, 1.35872]))
 
-    
 Ethreshold = 2.
 Emaximum = 30.
+ERmaximum = 36.
 
 Efficiency_ER = lambda er: np.array(1.) if er >= 3. else np.array(0.)
 

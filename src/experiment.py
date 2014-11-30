@@ -57,7 +57,8 @@ class Experiment:
 
         self.bsq = 41.467/(45. * self.A**(-1./3) - 25. * self.A**(-2./3)) * fermiGeV**2
         self.FF66_function_list = np.array(map(lambda a, z: \
-            FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), np.array([[lambda y: 0]*2]*2)), self.A, self.Z))
+            FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), np.array([[lambda y: 0]*2]*2)), \
+            self.A, self.Z))
 
         self.FF = FF_options[self.scattering_type][module.FF[scattering_type]]
 
@@ -76,6 +77,7 @@ class Experiment:
         self.Efficiency_ER = module.Efficiency_ER
         self.Ethreshold = module.Ethreshold
         self.Emaximum = module.Emaximum
+        self.ERmaximum = module.ERmaximum
         self.ERecoilList = module.ERecoilList
         self.ElistMaxGap = np.append( np.insert( \
             np.array(filter(lambda x: self.Ethreshold < x < self.Emaximum, self.ERecoilList)), \
@@ -97,15 +99,18 @@ class Experiment:
 
     def FF66normlalized(self, ER):
         y = 2.e-6 * self.mT * ER * self.bsq / 4.
-        return np.array([np.array([[self.FF66_function_list[i,N1,N2](y[i]) for N2 in [0,1]] for N1 in [0,1]]) \
+        return np.array([np.array([[self.FF66_function_list[i,N1,N2](y[i]) \
+            for N2 in [0,1]] for N1 in [0,1]]) \
             * np.exp(-2. * y[i]) for i in range(self.numT)])
-#        l = np.array([self.FF66_function_list[:, N1, N2][i](y[i]) for i in range(self.numT)])
+#        l = np.array([self.FF66_function_list[:, N1, N2][i](y[i]) \
+#            for i in range(self.numT)])
 #        return l * np.exp(-2. * y)
 
     '''
     def FF66normlalized(self, ER, N1, N2):
         y = 2.e-6 * self.mT * ER * self.bsq / 4.
-        l = np.array([self.FF66_function_list[:, N1, N2][i](y[i]) for i in range(self.numT)])
+        l = np.array([self.FF66_function_list[:, N1, N2][i](y[i]) \
+            for i in range(self.numT)])
         return l * np.exp(-2. * y)
     '''
     
@@ -149,7 +154,9 @@ class Experiment:
         vmin = VMin(ER, self.mT, mx, delta)
         r_list = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
             self.Efficiency(Eee) * self.Efficiency_ER(ER) * \
-            self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER)) * eta0Maxwellian(vmin, vobs, v0bar, vesc)
+            self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER)) * \
+            eta0Maxwellian(vmin, vobs, v0bar, vesc)
+#        print("ER, Eee, resp = ", ER, " ", Eee, " ", r_list.sum())
         return r_list.sum()
         
     def ResponseSHM_Dirac(self, ER, Eee1, Eee2, mx, fp, fn, delta): 
@@ -182,12 +189,12 @@ class Experiment:
             if j < vmax else 0., self.mT, vdelta)
         ER_minus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1) \
             if j < vmax else 1.e6, self.mT, vdelta)
-        ER_plus = 1.01 * np.max(ER_plus_list)
-        ER_minus = 0.99 * np.min(ER_minus_list)
+        ER_plus = min(np.max(ER_plus_list), self.ERmaximum)
+        ER_minus = np.min(ER_minus_list)
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus, \
                 args=(Eee1, Eee2, mx, fp, fn, delta)) #, vec_func=False
-            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr,)
+            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
             return integr[0]
         else:
             return 0.
@@ -201,7 +208,7 @@ class Experiment:
             if j < vmax else 0., self.mT, vdelta)
         ER_minus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1) \
             if j < vmax else 1.e6, self.mT, vdelta)
-        ER_plus = np.max(ER_plus_list)
+        ER_plus = min(np.max(ER_plus_list), self.ERmaximum)
         ER_minus = np.min(ER_minus_list)
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Other, ER_minus, ER_plus, \
@@ -219,7 +226,8 @@ class Experiment:
             
     def MaximumGapUpperBoundSHM(self, mx, fp, fn, delta, output_file):
         print("mx = ", mx)
-        xtable = np.array(map(lambda i, j: self.IntegratedResponseSHM(i, j, mx, fp, fn, delta), \
+        xtable = np.array(map(lambda i, j: \
+            self.IntegratedResponseSHM(i, j, mx, fp, fn, delta), \
             self.ElistMaxGap[:-1], self.ElistMaxGap[1:]))
         mu_scaled = xtable.sum()
         x_scaled = np.max(xtable)
@@ -242,7 +250,8 @@ class Experiment:
         
     def MaximumGapLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
-        upper_limit = np.array(map(lambda mx: self.MaximumGapUpperBoundSHM(mx, fp, fn, delta, output_file), mx_list))
+        upper_limit = np.array(map(lambda mx: \
+            self.MaximumGapUpperBoundSHM(mx, fp, fn, delta, output_file), mx_list))
         print(mx_list)
         print(upper_limit)
         return np.log10(np.transpose([mx_list, upper_limit.flatten()]))

@@ -16,7 +16,7 @@ def Plot_Upper_Limit(max_gap, plot_close = True, plot_show = True):
     
     if plot_close:
         plt.close()
-        
+
     if max_gap.size == 0:
         print("max_gap is empty!")
     elif max_gap.ndim == 1:
@@ -65,9 +65,9 @@ def main():
     MAKE_PLOT = False
 
     if RUN_PROGRAM:          
-        mx_min = 6.
+        mx_min = 42.
         mx_max = 100.
-        num_steps = 40
+        num_steps = 1
         output_file = output_file_no_extension + "_py_temp.dat" 
         f_handle = open(output_file, 'w')   # clear the file first
         f_handle.close()
