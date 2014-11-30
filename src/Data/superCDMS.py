@@ -34,7 +34,7 @@ num_target_nuclides = target_nuclide_mass_list.size
 QuenchingFactor = lambda e: 1
 Ethreshold = 1.63799
 Emaximum = 10.0011
-ERmaximum = 11.
+ERmaximum = 10.0011
 
 Efficiency_interp = interp1d(np.array([1.63799, 1.93525, 2.35928, 2.37871, 3.12938, 3.15831, 3.8895, 3.90877, \
     4.2841, 4.30358, 4.63016, 4.64942, 5.38539, 5.4095, 5.78968, 6.15036, 6.16481, 6.8911, 6.92511, \

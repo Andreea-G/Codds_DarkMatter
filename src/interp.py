@@ -19,6 +19,7 @@ class interp1d:
     def __init__(self, x, y, kind = "linear", fill_value = np.nan):
         self.x = x
         self.y = y
+        self.len = len(self.x)
         self.fill_value = fill_value
         if kind == "linear":
             self._call = self._call_linear
@@ -48,7 +49,7 @@ class interp1d:
 
     def _call_linear(self, x_new):
         x_new_index = np.searchsorted(self.x, x_new)
-        x_new_index = x_new_index.clip(1, len(self.x)-1).astype(int)
+        x_new_index = x_new_index.clip(1, self.len-1).astype(int)
         lo = x_new_index - 1
         hi = x_new_index
         x_lo = self.x[lo]
