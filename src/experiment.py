@@ -11,7 +11,7 @@ from __future__ import division
 
 INPUT_DIR = "Data/"
 OUTPUT_MAIN_DIR = "Output/"
-PRECISSION = 1e-3
+PRECISSION = 1e-2
 
 def import_file(full_path_to_module):
     import os, sys
@@ -46,14 +46,33 @@ class Experiment:
             self.energy_resolution_type == "Gaussian" else GPoisson  
         
         self.mPhi = mPhi
-        self.numT = module.num_target_nuclides
-        self.mT = module.target_nuclide_mass_list
-        self.A = module.target_nuclide_AZC_list[:,0]
-        self.Z = module.target_nuclide_AZC_list[:,1]
-        self.mass_fraction = module.target_nuclide_AZC_list[:,2]
         self.J = module.target_nuclide_JSpSn_list[:,0]
-        self.SpScaled = module.target_nuclide_JSpSn_list[:,1]
-        self.SnScaled = module.target_nuclide_JSpSn_list[:,2]
+        self.numT = module.num_target_nuclides
+        if "SD" in self.scattering_type:
+            self.mT = np.array([module.target_nuclide_mass_list[i] \
+                for i in range(self.numT) if self.J[i] != 0 ])
+            self.A = np.array([module.target_nuclide_AZC_list[i,0] \
+                for i in range(self.numT) if self.J[i] != 0 ])
+            self.Z = np.array([module.target_nuclide_AZC_list[i,1] \
+                for i in range(self.numT) if self.J[i] != 0 ])
+            self.mass_fraction = np.array([module.target_nuclide_AZC_list[i,2] \
+                for i in range(self.numT) if self.J[i] != 0 ])
+            self.SpScaled = np.array([module.target_nuclide_JSpSn_list[i,1] \
+                for i in range(self.numT) if self.J[i] != 0 ])
+            self.SnScaled = np.array([module.target_nuclide_JSpSn_list[i,2] \
+                for i in range(self.numT) if self.J[i] != 0 ])
+            self.J = np.array([j for j in self.J if j != 0 ])
+            self.numT = np.size(self.J)
+        else:
+            self.mT = module.target_nuclide_mass_list
+            self.A = module.target_nuclide_AZC_list[:,0]
+            self.Z = module.target_nuclide_AZC_list[:,1]
+            self.mass_fraction = module.target_nuclide_AZC_list[:,2]
+            self.SpScaled = module.target_nuclide_JSpSn_list[:,1]
+            self.SnScaled = module.target_nuclide_JSpSn_list[:,2]
+
+#        print(self.mT, "\n", self.A, "\n", self.Z, "\n", self.mass_fraction, \
+#            "\n", self.J, "\n", self.SpScaled, "\n", self.SnScaled)        
 
         self.bsq = 41.467/(45. * self.A**(-1./3) - 25. * self.A**(-2./3)) * fermiGeV**2
         self.FF66_function_list = np.array(map(lambda a, z: \
@@ -139,7 +158,7 @@ class Experiment:
             (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
         '''
         
-    #TODO
+    #TODO! implement
     def CrossSectionFactors_SD44(self, ER, mx, fp, fn, delta):
         #print(exper.name, "SD44")
         return 0        
@@ -156,7 +175,6 @@ class Experiment:
             self.Efficiency(Eee) * self.Efficiency_ER(ER) * \
             self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER)) * \
             eta0Maxwellian(vmin, vobs, v0bar, vesc)
-#        print("ER, Eee, resp = ", ER, " ", Eee, " ", r_list.sum())
         return r_list.sum()
         
     def ResponseSHM_Dirac(self, ER, Eee1, Eee2, mx, fp, fn, delta): 
@@ -218,7 +236,7 @@ class Experiment:
                 lambda Eee: Eee1, lambda Eee: Eee2, \
                 args=(mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
             '''
-            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr,)
+            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
             return integr[0]
         else:
             return 0.
