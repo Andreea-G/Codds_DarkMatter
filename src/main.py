@@ -53,11 +53,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
         + FileNameTail(fp, fn)# + "_test"
     print(output_file_no_extension)
 
-    if RUN_PROGRAM:          
-        mx_min = 10.
-        mx_max = 100.
-        num_steps = 1
-        output_file = output_file_no_extension + "_py_temp.dat" 
+    if RUN_PROGRAM:  
+        output_file = output_file_no_extension + "_temp.dat" 
         f_handle = open(output_file, 'w')   # clear the file first
         f_handle.close()
         
@@ -65,7 +62,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
         print("max gap = ", max_gap)
         print("diff response calls = " , exper.count_diffresponse_calls)
         print("response calls = " , exper.count_response_calls)
-        output_file = output_file_no_extension + "_py.dat" 
+        output_file = output_file_no_extension + ".dat" 
         print(output_file)
         np.savetxt(output_file, max_gap)
 
@@ -85,16 +82,16 @@ def main():
     mPhi = 1000.
     fp = 1.
     fn = 0.
-    delta = -50.
+    delta = 50.
 
-    mx_min = 3.197
+    mx_min = 17.66
     mx_max = 100.
     num_steps = 30 
         
     RUN_PROGRAM = True
     MAKE_PLOT = False
 
-    exper_list = ["LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many"]
+    exper_list = ["LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many"]
     plt.close()
     for exper_name in exper_list:
         run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max, num_steps, \
