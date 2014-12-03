@@ -74,8 +74,7 @@ class Experiment:
 #        print(self.mT, "\n", self.A, "\n", self.Z, "\n", self.mass_fraction, \
 #            "\n", self.J, "\n", self.SpScaled, "\n", self.SnScaled)        
 
-        self.bsq = 41.467/(45. * self.A**(-1./3) - 25. * self.A**(-2./3)) * fermiGeV**2
-        self.FF66_function_list = np.array(map(lambda a, z: \
+        self._FF66_function_list = np.array(map(lambda a, z: \
             FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), np.array([[lambda y: 0]*2]*2)), \
             self.A, self.Z))
 
@@ -90,7 +89,7 @@ class Experiment:
             self.IntegratedResponseSHM = self.IntegratedResponseSHM_Dirac
         else:
             self.IntegratedResponseSHM = self.IntegratedResponseSHM_Other
-            
+
         self.QuenchingFactor = module.QuenchingFactor  
         self.Efficiency = module.Efficiency
         self.Efficiency_ER = module.Efficiency_ER
@@ -105,7 +104,12 @@ class Experiment:
         
         self.count_diffresponse_calls = 0
         self.count_response_calls = 0
-        
+
+        self._bsq = 41.467/(45. * self.A**(-1./3) - 25. * self.A**(-2./3)) * fermiGeV**2
+        self._y_over_ER =  2.e-6 * self.mT * self._bsq / 4.
+        self._cross_sec_factors_SD66 =  (SpeedOfLight/v0bar)**4 * \
+            self.mass_fraction * self.mT**2 
+
     def FormFactor(self, ER):
         result = self.FF(ER, self.A, self.mT)
         return result
@@ -116,38 +120,25 @@ class Experiment:
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2. * self.mT))**2) * \
             ((self.Z + (self.A - self.Z) * fn/fp)**2) * self.FormFactor(ER) 
 
-    def FF66normlalized(self, ER):
-        y = 2.e-6 * self.mT * ER * self.bsq / 4.
-        return np.array([np.array([[self.FF66_function_list[i,N1,N2](y[i]) \
-            for N2 in [0,1]] for N1 in [0,1]]) \
-            * np.exp(-2. * y[i]) for i in range(self.numT)])
-#        l = np.array([self.FF66_function_list[:, N1, N2][i](y[i]) \
-#            for i in range(self.numT)])
-#        return l * np.exp(-2. * y)
-
-    '''
     def FF66normlalized(self, ER, N1, N2):
-        y = 2.e-6 * self.mT * ER * self.bsq / 4.
-        l = np.array([self.FF66_function_list[:, N1, N2][i](y[i]) \
-            for i in range(self.numT)])
+#        l = np.array([self._FF66_function_list[i, N1, N2](y[i]) \
+#            for i in range(self.numT)])
+        y = ER * self._y_over_ER
+        l = np.empty(self.numT)
+        for i in range(self.numT): 
+            l[i] = self._FF66_function_list[i, N1, N2](y[i])
         return l * np.exp(-2. * y)
-    '''
     
     def CrossSectionFactors_SD66(self, ER, mx, fp, fn, delta):
         #ffelemQ = FFElementQ(self.Z)
         mu_p = ProtonMass * mx / (ProtonMass + mx)
-        ff = self.FF66normlalized(ER)
-        return self.mass_fraction * 3./(8.*mu_p**6) * self.mT**2 * 1e-12 * ER**2 * \
-            (SpeedOfLight/v0bar)**4 * \
-            mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
-            (ff[:,0,0] + ff[:,0,1] * 2 * fn/fp + ff[:,1,1] * (fn/fp)**2) 
-        '''        
-        return self.mass_fraction * 3./(8.*mu_p**6) * self.mT**2 * 1e-12 * ER**2 * \
-            (SpeedOfLight/v0bar)**4 * \
-            mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
+        return 1.e-12 * ER**2 * 3./8. * mu_p**6 * \
+            mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/ 2 / self.mT)**2) * \
+            self._cross_sec_factors_SD66 * \
             (self.FF66normlalized(ER, 0, 0) + \
-            self.FF66normlalized(ER, 0, 1) * 2 * fn/fp + \
-            self.FF66normlalized(ER, 1, 1) * (fn/fp)**2) 
+            2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
+            (fn/fp)**2 * self.FF66normlalized(ER, 1, 1)) 
+        '''
         return self.mass_fraction * 3./(8.*mu_p**6) * self.mT**2 * 1e-12 * ER**2 * \
             (SpeedOfLight/v0bar)**4 * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
