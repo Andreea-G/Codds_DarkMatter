@@ -74,8 +74,13 @@ class Experiment:
 #        print(self.mT, "\n", self.A, "\n", self.Z, "\n", self.mass_fraction, \
 #            "\n", self.J, "\n", self.SpScaled, "\n", self.SnScaled)        
 
+        FF_default = np.array([[lambda y: 0]*2]*2)
         self._FF66_function_list = np.array(map(lambda a, z: \
-            FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), np.array([[lambda y: 0]*2]*2)), \
+            FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), FFdefault), \
+            self.A, self.Z))
+        self._FF44_function_list = np.array(map(lambda a, z: \
+            1. / 3 * (FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), FF_default) + \
+            FFSigmaPJ.get((np.trunc(a), np.trunc(z)), FF_default)), \
             self.A, self.Z))
 
         self.FF = FF_options[self.scattering_type][module.FF[scattering_type]]
@@ -125,8 +130,17 @@ class Experiment:
 #            for i in range(self.numT)])
         y = ER * self._y_over_ER
         l = np.empty(self.numT)
-        for i in range(self.numT): 
+        for i in range(self.numT):
             l[i] = self._FF66_function_list[i, N1, N2](y[i])
+        return l * np.exp(-2. * y)
+
+    def FF44normlalized(self, ER, N1, N2):
+#        l = np.array([self._FF66_function_list[i, N1, N2](y[i]) \
+#            for i in range(self.numT)])
+        y = ER * self._y_over_ER
+        l = np.empty(self.numT)
+        for i in range(self.numT):
+            l[i] = self._FF44_function_list[i, N1, N2](y[i])
         return l * np.exp(-2. * y)
     
     def CrossSectionFactors_SD66(self, ER, mx, fp, fn, delta):
@@ -137,7 +151,7 @@ class Experiment:
             self._cross_sec_factors_SD66 * \
             (self.FF66normlalized(ER, 0, 0) + \
             2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
-            (fn/fp)**2 * self.FF66normlalized(ER, 1, 1)) 
+            (fn/fp)**2 * self.FF66normlalized(ER, 1, 1))
         '''
         return self.mass_fraction * 3./(8.*mu_p**6) * self.mT**2 * 1e-12 * ER**2 * \
             (SpeedOfLight/v0bar)**4 * \
@@ -149,10 +163,13 @@ class Experiment:
             (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
         '''
         
-    #TODO! implement
     def CrossSectionFactors_SD44(self, ER, mx, fp, fn, delta):
-        #print(exper.name, "SD44")
-        return 0        
+        mu_p = ProtonMass * mx / (ProtonMass + mx)
+        return self.mass_fraction / (2 * mu_p**2) * \
+            mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
+            (self.FF44normlalized(ER, 0, 0) + \
+            2 * fn/fp * self.FF44normlalized(ER, 0, 1) + \
+            (fn/fp)**2 * self.FF44normlalized(ER, 1, 1))
         
     def Resolution(self, Eee, qER):
         return self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
