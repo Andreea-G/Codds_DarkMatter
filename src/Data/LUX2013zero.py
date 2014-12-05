@@ -15,8 +15,6 @@ name = "LUX2013zero"
 
 energy_resolution_type = "Poisson"
 EnergyResolution = lambda e: 0.37
-#energy_resolution_type = "Gaussian"
-#EnergyResolution = lambda e: np.sqrt(0.293**2 + 0.056**2 * e)
 FFSD = 'GaussianFFSD'
 FFSI = 'HelmFF'
 FF = {'SI' : FFSI,
