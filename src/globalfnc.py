@@ -18,9 +18,9 @@ AtomicMassUnit = 0.931494028
 ProtonMass = 1.00727646677 * AtomicMassUnit
 mPhiRef = 1000.
 
-vobs = 232.
-v0bar = 220.
-vesc = 533.
+v0bar = default_v0bar = 220.
+vobs = default_vobs = default_v0bar + 12.
+vesc = default_vesc = 533.
 
 def FileNameTail(fp, fn):
     fnfp = fn/fp

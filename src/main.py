@@ -49,12 +49,19 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
     exper = Experiment(exper_name, scattering_type, mPhi)
     print('name = ', exper.name)
     output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
-    output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper.name + "_mxsigma" \
-        + FileNameTail(fp, fn)# + "_test"
+    output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper.name \
+        + "_mxsigma"
+    if vesc != default_vesc:
+        output_file_no_extension += "_vesc" \
+            + str(math.trunc(round(vesc)))
+    if vobs != default_vobs:
+        output_file_no_extension += "_vobs" \
+            + str(math.trunc(round(vobs)))
+    output_file_no_extension = output_file_no_extension + FileNameTail(fp, fn)
     print(output_file_no_extension)
 
     if RUN_PROGRAM:  
-        output_file = output_file_no_extension + "_temp.dat" 
+        output_file += "_temp.dat" 
         f_handle = open(output_file, 'w')   # clear the file first
         f_handle.close()
         
@@ -70,28 +77,34 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
         output_file = output_file_no_extension + ".dat" 
         max_gap = np.loadtxt(output_file)
         print("max_gap = ", max_gap)    
-        Plot_Upper_Limit(max_gap, plot_close = False, plot_show = False, plot_dots = False)
+        Plot_Upper_Limit(max_gap, plot_close = False, \
+            plot_show = False, plot_dots = False)
         
     
     
 def main():
-#    exper_name = "CDMSlite2013CoGeNTQ"
-#    exper_name = "superCDMS"
-#    exper_name = "LUX2013zero"
+    implemented_exper = ["superCDMS", \
+        "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many", \
+        "XENON10", "CDMSlite2013CoGeNTQ"]
     scattering_type = 'SD66'
     mPhi = 1000.
     fp = 1.
     fn = 0.
-    delta = 50.
+    delta = 0.
 
-    mx_min = 17.66
+    mx_min = 10
     mx_max = 100.
-    num_steps = 30 
-        
-    RUN_PROGRAM = True
+    num_steps = 1
+
+    global v0bar, vobs, vesc
+    v0bar = 230 - 3 * 24.4
+    vobs = v0bar + 12
+    vesc = 544 - 3 * 39
+
+    RUN_PROGRAM = False
     MAKE_PLOT = False
 
-    exper_list = ["LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many"]
+    exper_list = implemented_exper[0:1]
     plt.close()
     for exper_name in exper_list:
         run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max, num_steps, \
@@ -99,6 +112,6 @@ def main():
     plt.show()
     
 if __name__ == '__main__':
-#    main()
-    profile.run("main()")
+    main()
+#    profile.run("main()")
 

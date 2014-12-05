@@ -75,12 +75,11 @@ class Experiment:
 #            "\n", self.J, "\n", self.SpScaled, "\n", self.SnScaled)        
 
         FF_default = np.array([[lambda y: 0]*2]*2)
-        self._FF66_function_list = np.array(map(lambda a, z: \
-            FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), FFdefault), \
+        self._FFSigmaPPJ_function_list = np.array(map(lambda a, z: \
+            FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), FF_default), \
             self.A, self.Z))
-        self._FF44_function_list = np.array(map(lambda a, z: \
-            1. / 3 * (FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), FF_default) + \
-            FFSigmaPJ.get((np.trunc(a), np.trunc(z)), FF_default)), \
+        self._FFSigmaPj_function_list = np.array(map(lambda a, z: \
+            FFSigmaPJ.get((np.trunc(a), np.trunc(z)), FF_default), \
             self.A, self.Z))
 
         self.FF = FF_options[self.scattering_type][module.FF[scattering_type]]
@@ -126,21 +125,20 @@ class Experiment:
             ((self.Z + (self.A - self.Z) * fn/fp)**2) * self.FormFactor(ER) 
 
     def FF66normlalized(self, ER, N1, N2):
-#        l = np.array([self._FF66_function_list[i, N1, N2](y[i]) \
+#        l = np.array([self._FFSigmaPPJ_function_list[i, N1, N2](y[i]) \
 #            for i in range(self.numT)])
         y = ER * self._y_over_ER
         l = np.empty(self.numT)
         for i in range(self.numT):
-            l[i] = self._FF66_function_list[i, N1, N2](y[i])
+            l[i] = self._FFSigmaPPJ_function_list[i, N1, N2](y[i])
         return l * np.exp(-2. * y)
 
     def FF44normlalized(self, ER, N1, N2):
-#        l = np.array([self._FF66_function_list[i, N1, N2](y[i]) \
-#            for i in range(self.numT)])
         y = ER * self._y_over_ER
         l = np.empty(self.numT)
         for i in range(self.numT):
-            l[i] = self._FF44_function_list[i, N1, N2](y[i])
+            l[i] = 1./3 * (self._FFSigmaPPJ_function_list[i, N1, N2](y[i]) \
+            + self._FFSigmaPJ_function_list[i, N1, N2](y[i]))
         return l * np.exp(-2. * y)
     
     def CrossSectionFactors_SD66(self, ER, mx, fp, fn, delta):
