@@ -4,89 +4,15 @@ Created on Thu Nov 20 22:52:11 2014
 
 @author: Andreea
 """
-
 from __future__ import print_function
 from __future__ import division
-from experiment import *
-import profile
-import matplotlib.pyplot as plt
-     
-def Plot_Upper_Limit(max_gap, plot_close = True, plot_show = True, plot_dots = True):
-    from scipy.interpolate import interp1d
-    
-    if plot_close:
-        plt.close()
+#import profile
+from runprogram import *
 
-    if max_gap.size == 0:
-        print("max_gap is empty!")
-    elif max_gap.ndim == 1:
-        x = [max_gap[0]]
-        y = [-np.log10(3.*SpeedOfLight**2*1e4*3600*24) + max_gap[0] + max_gap[1]]
-        plt.plot(x, y, "o")
-    else:
-        x = max_gap[:,0]
-        y = -np.log10(3.*SpeedOfLight**2*1e4*3600*24) + max_gap[:,0] + max_gap[:,1]
-        num_points = x.size
-        if num_points == 2:
-            interp_kind = "linear"
-        elif num_points == 3:
-            interp_kind = "quadratic"
-        else:
-            interp_kind = "cubic"
-        interp = interp1d(x, y, kind = interp_kind)
-        x1 = np.linspace(x[0], x[-1], 50)
-        if plot_dots:
-            plt.plot(x, y, "o")    
-        plt.plot(x1, interp(x1))
-    plt.xlabel('Log10(m [GeV])')
-    plt.ylabel('Log10(sigma)')
-    if plot_show:
-        plt.show()
-
-
-def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max, num_steps, \
-    RUN_PROGRAM, MAKE_PLOT, filename_tail = ""):
-    exper = Experiment(exper_name, scattering_type, mPhi)
-    print('name = ', exper.name)
-    output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
-    output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper.name \
-        + "_mxsigma"
-    if vesc != default_vesc:
-        output_file_no_extension += "_vesc" \
-            + str(math.trunc(round(vesc)))
-    if vobs != default_vobs:
-        output_file_no_extension += "_vobs" \
-            + str(math.trunc(round(vobs)))
-    output_file_no_extension = output_file_no_extension + FileNameTail(fp, fn)
-    output_file_no_extension += filename_tail
-    print(output_file_no_extension)
-
-    if RUN_PROGRAM:  
-        output_file = output_file_no_extension + "_temp.dat" 
-        f_handle = open(output_file, 'w')   # clear the file first
-        f_handle.close()
-        
-        max_gap = exper.MaximumGapLimit(fp, fn, delta, mx_min, mx_max, num_steps, output_file)
-        print("max gap = ", max_gap)
-        print("diff response calls = " , exper.count_diffresponse_calls)
-        print("response calls = " , exper.count_response_calls)
-        output_file = output_file_no_extension + ".dat" 
-        print(output_file)
-        np.savetxt(output_file, max_gap)
-
-    if MAKE_PLOT:
-        output_file = output_file_no_extension + ".dat" 
-        max_gap = np.loadtxt(output_file)
-        print("max_gap = ", max_gap)    
-        Plot_Upper_Limit(max_gap, plot_close = False, \
-            plot_show = False, plot_dots = True)
-        
-    
-    
 def main():
     implemented_exper = ["superCDMS", \
         "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many", \
-        "XENON10", "CDMSlite2013CoGeNTQ"]
+        "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi"]
     scattering_type = 'SD66'
     mPhi = 1000.
     fp = 1.
@@ -95,7 +21,7 @@ def main():
 
     mx_min = 3.18
     mx_max = 100.
-    num_steps = 61
+    num_steps = 30
 
     '''
     global v0bar, vobs, vesc
@@ -104,16 +30,23 @@ def main():
     vesc = 544 - 3 * 39
     '''
     
+#    inputs = [(0, 0, 3.18), (-1/16.4, 0, 3.18), (0, -30., 2.), (0, -50., 1.7)]
+#    inputs = [(0, 50, 29)]
+#    inputs = [(0, 0, 3.18), (0, -30., 2.), (0, -50., 1.7), \
+#        (0, 50, 29)]
+    inputs = [(0., 0., 3.)]
+
     RUN_PROGRAM = F
     MAKE_PLOT = T
 
-    exper_list = implemented_exper[0:1]
+    exper_list = implemented_exper[8:9]
     filename_tail_list = [""]
     plt.close()
     for exper_name in exper_list:
         for filename_tail in filename_tail_list:
-            run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max, num_steps, \
-                RUN_PROGRAM, MAKE_PLOT, filename_tail)
+            for (fn, delta, mx_min) in inputs[0:1]:
+                run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max, num_steps, \
+                    RUN_PROGRAM, MAKE_PLOT, filename_tail, plot_dots = False)
     plt.show()
     
 if __name__ == '__main__':
