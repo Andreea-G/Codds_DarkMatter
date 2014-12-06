@@ -11,7 +11,7 @@ from __future__ import division
 
 INPUT_DIR = "Data/"
 OUTPUT_MAIN_DIR = "Output/"
-PRECISSION = 1.e-3
+PRECISSION = 1.e-4
 
 def import_file(full_path_to_module):
     import os, sys
@@ -194,7 +194,7 @@ class Experiment:
             integrated_delta * eta0Maxwellian(vmin, vobs, v0bar, vesc)
         self.count_response_calls += 1
         return r_list.sum()
-#       print(ER, " ", r)
+#        print(ER, " ", r)
 #        return r
         
     def ResponseSHM_Other(self, ER, Eee1, Eee2, mx, fp, fn, delta):
@@ -213,8 +213,10 @@ class Experiment:
             if j < vmax else 0., self.mT, vdelta)
         ER_minus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1) \
             if j < vmax else 1.e6, self.mT, vdelta)
-        ER_plus = min(np.max(ER_plus_list), self.ERmaximum)
-        ER_minus = np.min(ER_minus_list)
+        #TODO! This is only valid for quenching factor 1!!! Extend to arbitrary q!
+        ER_plus = min(min(np.max(ER_plus_list), self.ERmaximum),Eee2)
+        ER_minus = max(np.min(ER_minus_list),Eee1)
+        print("ER+- = ", ER_minus, " ", ER_plus)
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus, \
                 args=(Eee1, Eee2, mx, fp, fn, delta)) #, vec_func=False
@@ -242,7 +244,7 @@ class Experiment:
                 lambda Eee: Eee1, lambda Eee: Eee2, \
                 args=(mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
             '''
-            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
+#            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
             return integr[0]
         else:
             return 0.

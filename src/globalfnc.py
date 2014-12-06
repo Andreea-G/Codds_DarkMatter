@@ -11,6 +11,10 @@ from math import erf
 import math
 pi = np.pi
 
+T = True
+F = False
+
+
 fermiGeV = 1./0.1973269602 #Natural[GeV femto Meter]
 kilogram = 1e-9/1.782661758e-36
 SpeedOfLight = 299792.458 #km/s

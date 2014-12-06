@@ -45,7 +45,7 @@ def Plot_Upper_Limit(max_gap, plot_close = True, plot_show = True, plot_dots = T
 
 
 def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max, num_steps, \
-    RUN_PROGRAM, MAKE_PLOT):
+    RUN_PROGRAM, MAKE_PLOT, filename_tail = ""):
     exper = Experiment(exper_name, scattering_type, mPhi)
     print('name = ', exper.name)
     output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
@@ -58,10 +58,11 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
         output_file_no_extension += "_vobs" \
             + str(math.trunc(round(vobs)))
     output_file_no_extension = output_file_no_extension + FileNameTail(fp, fn)
+    output_file_no_extension += filename_tail
     print(output_file_no_extension)
 
     if RUN_PROGRAM:  
-        output_file = output_file_no_extension + ".dat" 
+        output_file = output_file_no_extension + "_temp.dat" 
         f_handle = open(output_file, 'w')   # clear the file first
         f_handle.close()
         
@@ -78,7 +79,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
         max_gap = np.loadtxt(output_file)
         print("max_gap = ", max_gap)    
         Plot_Upper_Limit(max_gap, plot_close = False, \
-            plot_show = False, plot_dots = False)
+            plot_show = False, plot_dots = True)
         
     
     
@@ -92,9 +93,9 @@ def main():
     fn = 0.
     delta = 0.
 
-    mx_min = 6
+    mx_min = 3.18
     mx_max = 100.
-    num_steps = 1
+    num_steps = 61
 
     '''
     global v0bar, vobs, vesc
@@ -102,15 +103,17 @@ def main():
     vobs = v0bar + 12
     vesc = 544 - 3 * 39
     '''
-
-    RUN_PROGRAM = True
-    MAKE_PLOT = False
+    
+    RUN_PROGRAM = F
+    MAKE_PLOT = T
 
     exper_list = implemented_exper[0:1]
+    filename_tail_list = [""]
     plt.close()
     for exper_name in exper_list:
-        run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max, num_steps, \
-            RUN_PROGRAM, MAKE_PLOT)
+        for filename_tail in filename_tail_list:
+            run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max, num_steps, \
+                RUN_PROGRAM, MAKE_PLOT, filename_tail)
     plt.show()
     
 if __name__ == '__main__':
