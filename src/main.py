@@ -61,7 +61,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
     print(output_file_no_extension)
 
     if RUN_PROGRAM:  
-        output_file += "_temp.dat" 
+        output_file = output_file_no_extension + ".dat" 
         f_handle = open(output_file, 'w')   # clear the file first
         f_handle.close()
         
@@ -92,16 +92,18 @@ def main():
     fn = 0.
     delta = 0.
 
-    mx_min = 10
+    mx_min = 6
     mx_max = 100.
     num_steps = 1
 
+    '''
     global v0bar, vobs, vesc
     v0bar = 230 - 3 * 24.4
     vobs = v0bar + 12
     vesc = 544 - 3 * 39
+    '''
 
-    RUN_PROGRAM = False
+    RUN_PROGRAM = True
     MAKE_PLOT = False
 
     exper_list = implemented_exper[0:1]
