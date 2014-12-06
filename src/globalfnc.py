@@ -74,7 +74,6 @@ def GPoisson(x, nu, sigma):
     return result
 
 def HelmFF(ER, A, mT):
-    #print 'HelmFF'
     q = np.sqrt(2e-6 * mT * ER)
     s = 0.9
     ha = 0.52
@@ -90,7 +89,6 @@ def HelmFF(ER, A, mT):
     return f**2 * np.exp(-y**2)
 
 def GaussianFFSD(ER, A, mT):
-    print('GaussianFFSD')
     q = np.sqrt(2e-6 * mT * ER)
     R = 0.92 * A**(1./3) + 2.68 - 0.78 * np.sqrt((A**(1./3) - 3.8)**2 + 0.2)
     x = np.abs(q * R * fermiGeV)

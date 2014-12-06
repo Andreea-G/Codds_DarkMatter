@@ -147,9 +147,10 @@ class Experiment:
         return 1.e-12 * ER**2 * 3./(8. * mu_p**6) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/ 2 / self.mT)**2) * \
             self._cross_sec_factors_SD66 * \
-            (self.FF66normlalized(ER, 0, 0) + \
-            2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
-            (fn/fp)**2 * self.FF66normlalized(ER, 1, 1))
+            (4./3. * (4. * pi)/(2 * self.J + 1.)) * \
+            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER)
+#            (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
+#            (fn/fp)**2 * self.FF66normlalized(ER, 1, 1))
         '''
         return self.mass_fraction * 3./(8.*mu_p**6) * self.mT**2 * 1e-12 * ER**2 * \
             (SpeedOfLight/v0bar)**4 * \
@@ -236,15 +237,22 @@ class Experiment:
             if j < vmax else 1.e6, self.mT, vdelta)
         ER_plus = min(np.max(ER_plus_list), self.ERmaximum)
         ER_minus = np.min(ER_minus_list)
+#        print("ER+- = ", ER_minus, " ", ER_plus)
+        midpoints = []
+        if ER_minus < Eee1 < ER_plus:
+            midpoints += [Eee1]
+        if ER_minus < Eee2 < ER_plus:
+            midpoints += [Eee2]
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Other, ER_minus, ER_plus, \
-                args=(Eee1, Eee2, mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
+                args=(Eee1, Eee2, mx, fp, fn, delta), points = midpoints, epsrel = PRECISSION, epsabs = 0)
             '''
             integr = integrate.dblquad(self.DifferentialResponseSHM, ER_minus, ER_plus, \
                 lambda Eee: Eee1, lambda Eee: Eee2, \
                 args=(mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
             '''
-#            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
+#            print("midpoints = ", midpoints)
+            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
             return integr[0]
         else:
             return 0.
