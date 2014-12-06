@@ -21,6 +21,7 @@ FFSD = 'GaussianFFSD'
 FFSI = 'HelmFF'
 FF = {'SI' : FFSI,
       'SD66' : FFSD, 
+      'SD44' : FFSD,
 }
 target_nuclide_AZC_list = np.array([[70., 32., 0.19608], [72., 32., 0.27040], [73., 32., 0.07790], \
     [74., 32., 0.37378], [76., 32., 0.08184]])

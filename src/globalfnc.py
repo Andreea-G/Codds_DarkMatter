@@ -103,6 +103,7 @@ FFSD_options = {'GaussianFFSD' : GaussianFFSD,
 }
 FF_options = {'SI' : FFSI_options,
               'SD66' : FFSD_options,
+              'SD44' : FFSD_options,              
 }
 
 def VMin(ER, mT, mx, delta):

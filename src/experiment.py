@@ -78,7 +78,7 @@ class Experiment:
         self._FFSigmaPPJ_function_list = np.array(map(lambda a, z: \
             FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), FF_default), \
             self.A, self.Z))
-        self._FFSigmaPj_function_list = np.array(map(lambda a, z: \
+        self._FFSigmaPJ_function_list = np.array(map(lambda a, z: \
             FFSigmaPJ.get((np.trunc(a), np.trunc(z)), FF_default), \
             self.A, self.Z))
 
@@ -216,11 +216,11 @@ class Experiment:
         #TODO! This is only valid for quenching factor 1!!! Extend to arbitrary q!
         ER_plus = min(min(np.max(ER_plus_list), self.ERmaximum),Eee2)
         ER_minus = max(np.min(ER_minus_list),Eee1)
-        print("ER+- = ", ER_minus, " ", ER_plus)
+#        print("ER+- = ", ER_minus, " ", ER_plus)
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus, \
                 args=(Eee1, Eee2, mx, fp, fn, delta)) #, vec_func=False
-            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
+#            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
             return integr[0]
         else:
             return 0.
