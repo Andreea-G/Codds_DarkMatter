@@ -11,7 +11,7 @@ from __future__ import division
 
 INPUT_DIR = "Data/"
 OUTPUT_MAIN_DIR = "Output/"
-PRECISSION = 1e-2
+PRECISSION = 1.e-3
 
 def import_file(full_path_to_module):
     import os, sys
@@ -144,7 +144,7 @@ class Experiment:
     def CrossSectionFactors_SD66(self, ER, mx, fp, fn, delta):
         #ffelemQ = FFElementQ(self.Z)
         mu_p = ProtonMass * mx / (ProtonMass + mx)
-        return 1.e-12 * ER**2 * 3./8. * mu_p**6 * \
+        return 1.e-12 * ER**2 * 3./(8. * mu_p**6) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/ 2 / self.mT)**2) * \
             self._cross_sec_factors_SD66 * \
             (self.FF66normlalized(ER, 0, 0) + \
