@@ -102,7 +102,8 @@ class Experiment:
         self.ERmaximum = module.ERmaximum
         self.ERecoilList = module.ERecoilList
         self.ElistMaxGap = np.append( np.insert( \
-            np.array(filter(lambda x: self.Ethreshold < x < self.Emaximum, self.ERecoilList)), \
+            np.array(list(filter(lambda x: self.Ethreshold < x < self.Emaximum, \
+            self.ERecoilList))), \
             0, self.Ethreshold), self.Emaximum)
         self.Exposure = module.Exposure
         
@@ -210,10 +211,13 @@ class Experiment:
         muT = self.mT * mx / (self.mT + mx)
         vdelta = SpeedOfLight / 500. * np.sqrt(delta / 2. / muT) if delta > 0 \
             else np.array([0] * self.numT)
-        ER_plus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, 1) \
-            if j < vmax else 0., self.mT, vdelta)
-        ER_minus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1) \
-            if j < vmax else 1.e6, self.mT, vdelta)
+        ER_plus_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, 1) \
+            if j < vmax else 0., self.mT, vdelta))
+        ER_minus_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1) \
+            if j < vmax else 1.e6, self.mT, vdelta))
+#        print("ER_plus_list = ", ER_plus_list)
+#        print(min(np.max(ER_plus_list), self.ERmaximum))
+#        print(Eee2)
         #TODO! This is only valid for quenching factor 1!!! Extend to arbitrary q!
         ER_plus = min(min(np.max(ER_plus_list), self.ERmaximum),Eee2)
         ER_minus = max(np.min(ER_minus_list),Eee1)
@@ -231,10 +235,10 @@ class Experiment:
         muT = self.mT * mx / (self.mT + mx)
         vdelta = SpeedOfLight / 500. * np.sqrt(delta / 2. / muT) if delta > 0 \
             else np.array([0] * self.numT)
-        ER_plus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, 1) \
-            if j < vmax else 0., self.mT, vdelta)
-        ER_minus_list = map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1) \
-            if j < vmax else 1.e6, self.mT, vdelta)
+        ER_plus_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, 1) \
+            if j < vmax else 0., self.mT, vdelta))
+        ER_minus_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1) \
+            if j < vmax else 1.e6, self.mT, vdelta))
         ER_plus = min(np.max(ER_plus_list), self.ERmaximum)
         ER_minus = np.min(ER_minus_list)
 #        print("ER+- = ", ER_minus, " ", ER_plus)
@@ -260,9 +264,9 @@ class Experiment:
             
     def MaximumGapUpperBoundSHM(self, mx, fp, fn, delta, output_file):
         print("mx = ", mx)
-        xtable = np.array(map(lambda i, j: \
+        xtable = np.array(list(map(lambda i, j: \
             self.IntegratedResponseSHM(i, j, mx, fp, fn, delta), \
-            self.ElistMaxGap[:-1], self.ElistMaxGap[1:]))
+            self.ElistMaxGap[:-1], self.ElistMaxGap[1:])))
         mu_scaled = xtable.sum()
         x_scaled = np.max(xtable)
         if x_scaled == 0:
@@ -278,15 +282,15 @@ class Experiment:
         print("xtable = ", xtable)
         print("result = ", result[0])
         to_print = np.log10(np.array([[mx, result[0]]]))
-        with open(output_file,'a') as f_handle:
+        with open(output_file,'ab') as f_handle:
             np.savetxt(f_handle, to_print)
         return result
         
     def MaximumGapLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
-        upper_limit = np.array(map(lambda mx: \
-            self.MaximumGapUpperBoundSHM(mx, fp, fn, delta, output_file), mx_list))
-        print(mx_list)
-        print(upper_limit)
+        upper_limit = np.array(list(map(lambda mx: \
+            self.MaximumGapUpperBoundSHM(mx, fp, fn, delta, output_file), mx_list)))
+        print("mx_list = ", mx_list)
+        print("upper_limit = ", upper_limit)
         return np.log10(np.transpose([mx_list, upper_limit.flatten()]))
         

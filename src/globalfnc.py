@@ -81,11 +81,11 @@ def HelmFF(ER, A, mT):
     cpa = 7./3. * (pi * ha)**2
     rsq = hc**2 + cpa
     r1tmp = rsq - 5. * s**2
-    r1 = map(lambda r,s: np.sqrt(r) if r > 0 else np.sqrt(s), r1tmp, rsq)
+    r1 = list(map(lambda r,s: np.sqrt(r) if r > 0 else np.sqrt(s), r1tmp, rsq))
     x = np.abs(q * r1 * fermiGeV)
     y = q * s * fermiGeV
-    f = np.array(map(lambda i: 3.0 * (np.sin(i) - i * np.cos(i))/i**3 if i > 5.e-8 \
-        else 1. - i**2 * (-0.1 + i**2 * (1./200. + i**2 * (-1./15120. + i**2/1330560.))), x))
+    f = np.array(list(map(lambda i: 3.0 * (np.sin(i) - i * np.cos(i))/i**3 if i > 5.e-8 \
+        else 1. - i**2 * (-0.1 + i**2 * (1./200. + i**2 * (-1./15120. + i**2/1330560.))), x)))
     return f**2 * np.exp(-y**2)
 
 def GaussianFFSD(ER, A, mT):
@@ -121,11 +121,11 @@ def eta0Maxwellian(vmin, vobs, v0bar, vesc):
     sqrt_pi = np.sqrt(pi)
     exp_z_sq = np.exp(-z**2)
     exp_z_sq_z = np.exp(-z**2 * z)
-    eta = map(lambda i: -2. * exp_z_sq / sqrt_pi - erf(i-y) / (2.*y) + erf(i+y) / (2.*y) \
+    eta = list(map(lambda i: -2. * exp_z_sq / sqrt_pi - erf(i-y) / (2.*y) + erf(i+y) / (2.*y) \
         if i + y <= z \
         else exp_z_sq * (i - y - z) / (sqrt_pi * y) - erf(i-y) / (2.*y) + erfz / (2.*y) \
         if i - y <= z < i + y \
-        else 0, x)
+        else 0, x))
     return eta / (-2. * exp_z_sq_z / sqrt_pi + erfz) / v0bar
         
 def MaximumGapC0scaled(x, mu_over_x):

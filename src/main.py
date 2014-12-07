@@ -21,7 +21,7 @@ def main():
 
     mx_min = 3.18
     mx_max = 100.
-    num_steps = 30
+    num_steps = 60
 
     
 #    inputs = [(0, 0, 3.18), (-1/16.4, 0, 3.18), (0, -30., 2.), (0, -50., 1.7)]
@@ -29,15 +29,15 @@ def main():
 #    inputs = [(0, 0, 3.18), (0, -30., 2.), (0, -50., 1.7), \
 #        (0, 50, 29)]
 #    inputs = [(0., 0., 3.)]
-    inputs = [(-1/16.4, 0., 3.5, 100)]
-#    inputs = [(0., 0., 3.,100), \
-#        (0,-30,1,100), (0,-50,1,50)]#, (0,50,95,200)]
+#    inputs = [(-1/16.4, 0., 3.5, 100)]
+    inputs = [(0., 0., 3.18, 100), \
+        (0,-30,1,100), (0,-50,1,50)]#, (0,50,95,200)]
 
-    RUN_PROGRAM = F
-    MAKE_PLOT = T
+    RUN_PROGRAM = T
+    MAKE_PLOT = F
 
-    exper_list = implemented_exper[8:9]
-    filename_tail_list = [""]
+    exper_list = implemented_exper[0:1]
+    filename_tail_list = ["_numpytest"]
     plt.close()
     for exper_name in exper_list:
         for filename_tail in filename_tail_list:
