@@ -142,7 +142,6 @@ class Experiment:
         return l * np.exp(-2. * y)
     
     def CrossSectionFactors_SD66(self, ER, mx, fp, fn, delta):
-        #ffelemQ = FFElementQ(self.Z)
         mu_p = ProtonMass * mx / (ProtonMass + mx)
         return 1.e-12 * ER**2 * 3./(8. * mu_p**6) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/ 2 / self.mT)**2) * \
@@ -166,9 +165,10 @@ class Experiment:
         mu_p = ProtonMass * mx / (ProtonMass + mx)
         return self.mass_fraction / (2 * mu_p**2) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
-            (self.FF44normlalized(ER, 0, 0) + \
-            2 * fn/fp * self.FF44normlalized(ER, 0, 1) + \
-            (fn/fp)**2 * self.FF44normlalized(ER, 1, 1))
+            (4./3. * (4. * pi)/(2 * self.J + 1.)) * \
+            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER)
+#            (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
+#            (fn/fp)**2 * self.FF66normlalized(ER, 1, 1))
         
     def Resolution(self, Eee, qER):
         return self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))

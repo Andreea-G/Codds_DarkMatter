@@ -50,6 +50,12 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
     output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
     output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper.name \
         + "_mxsigma"
+
+#    global v0bar, vobs, vesc
+#    v0bar = 230 - 3 * 24.4
+#    vobs = v0bar + 12
+#    vesc = 544 - 3 * 39
+
     if vesc != default_vesc:
         output_file_no_extension += "_vesc" \
             + str(math.trunc(round(vesc)))

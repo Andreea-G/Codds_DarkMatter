@@ -23,18 +23,15 @@ def main():
     mx_max = 100.
     num_steps = 30
 
-    '''
-    global v0bar, vobs, vesc
-    v0bar = 230 - 3 * 24.4
-    vobs = v0bar + 12
-    vesc = 544 - 3 * 39
-    '''
     
 #    inputs = [(0, 0, 3.18), (-1/16.4, 0, 3.18), (0, -30., 2.), (0, -50., 1.7)]
 #    inputs = [(0, 50, 29)]
 #    inputs = [(0, 0, 3.18), (0, -30., 2.), (0, -50., 1.7), \
 #        (0, 50, 29)]
-    inputs = [(0., 0., 3.)]
+#    inputs = [(0., 0., 3.)]
+    inputs = [(-1/16.4, 0., 3.5, 100)]
+#    inputs = [(0., 0., 3.,100), \
+#        (0,-30,1,100), (0,-50,1,50)]#, (0,50,95,200)]
 
     RUN_PROGRAM = F
     MAKE_PLOT = T
@@ -44,7 +41,7 @@ def main():
     plt.close()
     for exper_name in exper_list:
         for filename_tail in filename_tail_list:
-            for (fn, delta, mx_min) in inputs[0:1]:
+            for (fn, delta, mx_min, mx_max) in inputs[0:1]:
                 run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max, num_steps, \
                     RUN_PROGRAM, MAKE_PLOT, filename_tail, plot_dots = False)
     plt.show()
