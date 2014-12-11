@@ -13,7 +13,7 @@ def main():
     implemented_exper = ["superCDMS", \
         "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many", \
         "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi"]
-    scattering_type = 'SD66'
+    scattering_type = 'SD44'
     mPhi = 1000.
     fp = 1.
     fn = 0.
@@ -21,7 +21,7 @@ def main():
 
     mx_min = 3.18
     mx_max = 100.
-    num_steps = 30
+    num_steps = 60
 
     
 #    inputs = [(0, 0, 3.18), (-1/16.4, 0, 3.18), (0, -30., 2.), (0, -50., 1.7)]
@@ -29,14 +29,16 @@ def main():
 #    inputs = [(0, 0, 3.18), (0, -30., 2.), (0, -50., 1.7), \
 #        (0, 50, 29)]
 #    inputs = [(0., 0., 3.)]
-    inputs = [(-1/16.4, 0., 3.5, 100)]
+#    inputs = [(-1/16.4, 0., 3.5, 100)]
 #    inputs = [(0., 0., 3.,100), \
 #        (0,-30,1,100), (0,-50,1,50)]#, (0,50,95,200)]
+#    inputs = [(0, 50, 17.66, 100)]
+    inputs = [(0, 0, 6, 100)]
 
     RUN_PROGRAM = F
     MAKE_PLOT = T
 
-    exper_list = implemented_exper[8:9]
+    exper_list = [implemented_exper[i] for i in [0]]
     filename_tail_list = [""]
     plt.close()
     for exper_name in exper_list:
