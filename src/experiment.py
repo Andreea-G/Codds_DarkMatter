@@ -11,7 +11,7 @@ from __future__ import division
 
 INPUT_DIR = "Data/"
 OUTPUT_MAIN_DIR = "Output/"
-PRECISSION = 1.e-4
+PRECISSION = 1.e-2
 
 def import_file(full_path_to_module):
     import os, sys
