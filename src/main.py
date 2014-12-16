@@ -12,7 +12,7 @@ from runprogram import *
 def main():
     implemented_exper = ["superCDMS", \
         "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many", \
-        "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi"]
+        "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
     scattering_type = 'SD44'
     mPhi = 1000.
     fp = 1.
@@ -39,7 +39,7 @@ def main():
     MAKE_PLOT = F
 
     exper_list = [implemented_exper[i] for i in [0]]
-    filename_tail_list = [""]
+    filename_tail_list = ["_speedtest"]
     plt.close()
     for exper_name in exper_list:
         for filename_tail in filename_tail_list:
