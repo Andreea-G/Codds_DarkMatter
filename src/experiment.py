@@ -11,7 +11,7 @@ from __future__ import division
 
 INPUT_DIR = "Data/"
 OUTPUT_MAIN_DIR = "Output/"
-PRECISSION = 1.e-4
+PRECISSION = 1.e-3
 
 def import_file(full_path_to_module):
     import os, sys
@@ -147,10 +147,10 @@ class Experiment:
         return 1.e-12 * ER**2 * 3./(8. * mu_p**6) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/ 2 / self.mT)**2) * \
             self._cross_sec_factors_SD66 * \
-            (4./3. * (4. * pi)/(2 * self.J + 1.)) * \
-            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER)
-#            (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
-#            (fn/fp)**2 * self.FF66normlalized(ER, 1, 1))
+            (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
+            (fn/fp)**2 * self.FF66normlalized(ER, 1, 1))
+#            (4./3. * (4. * pi)/(2 * self.J + 1.)) * \
+#            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER)
         '''
         return self.mass_fraction * 3./(8.*mu_p**6) * self.mT**2 * 1e-12 * ER**2 * \
             (SpeedOfLight/v0bar)**4 * \
@@ -166,10 +166,10 @@ class Experiment:
         mu_p = ProtonMass * mx / (ProtonMass + mx)
         return self.mass_fraction / (2 * mu_p**2) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
-            (4./3. * (4. * pi)/(2 * self.J + 1.)) * \
-            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER)
-#            (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
-#            (fn/fp)**2 * self.FF66normlalized(ER, 1, 1))
+            (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
+            (fn/fp)**2 * self.FF66normlalized(ER, 1, 1))
+#            (4./3. * (4. * pi)/(2 * self.J + 1.)) * \
+#            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER)
         
     def Resolution(self, Eee, qER):
         return self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))

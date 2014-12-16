@@ -7,6 +7,7 @@ del*
 *profile*
 src/Output/*
 output*
+src/main1*
 src/main2*
 src/main3*
 src/main4*
