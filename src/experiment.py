@@ -75,12 +75,12 @@ class Experiment:
 #            "\n", self.J, "\n", self.SpScaled, "\n", self.SnScaled)        
 
         FF_default = np.array([[lambda y: 0]*2]*2)
-        self._FFSigmaPPJ_function_list = np.array(map(lambda a, z: \
+        self._FFSigmaPPJ_function_list = np.array(list(map(lambda a, z: \
             FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), FF_default), \
-            self.A, self.Z))
-        self._FFSigmaPJ_function_list = np.array(map(lambda a, z: \
+            self.A, self.Z)))
+        self._FFSigmaPJ_function_list = np.array(list(map(lambda a, z: \
             FFSigmaPJ.get((np.trunc(a), np.trunc(z)), FF_default), \
-            self.A, self.Z))
+            self.A, self.Z)))
 
         self.FF = FF_options[self.scattering_type][module.FF[scattering_type]]
 
