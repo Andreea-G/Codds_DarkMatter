@@ -21,10 +21,17 @@ SpeedOfLight = 299792.458 #km/s
 AtomicMassUnit = 0.931494028
 ProtonMass = 1.00727646677 * AtomicMassUnit
 mPhiRef = 1000.
-
+rho = 0.3
+conversion_factor = rho * SpeedOfLight**2 * 1e5 * 3600 * 24
+        
 v0bar = default_v0bar = 220.
 vobs = default_vobs = default_v0bar + 12.
 vesc = default_vesc = 533.
+
+MaximumGapLimit_exper = ["superCDMS", \
+        "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many", \
+        "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
+GaussianLimit_exper = ["KIMS2012"]
 
 def FileNameTail(fp, fn, mPhi):
     if mPhi == 1000.:

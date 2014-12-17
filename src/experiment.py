@@ -71,9 +71,6 @@ class Experiment:
             self.SpScaled = module.target_nuclide_JSpSn_list[:,1]
             self.SnScaled = module.target_nuclide_JSpSn_list[:,2]
 
-#        print(self.mT, "\n", self.A, "\n", self.Z, "\n", self.mass_fraction, \
-#            "\n", self.J, "\n", self.SpScaled, "\n", self.SnScaled)        
-
         FF_default = np.array([[lambda y: 0]*2]*2)
         self._FFSigmaPPJ_function_list = np.array(list(map(lambda a, z: \
             FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), FF_default), \
@@ -83,6 +80,7 @@ class Experiment:
             self.A, self.Z)))
 
         self.FF = FF_options[self.scattering_type][module.FF[scattering_type]]
+        self.ffelemQ = FFElementQ(self.Z)
 
         CrossSectionFactors_options = {'SI' : self.CrossSectionFactors_SI,
            'SD66' : self.CrossSectionFactors_SD66,
@@ -100,11 +98,6 @@ class Experiment:
         self.Ethreshold = module.Ethreshold
         self.Emaximum = module.Emaximum
         self.ERmaximum = module.ERmaximum
-        self.ERecoilList = module.ERecoilList
-        self.ElistMaxGap = np.append( np.insert( \
-            np.array(list(filter(lambda x: self.Ethreshold < x < self.Emaximum, \
-            self.ERecoilList))), \
-            0, self.Ethreshold), self.Emaximum)
         self.Exposure = module.Exposure
         
         self.count_diffresponse_calls = 0
@@ -116,9 +109,9 @@ class Experiment:
             self.mass_fraction * self.mT**2 
 
     def FormFactor(self, ER):
-        result = self.FF(ER, self.A, self.mT)
+        result = (4./3. * (4. * pi)/(2 * self.J + 1.)) * self.FF(ER, self.A, self.mT)
         return result
-    
+
     def CrossSectionFactors_SI(self, ER, mx, fp, fn, delta):
         mu_p = ProtonMass * mx / (ProtonMass + mx)
         return self.mass_fraction * 1./(2.*mu_p**2) * \
@@ -144,23 +137,29 @@ class Experiment:
     
     def CrossSectionFactors_SD66(self, ER, mx, fp, fn, delta):
         mu_p = ProtonMass * mx / (ProtonMass + mx)
+        '''
         return 1.e-12 * ER**2 * 3./(8. * mu_p**6) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/ 2 / self.mT)**2) * \
             self._cross_sec_factors_SD66 * \
             (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
             (fn/fp)**2 * self.FF66normlalized(ER, 1, 1))
-#            (4./3. * (4. * pi)/(2 * self.J + 1.)) * \
-#            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER)
+            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER)
         '''
-        return self.mass_fraction * 3./(8.*mu_p**6) * self.mT**2 * 1e-12 * ER**2 * \
-            (SpeedOfLight/v0bar)**4 * \
-            mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
-            (ffelemQ * (FF66normlalized(ER, self.A, self.Z, self.mT, 0, 0) + \
-            FF66normlalized(ER, self.A, self.Z, self.mT, 0, 1) * 2 * fn/fp + \
-            FF66normlalized(ER, self.A, self.Z, self.mT, 1, 1) * (fn/fp)**2) + \
-            (1 - ffelemQ) * (4./3. * (4. * pi)/(2 * self.J + 1.)) * \
-            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
-        '''
+        return 1.e-12 * ER**2 * 3./(8. * mu_p**6) * \
+            mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/ 2 / self.mT)**2) * \
+            self._cross_sec_factors_SD66 * \
+            (self.ffelemQ * (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
+            (fn/fp)**2 * self.FF66normlalized(ER, 1, 1)) + \
+            (1-self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
+
+#        return self.mass_fraction * 3./(8.*mu_p**6) * self.mT**2 * 1e-12 * ER**2 * \
+#            (SpeedOfLight/v0bar)**4 * \
+#            mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
+#            (ffelemQ * (FF66normlalized(ER, self.A, self.Z, self.mT, 0, 0) + \
+#            FF66normlalized(ER, self.A, self.Z, self.mT, 0, 1) * 2 * fn/fp + \
+#            FF66normlalized(ER, self.A, self.Z, self.mT, 1, 1) * (fn/fp)**2) + \
+#            (1 - ffelemQ) * (4./3. * (4. * pi)/(2 * self.J + 1.)) * \
+#            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
         
     def CrossSectionFactors_SD44(self, ER, mx, fp, fn, delta):
         mu_p = ProtonMass * mx / (ProtonMass + mx)
@@ -242,6 +241,7 @@ class Experiment:
         ER_plus = min(np.max(ER_plus_list), self.ERmaximum)
         ER_minus = np.min(ER_minus_list)
 #        print("ER+- = ", ER_minus, " ", ER_plus)
+#        print("Eee = ", Eee1, " ", Eee2)
         midpoints = []
         if ER_minus < Eee1 < ER_plus:
             midpoints += [Eee1]
@@ -260,8 +260,53 @@ class Experiment:
             return integr[0]
         else:
             return 0.
-    
-            
+
+class GaussianExperiment(Experiment):
+    def __init__(self, expername, scattering_type, mPhi = mPhiRef):
+        Experiment.__init__(self, expername, scattering_type, mPhi)
+        module = import_file(INPUT_DIR + expername + ".py")
+        self.BinEdges = module.BinEdges
+        self.BinData = module.BinData
+        self.BinError = module.BinError
+        self.BinSize = module.BinSize
+        self.chiSquared = module.chiSquared
+
+    def GaussianUpperBoundSHM(self, mx, fp, fn, delta, output_file):
+        predicted = conversion_factor / mx * \
+            np.array(list(map(lambda i, j: \
+            self.IntegratedResponseSHM(i, j, mx, fp, fn, delta), \
+            self.BinEdges[:-1], self.BinEdges[1:])))
+        sum_pred_squared = 1./self.BinSize**2 * sum((predicted/self.BinError)**2)
+        sum_pred_binddata = 2./self.BinSize * \
+            sum(predicted * self.BinData / self.BinError**2)
+        sum_bindata_squared = sum((self.BinData/self.BinError)**2) - self.chiSquared
+        result = (sum_pred_binddata + np.sqrt(sum_pred_binddata**2 - \
+            4 * sum_pred_squared * sum_bindata_squared)) / (2 * sum_pred_squared)
+        print("mx = ", mx)
+        print("result = ", result)
+        to_print = np.log10(np.array([[mx, result]]))
+        with open(output_file,'ab') as f_handle:
+            np.savetxt(f_handle, to_print)
+        return result
+
+    def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
+        mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
+        upper_limit = np.array(list(map(lambda mx: \
+            self.GaussianUpperBoundSHM(mx, fp, fn, delta, output_file), mx_list)))
+        print("mx_list = ", mx_list)
+        print("upper_limit = ", upper_limit)
+        return np.log10(np.transpose([mx_list, upper_limit.flatten()]))
+
+class MaxGapExperiment(Experiment):
+    def __init__(self, expername, scattering_type, mPhi = mPhiRef):
+        Experiment.__init__(self, expername, scattering_type, mPhi)
+        module = import_file(INPUT_DIR + expername + ".py")
+        self.ERecoilList = module.ERecoilList
+        self.ElistMaxGap = np.append( np.insert( \
+            np.array(list(filter(lambda x: self.Ethreshold < x < self.Emaximum, \
+            self.ERecoilList))), \
+            0, self.Ethreshold), self.Emaximum)
+
     def MaximumGapUpperBoundSHM(self, mx, fp, fn, delta, output_file):
         print("mx = ", mx)
         xtable = np.array(list(map(lambda i, j: \
@@ -286,7 +331,7 @@ class Experiment:
             np.savetxt(f_handle, to_print)
         return result
         
-    def MaximumGapLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
+    def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
         upper_limit = np.array(list(map(lambda mx: \
             self.MaximumGapUpperBoundSHM(mx, fp, fn, delta, output_file), mx_list)))

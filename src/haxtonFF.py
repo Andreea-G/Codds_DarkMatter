@@ -62,10 +62,10 @@ FFSigmaPJ = {(19, 9): np.array([[lambda y: 1.80556 + y * (-4.8508 + y * (4.87922
 
 
 
-#def FFElementQ(Z):
-#    #check = [math.trunc(z) in np.array([9, 11, 32, 53, 54]) for z in Z]
-#    #return np.array([1 if c else 0 for c in check])
-#    return np.array([1] * Z.size)
+def FFElementQ(Z):
+    check = [math.trunc(z) in np.array([9, 11, 32, 53, 54]) for z in Z]
+    return np.array([1 if c else 0 for c in check])
+    #return np.array([1] * Z.size)
 
 
 '''

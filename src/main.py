@@ -12,16 +12,16 @@ from runprogram import *
 def main():
     implemented_exper = ["superCDMS", \
         "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many", \
-        "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
+        "KIMS2012", "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
     scattering_type = 'SD66'
-    mPhi = 0.
+    mPhi = 1000.
     fp = 1.
     fn = 0.
     delta = 0.
 
     mx_min = 3.18
     mx_max = 100.
-    num_steps = 30
+    num_steps = 5
 
     
 #    inputs = [(0, 0, 3.18), (-1/16.4, 0, 3.18), (0, -30., 2.), (0, -50., 1.7)]
@@ -33,14 +33,15 @@ def main():
 #    inputs = [(0., 0., 3.,100), \
 #        (0,-30,1,100), (0,-50,1,50)]#, (0,50,95,200)]
 #    inputs = [(0, 50, 17.66, 100)]
-    inputs = [(0, 0, 5.5, 100), (0, -30, 4., 100), (0, 50, 17., 100)]
+#    inputs = [(0, 0, 5.5, 100), (0, -30, 4., 100), (0, 50, 17., 100)]
 #    inputs = [(0, 0, 6., 100), (0, -30, 2.8, 100), (0, 50, 12., 100)]
+    inputs = [(0, 0, 10, 100)]
 
     RUN_PROGRAM = F
     MAKE_PLOT = T
 
-    exper_list = implemented_exper[1:2]
-    filename_tail_list = [""]
+    exper_list = implemented_exper[6:7]
+    filename_tail_list = ["_inher"]
     plt.close()
     for exper_name in exper_list:
         for filename_tail in filename_tail_list:
