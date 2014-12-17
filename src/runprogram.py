@@ -51,12 +51,14 @@ def Plot_Upper_Limit(exper_name, upper_limit, plot_dots = True, plot_close = Tru
         plt.show()
 
 
-def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max, num_steps, \
-    RUN_PROGRAM, MAKE_PLOT, filename_tail = "", plot_dots = True):
+def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max, \
+    num_steps, RUN_PROGRAM, MAKE_PLOT, filename_tail = "", plot_dots = True, qKIMS = None):
+    if exper_name != "KIMS2012":
+        qKIMS = None
     if exper_name in MaximumGapLimit_exper:
         exper = MaxGapExperiment(exper_name, scattering_type, mPhi)
     else:
-        exper = GaussianExperiment(exper_name, scattering_type, mPhi)
+        exper = GaussianExperiment(exper_name, scattering_type, mPhi, qKIMS)
     print('name = ', exper.name)
     output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
     output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper.name \
@@ -74,6 +76,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
         output_file_no_extension += "_vobs" \
             + str(math.trunc(round(vobs)))
     output_file_no_extension = output_file_no_extension + FileNameTail(fp, fn, mPhi)
+    if qKIMS != None:
+        output_file_no_extension += "_q" + str(qKIMS)
     output_file_no_extension += filename_tail
     print(output_file_no_extension)
 
@@ -82,7 +86,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
         f_handle = open(output_file, 'w')   # clear the file first
         f_handle.close()
 
-        upper_limit = exper.UpperLimit(fp, fn, delta, mx_min, mx_max, num_steps, output_file)
+        upper_limit = exper.UpperLimit(fp, fn, delta, mx_min, mx_max, num_steps, \
+            output_file)
         print("upper_limit = ", upper_limit)
         print("diff response calls = " , exper.count_diffresponse_calls)
         print("response calls = " , exper.count_response_calls)

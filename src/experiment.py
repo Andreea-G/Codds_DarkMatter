@@ -254,7 +254,7 @@ class Experiment:
             return 0.
 
 class GaussianExperiment(Experiment):
-    def __init__(self, expername, scattering_type, mPhi = mPhiRef):
+    def __init__(self, expername, scattering_type, mPhi = mPhiRef, quenching_factor = None):
         Experiment.__init__(self, expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.BinEdges = module.BinEdges
@@ -262,6 +262,9 @@ class GaussianExperiment(Experiment):
         self.BinError = module.BinError
         self.BinSize = module.BinSize
         self.chiSquared = module.chiSquared
+        
+        if quenching_factor != None:
+            self.QuenchingFactor = lambda e: quenching_factor
 
     def GaussianUpperBoundSHM(self, mx, fp, fn, delta, output_file):
         predicted = conversion_factor / mx * \
