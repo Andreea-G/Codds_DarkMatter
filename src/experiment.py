@@ -155,13 +155,19 @@ class Experiment:
 
     def CrossSectionFactors_SD44(self, ER, mx, fp, fn, delta):
         mu_p = ProtonMass * mx / (ProtonMass + mx)
+        '''
         return self.mass_fraction / (2 * mu_p**2) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
             (self.FF44normlalized(ER, 0, 0) + 2 * fn/fp * self.FF44normlalized(ER, 0, 1) + \
             (fn/fp)**2 * self.FF44normlalized(ER, 1, 1))
-#            (4./3. * (4. * pi)/(2 * self.J + 1.)) * \
 #            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER)
-        
+        '''
+        return self.mass_fraction / (2 * mu_p**2) * \
+            mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
+            (self.ffelemQ * (self.FF44normlalized(ER, 0, 0) + 2 * fn/fp * self.FF44normlalized(ER, 0, 1) + \
+            (fn/fp)**2 * self.FF44normlalized(ER, 1, 1)) + \
+            (1-self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
+
     def Resolution(self, Eee, qER):
         return self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
         
