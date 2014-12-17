@@ -62,7 +62,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
     if vobs != default_vobs:
         output_file_no_extension += "_vobs" \
             + str(math.trunc(round(vobs)))
-    output_file_no_extension = output_file_no_extension + FileNameTail(fp, fn)
+    output_file_no_extension = output_file_no_extension + FileNameTail(fp, fn, mPhi)
     output_file_no_extension += filename_tail
     print(output_file_no_extension)
 

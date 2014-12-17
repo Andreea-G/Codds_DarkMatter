@@ -26,7 +26,11 @@ v0bar = default_v0bar = 220.
 vobs = default_vobs = default_v0bar + 12.
 vesc = default_vesc = 533.
 
-def FileNameTail(fp, fn):
+def FileNameTail(fp, fn, mPhi):
+    if mPhi == 1000.:
+        mPhi_string = ""
+    else:
+        mPhi_string = "_mPhi" + str(math.trunc(mPhi))
     fnfp = fn/fp
     fnfp_string = "_fnfp"
     if fnfp == 1.:
@@ -41,7 +45,7 @@ def FileNameTail(fp, fn):
             fnfp_string += "_neg" + str(math.trunc(round(abs(fnfp))))
         else:
             fnfp_string += str(math.trunc(round(abs(fnfp))))
-    return fnfp_string
+    return mPhi_string + fnfp_string
       
 def OutputDirectory(output_main_dir, scattering_type, mPhi, delta):
     out_dir = output_main_dir
