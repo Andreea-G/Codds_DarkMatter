@@ -143,7 +143,7 @@ class Experiment:
             self._cross_sec_factors_SD66 * \
             (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
             (fn/fp)**2 * self.FF66normlalized(ER, 1, 1))
-            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER)
+#            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER)
         '''
         return 1.e-12 * ER**2 * 3./(8. * mu_p**6) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/ 2 / self.mT)**2) * \
@@ -152,15 +152,7 @@ class Experiment:
             (fn/fp)**2 * self.FF66normlalized(ER, 1, 1)) + \
             (1-self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
 
-#        return self.mass_fraction * 3./(8.*mu_p**6) * self.mT**2 * 1e-12 * ER**2 * \
-#            (SpeedOfLight/v0bar)**4 * \
-#            mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
-#            (ffelemQ * (FF66normlalized(ER, self.A, self.Z, self.mT, 0, 0) + \
-#            FF66normlalized(ER, self.A, self.Z, self.mT, 0, 1) * 2 * fn/fp + \
-#            FF66normlalized(ER, self.A, self.Z, self.mT, 1, 1) * (fn/fp)**2) + \
-#            (1 - ffelemQ) * (4./3. * (4. * pi)/(2 * self.J + 1.)) * \
-#            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
-        
+
     def CrossSectionFactors_SD44(self, ER, mx, fp, fn, delta):
         mu_p = ProtonMass * mx / (ProtonMass + mx)
         return self.mass_fraction / (2 * mu_p**2) * \
@@ -218,8 +210,8 @@ class Experiment:
 #        print(min(np.max(ER_plus_list), self.ERmaximum))
 #        print(Eee2)
         #TODO! This is only valid for quenching factor 1!!! Extend to arbitrary q!
-        ER_plus = min(min(np.max(ER_plus_list), self.ERmaximum),Eee2)
-        ER_minus = max(np.min(ER_minus_list),Eee1)
+        ER_plus = min(min(np.max(ER_plus_list), self.ERmaximum), Eee2)
+        ER_minus = max(np.min(ER_minus_list), Eee1)
 #        print("ER+- = ", ER_minus, " ", ER_plus)
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus, \
@@ -295,7 +287,7 @@ class GaussianExperiment(Experiment):
             self.GaussianUpperBoundSHM(mx, fp, fn, delta, output_file), mx_list)))
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
-        return np.log10(np.transpose([mx_list, upper_limit.flatten()]))
+        return np.transpose([mx_list, upper_limit.flatten()])
 
 class MaxGapExperiment(Experiment):
     def __init__(self, expername, scattering_type, mPhi = mPhiRef):

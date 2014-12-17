@@ -21,7 +21,7 @@ def main():
 
     mx_min = 3.18
     mx_max = 100.
-    num_steps = 5
+    num_steps = 30
 
     
 #    inputs = [(0, 0, 3.18), (-1/16.4, 0, 3.18), (0, -30., 2.), (0, -50., 1.7)]
@@ -40,8 +40,8 @@ def main():
     RUN_PROGRAM = F
     MAKE_PLOT = T
 
-    exper_list = implemented_exper[6:7]
-    filename_tail_list = ["_inher"]
+    exper_list = [implemented_exper[i] for i in [0,1,6]]
+    filename_tail_list = [""]
     plt.close()
     for exper_name in exper_list:
         for filename_tail in filename_tail_list:
