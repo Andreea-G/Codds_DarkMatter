@@ -11,6 +11,7 @@ pi = np.pi
 from scipy.interpolate import interp1d
 
 name = "superCDMS"
+modulated = False
 
 energy_resolution_type = "Dirac"
 EnergyResolution = lambda e: 1.

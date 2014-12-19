@@ -52,17 +52,26 @@ def Plot_Upper_Limit(exper_name, upper_limit, plot_dots = True, plot_close = Tru
 
 
 def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max, \
-    num_steps, RUN_PROGRAM, MAKE_PLOT, filename_tail = "", plot_dots = True, qKIMS = None):
-    if exper_name != "KIMS2012":
-        qKIMS = None
+    num_steps, RUN_PROGRAM, MAKE_PLOT, filename_tail = "", plot_dots = True, quenching = None):
+    print('name = ', exper_name)
     if exper_name in MaximumGapLimit_exper:
         exper = MaxGapExperiment(exper_name, scattering_type, mPhi)
+    elif exper_name in GaussianLimit_exper:
+        exper = GaussianExperiment(exper_name, scattering_type, mPhi, quenching)
+    elif exper_name in DAMARegion_exper:
+        exper = DAMAExperiment(exper_name, scattering_type, mPhi, quenching)
     else:
-        exper = GaussianExperiment(exper_name, scattering_type, mPhi, qKIMS)
-    print('name = ', exper.name)
+        print("Error! This experiment was not implemented!")
+        return
+
     output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
-    output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper.name \
-        + "_mxsigma"
+    if exper_name in DAMARegion_exper:
+        output_file_no_extension = "./" + output_dir + "pbesebTab_" + exper.name \
+            + "_mxsigma"
+    else:
+        output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper.name \
+            + "_mxsigma"
+
 
 #    global v0bar, vobs, vesc
 #    v0bar = 230 - 3 * 24.4
@@ -76,8 +85,9 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
         output_file_no_extension += "_vobs" \
             + str(math.trunc(round(vobs)))
     output_file_no_extension = output_file_no_extension + FileNameTail(fp, fn, mPhi)
-    if qKIMS != None:
-        output_file_no_extension += "_q" + str(qKIMS)
+
+    if quenching != None:
+        output_file_no_extension += "_q" + str(quenching)
     output_file_no_extension += filename_tail
     print(output_file_no_extension)
 

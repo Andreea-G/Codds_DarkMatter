@@ -12,9 +12,9 @@ from runprogram import *
 def main():
     implemented_exper = ["superCDMS", \
         "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many", \
-        "KIMS2012", "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
+        "KIMS2012", "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned", "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
     scattering_type = 'SD66'
-    mPhi = 0.
+    mPhi = 1000.
     fp = 1.
     fn = 0.
     delta = 0.
@@ -35,27 +35,41 @@ def main():
 #    inputs = [(0, 50, 17.66, 100)]
 #    inputs = [(0, 0, 5.5, 100), (0, -30, 4., 100), (0, 50, 17., 100)]
 #    inputs = [(0, 0, 6., 100), (0, -30, 2.8, 100), (0, 50, 12., 100)]
-    inputs = [(0, -30, 7., 100), (0, 50, 20., 100), (0, 100, 40., 100)]
-
-    RUN_PROGRAM = F
+#    inputs = [(0, -30, 7., 100), (0, 50, 20., 100), (0, 100, 40., 100)]
+#    inputs = [(0, 0, 5.5, 10), (0, -30, 2, 5)]
+    inputs = [(0,-30, 20., 60)]
+    RUN_PROGRAM = T
     MAKE_PLOT = F
 
     qKIMS_list = [0.05, 0.1]
-    exper_list = [implemented_exper[i] for i in [6]]
+    qDAMANa_list = [0.4, 0.3]
+    qDAMAI_list = [0.09, 0.06]
+    exper_list = [implemented_exper[i] for i in [8]]
     filename_tail_list = [""]
     plt.close()
     for exper_name in exper_list:
         for filename_tail in filename_tail_list:
-            for (fn, delta, mx_min, mx_max) in inputs[0:3]:
-                if exper_name != "KIMS2012":
+            for (fn, delta, mx_min, mx_max) in inputs[0:1]:
+                if exper_name == "KIMS2012":
+                    for quenching in qKIMS_list:
+                        run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
+                            mx_min, mx_max, num_steps, RUN_PROGRAM, MAKE_PLOT, \
+                            filename_tail, plot_dots = False, quenching = quenching)
+                elif exper_name == "DAMA2010NaSmRebinned":
+                    for quenching in qDAMANa_list[0:1]:
+                        run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
+                            mx_min, mx_max, num_steps, RUN_PROGRAM, MAKE_PLOT, \
+                            filename_tail, plot_dots = False, quenching = quenching)
+                elif exper_name == "DAMA2010ISmRebinned":
+                    for quenching in qDAMAI_list[0:1]:
+                        run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
+                            mx_min, mx_max, num_steps, RUN_PROGRAM, MAKE_PLOT, \
+                            filename_tail, plot_dots = False, quenching = quenching)
+                else:
                     run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                         mx_min, mx_max, num_steps, RUN_PROGRAM, MAKE_PLOT, \
                         filename_tail, plot_dots = False)
-                else:
-                    for qKIMS in qKIMS_list:
-                        run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
-                            mx_min, mx_max, num_steps, RUN_PROGRAM, MAKE_PLOT, \
-                            filename_tail, plot_dots = False, qKIMS = qKIMS)                    
+
     plt.show()
     
 if __name__ == '__main__':

@@ -13,6 +13,7 @@ pi = np.pi
 #from interp import interp1d
 
 name = "XENON10"
+modulated = False
 
 energy_resolution_type = "Poisson"
 EnergyResolution = lambda e: 0.5

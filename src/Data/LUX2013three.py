@@ -12,6 +12,7 @@ pi = np.pi
 from interp import interp1d
 
 name = "LUX2013three"
+modulated = False
 
 energy_resolution_type = "Poisson"
 EnergyResolution = lambda e: 0.37

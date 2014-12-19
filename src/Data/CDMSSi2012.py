@@ -12,6 +12,7 @@ pi = np.pi
 from interp import interp1d
 
 name = "LUX2013zero"
+modulated = False
 
 energy_resolution_type = "Gaussian"
 EnergyResolution = lambda e: np.sqrt(0.085849 + 0.003136 * e)

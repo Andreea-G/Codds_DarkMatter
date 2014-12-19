@@ -32,6 +32,7 @@ MaximumGapLimit_exper = ["superCDMS", \
         "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many", \
         "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
 GaussianLimit_exper = ["KIMS2012"]
+DAMARegion_exper = ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]
 
 def FileNameTail(fp, fn, mPhi):
     if mPhi == 1000.:
@@ -138,7 +139,26 @@ def eta0Maxwellian(vmin, vobs, v0bar, vesc):
         if i - y <= z < i + y \
         else 0, x))
     return eta / (-2. * exp_z_sq_z / sqrt_pi + erfz) / v0bar
-        
+
+def eta1Maxwellian(vmin, vobs, v0bar, vesc):
+    x = vmin/v0bar
+    y = vobs/v0bar
+    z = vesc/v0bar
+    delta_v = 15.   # 30 * cos(60 * pi / 180)
+    erfz = erf(z)
+    sqrt_pi = np.sqrt(pi)
+    exp_z_sq = np.exp(-z**2)
+    exp_z_sq_z = np.exp(-z**2 * z)
+    erf_z = erf(z)
+    eta = list(map(lambda i: (np.exp(-(i+y)**2) + np.exp(-(i-y)**2)) / (sqrt_pi * y) + \
+        (erf(i-y) - erf(i+y)) / (2 * y**2) \
+        if i + y <= z \
+        else exp_z_sq * (-i + z) / (sqrt_pi * y**2) + np.exp(-(i-y)**2) / (sqrt_pi * y) + \
+        (erf(i-y) - erf_z) / (2 * y**2) \
+        if i - y <= z < i + y \
+        else 0, x))
+    return eta / (-2. * exp_z_sq_z / sqrt_pi + erfz) * delta_v / v0bar**2
+
 def MaximumGapC0scaled(x, mu_over_x):
     if mu_over_x < 1.:
         return 1.

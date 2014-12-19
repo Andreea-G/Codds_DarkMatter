@@ -71,6 +71,11 @@ class Experiment:
             self.SpScaled = module.target_nuclide_JSpSn_list[:,1]
             self.SnScaled = module.target_nuclide_JSpSn_list[:,2]
 
+        if module.modulated == False:
+            self.etaMaxwellian = eta0Maxwellian
+        else:
+            self.etaMaxwellian = eta1Maxwellian
+
         FF_default = np.array([[lambda y: 0]*2]*2)
         self._FFSigmaPPJ_function_list = np.array(list(map(lambda a, z: \
             FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), FF_default), \
@@ -119,8 +124,6 @@ class Experiment:
             ((self.Z + (self.A - self.Z) * fn/fp)**2) * self.FormFactor(ER) 
 
     def FF66normlalized(self, ER, N1, N2):
-#        l = np.array([self._FFSigmaPPJ_function_list[i, N1, N2](y[i]) \
-#            for i in range(self.numT)])
         y = ER * self._y_over_ER
         l = np.empty(self.numT)
         for i in range(self.numT):
@@ -131,13 +134,13 @@ class Experiment:
         y = ER * self._y_over_ER
         l = np.empty(self.numT)
         for i in range(self.numT):
-            l[i] = 1./3 * (self._FFSigmaPPJ_function_list[i, N1, N2](y[i]) \
-            + self._FFSigmaPJ_function_list[i, N1, N2](y[i]))
+            l[i] = 1./3 * (self._FFSigmaPPJ_function_list[i, N1, N2](y[i]) + \
+                self._FFSigmaPJ_function_list[i, N1, N2](y[i]))
         return l * np.exp(-2. * y)
     
     def CrossSectionFactors_SD66(self, ER, mx, fp, fn, delta):
         mu_p = ProtonMass * mx / (ProtonMass + mx)
-        '''
+
         return 1.e-12 * ER**2 * 3./(8. * mu_p**6) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/ 2 / self.mT)**2) * \
             self._cross_sec_factors_SD66 * \
@@ -151,11 +154,11 @@ class Experiment:
             (self.ffelemQ * (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
             (fn/fp)**2 * self.FF66normlalized(ER, 1, 1)) + \
             (1-self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
-
+        '''
 
     def CrossSectionFactors_SD44(self, ER, mx, fp, fn, delta):
         mu_p = ProtonMass * mx / (ProtonMass + mx)
-        '''
+
         return self.mass_fraction / (2 * mu_p**2) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
             (self.FF44normlalized(ER, 0, 0) + 2 * fn/fp * self.FF44normlalized(ER, 0, 1) + \
@@ -167,6 +170,7 @@ class Experiment:
             (self.ffelemQ * (self.FF44normlalized(ER, 0, 0) + 2 * fn/fp * self.FF44normlalized(ER, 0, 1) + \
             (fn/fp)**2 * self.FF44normlalized(ER, 1, 1)) + \
             (1-self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
+        '''
 
     def Resolution(self, Eee, qER):
         return self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
@@ -179,7 +183,7 @@ class Experiment:
         r_list = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
             self.Efficiency(Eee) * self.Efficiency_ER(ER) * \
             self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER)) * \
-            eta0Maxwellian(vmin, vobs, v0bar, vesc)
+            self.etaMaxwellian(vmin, vobs, v0bar, vesc)
         return r_list.sum()
         
     def ResponseSHM_Dirac(self, ER, Eee1, Eee2, mx, fp, fn, delta): 
@@ -190,7 +194,7 @@ class Experiment:
         integrated_delta = 1. if Eee1 <= qER < Eee2 else 0.
         r_list = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
             efficiency_ER * \
-            integrated_delta * eta0Maxwellian(vmin, vobs, v0bar, vesc)
+            integrated_delta * etaMaxwellian(vmin, vobs, v0bar, vesc)
         self.count_response_calls += 1
         return r_list.sum()
 #        print(ER, " ", r)
@@ -254,10 +258,12 @@ class Experiment:
                 args=(mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
             '''
 #            print("midpoints = ", midpoints)
-            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
+#            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
             return integr[0]
         else:
             return 0.
+
+
 
 class GaussianExperiment(Experiment):
     def __init__(self, expername, scattering_type, mPhi = mPhiRef, quenching_factor = None):
@@ -278,10 +284,10 @@ class GaussianExperiment(Experiment):
             self.IntegratedResponseSHM(i, j, mx, fp, fn, delta), \
             self.BinEdges[:-1], self.BinEdges[1:])))
         sum_pred_squared = 1./self.BinSize**2 * sum((predicted/self.BinError)**2)
-        sum_pred_binddata = 2./self.BinSize * \
+        sum_pred_bindata = 2./self.BinSize * \
             sum(predicted * self.BinData / self.BinError**2)
         sum_bindata_squared = sum((self.BinData/self.BinError)**2) - self.chiSquared
-        result = (sum_pred_binddata + np.sqrt(sum_pred_binddata**2 - \
+        result = (sum_pred_bindata + np.sqrt(sum_pred_bindata**2 - \
             4 * sum_pred_squared * sum_bindata_squared)) / (2 * sum_pred_squared)
         print("mx = ", mx)
         print("result = ", result)
@@ -297,6 +303,8 @@ class GaussianExperiment(Experiment):
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
         return np.transpose([mx_list, upper_limit.flatten()])
+
+
 
 class MaxGapExperiment(Experiment):
     def __init__(self, expername, scattering_type, mPhi = mPhiRef):
@@ -339,4 +347,42 @@ class MaxGapExperiment(Experiment):
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
         return np.log10(np.transpose([mx_list, upper_limit.flatten()]))
+
+
+
+class DAMAExperiment(Experiment):
+    def __init__(self, expername, scattering_type, mPhi = mPhiRef, quenching_factor = None):
+        Experiment.__init__(self, expername, scattering_type, mPhi)
+        module = import_file(INPUT_DIR + expername + ".py")
+        self.BinEdges = module.BinEdges
+        self.BinData = self.Exposure * module.BinData
+        self.BinError = self.Exposure *  module.BinError
         
+        if quenching_factor != None:
+            self.QuenchingFactor = lambda e: quenching_factor
+
+    def RegionSHM(self, mx, fp, fn, delta, output_file):
+        predicted = self.Exposure * conversion_factor / mx * \
+            np.array(list(map(lambda i, j: \
+            self.IntegratedResponseSHM(i, j, mx, fp, fn, delta), \
+            self.BinEdges[:-1], self.BinEdges[1:])))
+        sum_pred_squared = sum((predicted/self.BinError)**2)
+        sum_pred_bindata = sum(predicted * self.BinData / self.BinError**2)
+        sigma_fit = max(sum_pred_bindata / sum_pred_squared, 0)
+        predicted *= sigma_fit
+        log_likelihood_max = -0.5 * sum(((predicted - self.BinData) / self.BinError)**2)
+        print("mx = ", mx)
+        print("sigma_fit = ", sigma_fit)
+        print("max log likelihood = ", log_likelihood_max)
+        to_print = np.hstack((mx, sigma_fit, log_likelihood_max, predicted, self.BinData, self.BinError))
+        with open(output_file,'ab') as f_handle:
+            np.savetxt(f_handle, to_print)
+        return to_print
+
+    def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
+        mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
+        upper_limit = np.array(list(map(lambda mx: \
+            self.RegionSHM(mx, fp, fn, delta, output_file), mx_list)))
+        print("mx_list = ", mx_list)
+        print("upper_limit = ", upper_limit)
+        return upper_limit

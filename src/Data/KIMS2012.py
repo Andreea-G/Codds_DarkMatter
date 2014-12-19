@@ -12,6 +12,7 @@ pi = np.pi
 from interp import interp1d
 
 name = "KIMS2012"
+modulated = False
 
 energy_resolution_type = "Gaussian"
 EnergyResolution = lambda e: 0.582 * np.sqrt(e) + 0.0021 * e
