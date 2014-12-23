@@ -19,7 +19,7 @@ def Plot_Upper_Limit(exper_name, upper_limit, plot_dots = True, plot_close = Tru
     if upper_limit.size == 0:
         print("upper_limit is empty!")
     elif upper_limit.ndim == 1:
-        if exper_name in MaximumGapLimit_exper:
+        if exper_name in MaximumGapLimit_exper or exper_name in Poisson_Exper:
             x = [upper_limit[0]]
             y = [-np.log10(conversion_factor) + upper_limit[0] + upper_limit[1]]
         else:
@@ -27,7 +27,7 @@ def Plot_Upper_Limit(exper_name, upper_limit, plot_dots = True, plot_close = Tru
             y = np.log10(upper_limit[1])
         plt.plot(x, y, "o")
     else:
-        if exper_name in MaximumGapLimit_exper:
+        if exper_name in MaximumGapLimit_exper or exper_name in Poisson_Exper:
             x = upper_limit[:,0]
             y = -np.log10(conversion_factor) + upper_limit[:,0] + upper_limit[:,1]
         else:
@@ -58,6 +58,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
         exper = MaxGapExperiment(exper_name, scattering_type, mPhi)
     elif exper_name in GaussianLimit_exper:
         exper = GaussianExperiment(exper_name, scattering_type, mPhi, quenching)
+    elif exper_name in Poisson_Exper:
+        exper = PoissonExperiment(exper_name, scattering_type, mPhi)
     elif exper_name in DAMARegion_exper:
         exper = DAMAExperiment(exper_name, scattering_type, mPhi, quenching)
     else:
@@ -71,7 +73,6 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
     else:
         output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper.name \
             + "_mxsigma"
-
 
 #    global v0bar, vobs, vesc
 #    v0bar = 230 - 3 * 24.4

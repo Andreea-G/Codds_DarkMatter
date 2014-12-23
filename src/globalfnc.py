@@ -33,6 +33,7 @@ MaximumGapLimit_exper = ["superCDMS", \
         "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
 GaussianLimit_exper = ["KIMS2012"]
 DAMARegion_exper = ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]
+Poisson_Exper = ["SIMPLEModeStage2"]
 
 def FileNameTail(fp, fn, mPhi):
     if mPhi == 1000.:
