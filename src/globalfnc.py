@@ -14,7 +14,7 @@ pi = np.pi
 T = True
 F = False
 
-
+PRECISSION = 1.e-6
 fermiGeV = 1./0.1973269602 #Natural[GeV femto Meter]
 kilogram = 1e-9/1.782661758e-36
 SpeedOfLight = 299792.458 #km/s
@@ -133,7 +133,7 @@ def eta0Maxwellian(vmin, vobs, v0bar, vesc):
     erfz = erf(z)
     sqrt_pi = np.sqrt(pi)
     exp_z_sq = np.exp(-z**2)
-    exp_z_sq_z = np.exp(-z**2 * z)
+    exp_z_sq_z = np.exp(-z**2) * z
     eta = list(map(lambda i: -2. * exp_z_sq / sqrt_pi - erf(i-y) / (2.*y) + erf(i+y) / (2.*y) \
         if i + y <= z \
         else exp_z_sq * (i - y - z) / (sqrt_pi * y) - erf(i-y) / (2.*y) + erfz / (2.*y) \
@@ -149,7 +149,7 @@ def eta1Maxwellian(vmin, vobs, v0bar, vesc):
     erfz = erf(z)
     sqrt_pi = np.sqrt(pi)
     exp_z_sq = np.exp(-z**2)
-    exp_z_sq_z = np.exp(-z**2 * z)
+    exp_z_sq_z = np.exp(-z**2) * z
     erf_z = erf(z)
     eta = list(map(lambda i: (np.exp(-(i+y)**2) + np.exp(-(i-y)**2)) / (sqrt_pi * y) + \
         (erf(i-y) - erf(i+y)) / (2 * y**2) \

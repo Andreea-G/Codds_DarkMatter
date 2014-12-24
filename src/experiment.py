@@ -11,7 +11,6 @@ from __future__ import division
 
 INPUT_DIR = "Data/"
 OUTPUT_MAIN_DIR = "Output/"
-PRECISSION = 1.e-3
 
 def import_file(full_path_to_module):
     import os, sys
@@ -140,7 +139,7 @@ class Experiment:
     
     def CrossSectionFactors_SD66(self, ER, mx, fp, fn, delta):
         mu_p = ProtonMass * mx / (ProtonMass + mx)
-        '''
+        
         return 1.e-12 * ER**2 * 3./(8. * mu_p**6) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/ 2 / self.mT)**2) * \
             self._cross_sec_factors_SD66 * \
@@ -154,7 +153,7 @@ class Experiment:
             (self.ffelemQ * (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
             (fn/fp)**2 * self.FF66normlalized(ER, 1, 1)) + \
             (1-self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
-        
+        '''
 
     def CrossSectionFactors_SD44(self, ER, mx, fp, fn, delta):
         mu_p = ProtonMass * mx / (ProtonMass + mx)
@@ -190,14 +189,15 @@ class Experiment:
         q = self.QuenchingFactor(ER)
         qER = q * ER
         vmin = VMin(ER, self.mT, mx, delta)
-        efficiency_ER = self.Efficiency_ER(qER)
         integrated_delta = 1. if Eee1 <= qER < Eee2 else 0.
         r_list = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
-            efficiency_ER * \
+            self.Efficiency_ER(qER) * \
             integrated_delta * self.etaMaxwellian(vmin, vobs, v0bar, vesc)
         self.count_response_calls += 1
         r = r_list.sum()
-#        print(ER, " ", r)
+#        print(ER, " ", Eee1, " ", Eee2, " ", r)
+#        print(vmin)
+#        print(self.etaMaxwellian(vmin, vobs, v0bar, vesc))
         return r
         
     def ResponseSHM_Other(self, ER, Eee1, Eee2, mx, fp, fn, delta):
@@ -270,11 +270,17 @@ class PoissonExperiment(Experiment):
         self.Expected_limit = module.Expected_limit
 
     def PoissonUpperBoundSHM(self, mx, fp, fn, delta):
-        vminmax = vobs + vesc
-        Eee_min = max(self.Ethreshold, min(ERecoilBranch(vminmax, self.mT, mx, delta, -1)))
-        Eee_max = max(ERecoilBranch(vminmax, self.mT, mx, delta, 1))
+        vmax = vobs + vesc
+        muT = self.mT * mx / (self.mT + mx)
+        vdelta = SpeedOfLight / 500. * np.sqrt(delta / 2. / muT) if delta > 0 \
+            else np.array([0] * self.numT)
+        Eee_max_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, 1) \
+            if j < vmax else 0., self.mT, vdelta))
+        Eee_min_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1) \
+            if j < vmax else 1.e6, self.mT, vdelta))
+        Eee_max = np.max(Eee_max_list)
+        Eee_min = max(self.Ethreshold, np.min(Eee_min_list))
 #        print("mT = ", self.mT)
-#        print("ER = ", ERecoilBranch(vminmax, self.mT, mx, delta, 1))
 #        print("Eee_min & max = ", Eee_min, " ", Eee_max)
         int_response = self.IntegratedResponseSHM(Eee_min, Eee_max, mx, fp, fn, delta)
 #        print("int_response = ", int_response)
@@ -285,7 +291,6 @@ class PoissonExperiment(Experiment):
         print("mx = ", mx)
         print("result = ", result)
         return result
-
 
     def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
