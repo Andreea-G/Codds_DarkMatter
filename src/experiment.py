@@ -226,7 +226,7 @@ class Experiment:
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus, \
                 args=(Eee1, Eee2, mx, fp, fn, delta)) #, vec_func=False
-            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
+#            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
             return integr[0]
         else:
             return 0.
@@ -299,6 +299,7 @@ class PoissonExperiment(Experiment):
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
         to_print = np.log10(np.transpose([mx_list, upper_limit]))
+        to_print = to_print[to_print[:, 1] != np.inf]
         with open(output_file,'ab') as f_handle:
             np.savetxt(f_handle, to_print)
         return to_print
@@ -341,8 +342,8 @@ class GaussianExperiment(Experiment):
             self.GaussianUpperBoundSHM(mx, fp, fn, delta, output_file), mx_list)))
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
-        return np.transpose([mx_list, upper_limit.flatten()])
-
+        result = np.transpose([mx_list, upper_limit.flatten()])
+        return result[result[:, 1] != np.inf]
 
 
 class MaxGapExperiment(Experiment):
@@ -385,7 +386,8 @@ class MaxGapExperiment(Experiment):
             self.MaximumGapUpperBoundSHM(mx, fp, fn, delta, output_file), mx_list)))
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
-        return np.log10(np.transpose([mx_list, upper_limit.flatten()]))
+        result = np.log10(np.transpose([mx_list, upper_limit.flatten()]))
+        return result[result[:, 1] != np.inf]
 
 
 
