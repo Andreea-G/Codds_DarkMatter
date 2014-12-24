@@ -31,7 +31,7 @@ vesc = default_vesc = 533.
 MaximumGapLimit_exper = ["superCDMS", \
         "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many", \
         "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
-GaussianLimit_exper = ["KIMS2012"]
+GaussianLimit_exper = ["KIMS2012", "PICASSO"]
 DAMARegion_exper = ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]
 Poisson_Exper = ["SIMPLEModeStage2"]
 

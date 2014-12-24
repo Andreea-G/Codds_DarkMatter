@@ -45,7 +45,7 @@ Efficiency_interp = interp1d(np.array([1.63799, 1.93525, 2.35928, 2.37871, 3.129
     0.268395, 0.275658, 0.339739, 0.366008, 0.43731, 0.44819, 0.459066, 0.506, 0.514216, 0.543101, \
     0.544292, 0.529854, 0.532668]))
     
-Efficiency = lambda e: 1
+Efficiency = lambda e, er: 1
 Efficiency_ER = lambda e: Efficiency_interp(e) if Ethreshold <= e < Emaximum else np.array(0.)
 
 Exposure = 577.

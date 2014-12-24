@@ -45,6 +45,8 @@ ERecoilList = np.array([])
 
 BinSize = 1;
 BinEdges = np.array(range(Ethreshold, Emaximum + BinSize))
+BinEdges_left = BinEdges[:-1]
+BinEdges_right = BinEdges[1:]
 BinData = np.array([0., 0., 0., 0., 0., 0.006678, 0.007997, 0.005212])
 BinError = np.array([0.008209, 0.007622, 0.007036, 0.003078, 0.007622, 0.002345, \
     0.011286, 0.010114])

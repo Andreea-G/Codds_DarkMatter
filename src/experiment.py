@@ -191,7 +191,7 @@ class Experiment:
         vmin = VMin(ER, self.mT, mx, delta)
         integrated_delta = 1. if Eee1 <= qER < Eee2 else 0.
         r_list = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
-            self.Efficiency_ER(qER) * \
+            self.Efficiency(Eee1, qER) * self.Efficiency_ER(qER) * \
             integrated_delta * self.etaMaxwellian(vmin, vobs, v0bar, vesc)
         self.count_response_calls += 1
         r = r_list.sum()
@@ -226,7 +226,7 @@ class Experiment:
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus, \
                 args=(Eee1, Eee2, mx, fp, fn, delta)) #, vec_func=False
-#            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
+            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
             return integr[0]
         else:
             return 0.
@@ -307,7 +307,8 @@ class GaussianExperiment(Experiment):
     def __init__(self, expername, scattering_type, mPhi = mPhiRef, quenching_factor = None):
         Experiment.__init__(self, expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
-        self.BinEdges = module.BinEdges
+        self.BinEdges_left = module.BinEdges_left
+        self.BinEdges_right = module.BinEdges_right
         self.BinData = module.BinData
         self.BinError = module.BinError
         self.BinSize = module.BinSize
@@ -320,7 +321,7 @@ class GaussianExperiment(Experiment):
         predicted = conversion_factor / mx * \
             np.array(list(map(lambda i, j: \
             self.IntegratedResponseSHM(i, j, mx, fp, fn, delta), \
-            self.BinEdges[:-1], self.BinEdges[1:])))
+            self.BinEdges_left, self.BinEdges_right)))
         sum_pred_squared = 1./self.BinSize**2 * sum((predicted/self.BinError)**2)
         sum_pred_bindata = 2./self.BinSize * \
             sum(predicted * self.BinData / self.BinError**2)
