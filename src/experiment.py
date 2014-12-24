@@ -85,6 +85,14 @@ class Experiment:
 
         self.FF = FF_options[self.scattering_type][module.FF[scattering_type]]
         self.ffelemQ = FFElementQ(self.Z)
+        if ((self.ffelemQ == 1).all()):
+            print("Haxton")
+            self.CrossSectionFactors_SD44 = self.CrossSectionFactors_SD44_Haxton
+            self.CrossSectionFactors_SD66 = self.CrossSectionFactors_SD66_Haxton
+        else:
+            print("mixed")
+            self.CrossSectionFactors_SD44 = self.CrossSectionFactors_SD44_Mixed
+            self.CrossSectionFactors_SD66 = self.CrossSectionFactors_SD66_Mixed
 
         CrossSectionFactors_options = {'SI' : self.CrossSectionFactors_SI,
            'SD66' : self.CrossSectionFactors_SD66,
@@ -137,40 +145,40 @@ class Experiment:
                 self._FFSigmaPJ_function_list[i, N1, N2](y[i]))
         return l * np.exp(-2. * y)
     
-    def CrossSectionFactors_SD66(self, ER, mx, fp, fn, delta):
+    def CrossSectionFactors_SD66_Haxton(self, ER, mx, fp, fn, delta):
         mu_p = ProtonMass * mx / (ProtonMass + mx)
-        
         return 1.e-12 * ER**2 * 3./(8. * mu_p**6) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/ 2 / self.mT)**2) * \
             self._cross_sec_factors_SD66 * \
             (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
             (fn/fp)**2 * self.FF66normlalized(ER, 1, 1))
 #            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER)
-        '''
+
+    def CrossSectionFactors_SD66_Mixed(self, ER, mx, fp, fn, delta):
+        mu_p = ProtonMass * mx / (ProtonMass + mx)
         return 1.e-12 * ER**2 * 3./(8. * mu_p**6) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/ 2 / self.mT)**2) * \
             self._cross_sec_factors_SD66 * \
             (self.ffelemQ * (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
             (fn/fp)**2 * self.FF66normlalized(ER, 1, 1)) + \
             (1-self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
-        '''
 
-    def CrossSectionFactors_SD44(self, ER, mx, fp, fn, delta):
+    def CrossSectionFactors_SD44_Haxton(self, ER, mx, fp, fn, delta):
         mu_p = ProtonMass * mx / (ProtonMass + mx)
-        
         return self.mass_fraction / (2 * mu_p**2) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
             (self.FF44normlalized(ER, 0, 0) + 2 * fn/fp * self.FF44normlalized(ER, 0, 1) + \
             (fn/fp)**2 * self.FF44normlalized(ER, 1, 1))
 #            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER)
-        '''
+
+    def CrossSectionFactors_SD44_Mixed(self, ER, mx, fp, fn, delta):
+        mu_p = ProtonMass * mx / (ProtonMass + mx)
         return self.mass_fraction / (2 * mu_p**2) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
             (self.ffelemQ * (self.FF44normlalized(ER, 0, 0) + 2 * fn/fp * self.FF44normlalized(ER, 0, 1) + \
             (fn/fp)**2 * self.FF44normlalized(ER, 1, 1)) + \
             (1-self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
-        '''
-
+ 
     def Resolution(self, Eee, qER):
         return self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
         
