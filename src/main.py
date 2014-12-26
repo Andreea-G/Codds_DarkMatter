@@ -21,9 +21,9 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
         }
     elif "LUX" in exper_name:
         num_steps = 30
-#        mx_range_options = {(0, 1000.): (5.95, 100, num_steps),
-        mx_range_options = {(0, 1000.): (7.95, 100, num_steps),
-                            (0, 0.): (5.90, 130, num_steps),
+        mx_range_options = {(0, 1000.): (5.85, 100, num_steps),
+#        mx_range_options = {(0, 1000.): (7.95, 100, num_steps),
+                            (0, 0.): (5.80, 130, num_steps),
                             (-30, 1000.): (3.95, 100, num_steps),
                             (-30, 0.): (3.95, 100, num_steps),
                             (-50, 1000.): (3.197, 50, num_steps),
@@ -52,16 +52,16 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
     elif exper_name == "DAMA2010NaSmRebinned":
         num_steps = 60
         if quenching == 0.4:
-#            mx_range_options = {(0, 1000.): (5, 15, num_steps),
-            mx_range_options = {(0, 1000.): (8, 15, num_steps),
+            mx_range_options = {(0, 1000.): (5, 15, num_steps),
+#            mx_range_options = {(0, 1000.): (8, 15, num_steps),
                                 (0, 0.): (6, 20, num_steps),
                                 (-30, 1000.): (2, 4, num_steps),
                                 (-30, 0.): (2, 3, num_steps),
                                 (-50, 1000.): (1.5, 2.5, num_steps),
             }
         else:
-#            mx_range_options = {(0, 1000.): (6, 20, num_steps),
-            mx_range_options = {(0, 1000.): (10, 20, num_steps),
+            mx_range_options = {(0, 1000.): (6, 20, num_steps),
+#            mx_range_options = {(0, 1000.): (10, 20, num_steps),
                                 (0, 0.): (7, 30, num_steps),
                                 (-30, 1000.): (3, 5, num_steps),
                                 (-30, 0.): (2.5, 4, num_steps),
@@ -70,8 +70,8 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
     elif exper_name == "DAMA2010ISmRebinned":
         num_steps = 60
         if quenching == 0.09:
-#            mx_range_options = {(0, 1000.): (25, 65, num_steps),
-            mx_range_options = {(0, 1000.): (40, 65, num_steps),
+            mx_range_options = {(0, 1000.): (25, 65, num_steps),
+#            mx_range_options = {(0, 1000.): (40, 65, num_steps),
                                  (0, 0.): (35, 90, num_steps),
                                 (-30, 1000.): (20, 50, num_steps),
                                 (-30, 0.): (30, 50, num_steps),
@@ -81,8 +81,8 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
                                 (100, 0.): (50, 300, num_steps),
             }
         else:
-#            mx_range_options = {(0, 1000.): (35, 90, num_steps),
-            mx_range_options = {(0, 1000.): (55, 85, num_steps),
+            mx_range_options = {(0, 1000.): (35, 90, num_steps),
+#            mx_range_options = {(0, 1000.): (55, 85, num_steps),
                                 (0, 0.): (40, 130, num_steps),
                                 (-30, 1000.): (30, 60, num_steps),
                                 (-30, 0.): (40, 70, num_steps),
@@ -122,15 +122,15 @@ def main():
 
     plot_dots = F
 
-    inputs = [(0, 0, 1000.), (0, 0, 0.), (0, -30, 1000.), (0, -30, 0.), (0, -50, 1000.), (0, 50, 1000.), \
-        (0, 100, 1000.), (0, 100, 0.), (-1/16.4, 0, 1000.)]
+    inputs = [(0, 0, 1000.), (-1/16.4, 0, 1000.), (0, 0, 0.), (0, -30, 1000.), (0, -30, 0.), (0, -50, 1000.), \
+        (0, 50, 1000.), (0, 100, 1000.), (0, 100, 0.)]
 
     RUN_PROGRAM = T
     MAKE_PLOT = F
 
     qKIMS_list = [0.05, 0.1]
     qDAMANa_list = [0.4, 0.3]
-    qDAMAI_list = [0.09]
+    qDAMAI_list = [0.09, 0.06]
     qDAMANa_Rate_list = [0.4]
     quenching_list = {"KIMS2012": qKIMS_list,
                       "DAMA2010NaSmRebinned": qDAMANa_list,
@@ -138,8 +138,8 @@ def main():
                       "DAMA2010NaSmRebinned_TotRateLimit": qDAMANa_Rate_list,
     }
 
-    exper_list = [implemented_exper[i] for i in [9]]
-    filename_tail_list = ["_CL99"]
+    exper_list = [implemented_exper[i] for i in [6]]
+    filename_tail_list = [""]
     plt.close()
     for exper_name in exper_list:
         for filename_tail in filename_tail_list:
