@@ -6,10 +6,12 @@ Created on Wed Nov 19 00:18:55 2014
 """
 from __future__ import absolute_import
 from __future__ import division
+from __future__ import print_function
 import numpy as np
 pi = np.pi
 #from scipy.interpolate import interp1d
 from interp import interp1d
+from globalfnc import ConfidenceLevel
 
 name = "SIMPLEModeStage2"
 modulated = False
@@ -44,4 +46,10 @@ Efficiency_ER = lambda e: np.array(0.97 * (1 - np.exp(-4.2 * (e/8 - 1)))) if Eth
 Exposure = 6.71
 ERecoilList = np.array([])
 
-Expected_limit = 2.39  # upper limit of expected events for 2 observed events at 90 % CL
+if ConfidenceLevel == 0.9:
+    Expected_limit = 2.39 # upper limit of expected events for 2 observed events at 90 % CL
+elif ConfidenceLevel == 0.99:
+    Expected_limit = 4.715
+else:
+    Expected_limit = 2.39 # upper limit of expected events for 2 observed events at 90 % CL
+    print("Warning! You asked for a ConfidenceLevel that is not given! Using 0.9 instead.")

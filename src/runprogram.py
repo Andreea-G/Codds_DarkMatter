@@ -76,11 +76,6 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
         output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper.name \
             + "_mxsigma"
 
-#    global v0bar, vobs, vesc
-#    v0bar = 230 - 3 * 24.4
-#    vobs = v0bar + 12
-#    vesc = 544 - 3 * 39
-
     if vesc != default_vesc:
         output_file_no_extension += "_vesc" \
             + str(math.trunc(round(vesc)))
@@ -89,9 +84,9 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
             + str(math.trunc(round(vobs)))
     output_file_no_extension = output_file_no_extension + FileNameTail(fp, fn, mPhi)
 
+    output_file_no_extension += filename_tail
     if quenching != None:
         output_file_no_extension += "_q" + str(quenching)
-    output_file_no_extension += filename_tail
     print(output_file_no_extension)
 
     if RUN_PROGRAM:

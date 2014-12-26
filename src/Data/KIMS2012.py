@@ -6,10 +6,13 @@ Created on Wed Nov 19 00:18:55 2014
 """
 from __future__ import absolute_import
 from __future__ import division
+from __future__ import print_function
+
 import numpy as np
 pi = np.pi
 #from scipy.interpolate import interp1d
 from interp import interp1d
+from globalfnc import ConfidenceLevel
 
 name = "KIMS2012"
 modulated = False
@@ -51,4 +54,10 @@ BinData = np.array([0., 0., 0., 0., 0., 0.006678, 0.007997, 0.005212])
 BinError = np.array([0.008209, 0.007622, 0.007036, 0.003078, 0.007622, 0.002345, \
     0.011286, 0.010114])
 
-chiSquared = 13.3616
+if ConfidenceLevel == 0.9:
+    chiSquared = 13.3616
+elif ConfidenceLevel == 0.99:
+    chiSquared = 20.0902
+else:
+    chiSquared = 13.3616
+    print("Warning! You asked for a ConfidenceLevel that is not given! Using 0.9 instead.")

@@ -23,10 +23,15 @@ ProtonMass = 1.00727646677 * AtomicMassUnit
 mPhiRef = 1000.
 rho = 0.3
 conversion_factor = rho * SpeedOfLight**2 * 1e5 * 3600 * 24
+ConfidenceLevel = 0.99
         
 v0bar = default_v0bar = 220.
 vobs = default_vobs = default_v0bar + 12.
 vesc = default_vesc = 533.
+
+v0bar = 230 - 3 * 24.4
+vobs = v0bar + 12
+vesc = 544 - 3 * 39
 
 MaximumGapLimit_exper = ["superCDMS", \
         "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many", \
