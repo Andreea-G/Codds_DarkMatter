@@ -435,3 +435,33 @@ class DAMAExperiment(Experiment):
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
         return upper_limit
+
+
+class DAMATotalRateExperiment(Experiment):
+    def __init__(self, expername, scattering_type, mPhi = mPhiRef, quenching_factor = None):
+        Experiment.__init__(self, expername, scattering_type, mPhi)
+        module = import_file(INPUT_DIR + expername + ".py")
+        self.BinEdges = module.BinEdges
+        self.BinData = self.Exposure * module.BinData
+
+        if quenching_factor != None:
+            self.QuenchingFactor = lambda e: quenching_factor
+
+    def RegionSHM(self, mx, fp, fn, delta, output_file):
+        predicted = self.Exposure * conversion_factor / mx * \
+            np.array(self.IntegratedResponseSHM(self.BinEdges[0], self.BinEdges[1], mx, fp, fn, delta))
+        sigma_fit = self.BinData[0] / predicted
+        print("mx = ", mx)
+        print("sigma_fit = ", sigma_fit)
+        to_print = np.array([[mx, sigma_fit]])
+        with open(output_file,'ab') as f_handle:
+            np.savetxt(f_handle, to_print)
+        return to_print.flatten()
+
+    def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
+        mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
+        upper_limit = np.array(list(map(lambda mx: \
+            self.RegionSHM(mx, fp, fn, delta, output_file), mx_list)))
+        print("mx_list = ", mx_list)
+        print("upper_limit = ", upper_limit)
+        return upper_limit

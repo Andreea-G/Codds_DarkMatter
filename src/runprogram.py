@@ -62,12 +62,14 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max
         exper = PoissonExperiment(exper_name, scattering_type, mPhi)
     elif exper_name in DAMARegion_exper:
         exper = DAMAExperiment(exper_name, scattering_type, mPhi, quenching)
+    elif exper_name in DAMALimit_exper:
+        exper = DAMATotalRateExperiment(exper_name, scattering_type, mPhi, quenching)
     else:
         print("Error! This experiment was not implemented!")
         return
 
     output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
-    if exper_name in DAMARegion_exper:
+    if exper_name in DAMARegion_exper or exper_name in DAMALimit_exper:
         output_file_no_extension = "./" + output_dir + "pbesebTab_" + exper.name \
             + "_mxsigma"
     else:

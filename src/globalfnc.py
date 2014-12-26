@@ -14,7 +14,7 @@ pi = np.pi
 T = True
 F = False
 
-PRECISSION = 1.e-6
+PRECISSION = 1.e-3
 fermiGeV = 1./0.1973269602 #Natural[GeV femto Meter]
 kilogram = 1e-9/1.782661758e-36
 SpeedOfLight = 299792.458 #km/s
@@ -33,6 +33,7 @@ MaximumGapLimit_exper = ["superCDMS", \
         "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
 GaussianLimit_exper = ["KIMS2012", "PICASSO"]
 DAMARegion_exper = ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]
+DAMALimit_exper = ["DAMA2010NaSmRebinned_TotRateLimit"]
 Poisson_Exper = ["SIMPLEModeStage2"]
 
 def FileNameTail(fp, fn, mPhi):
