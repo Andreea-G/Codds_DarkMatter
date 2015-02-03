@@ -13,6 +13,7 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
     if exper_name == "superCDMS":
         num_steps = 60
         mx_range_options = {(0, 1000.): (5, 100, num_steps),
+#        mx_range_options = {(0, 1000.): (7, 100, num_steps),
                             (0, 0.): (4, 130, num_steps),
                             (-30, 1000.): (2.3, 100, num_steps),
                             (-30, 0.): (2, 100, num_steps),
@@ -22,7 +23,7 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
     elif "LUX" in exper_name:
         num_steps = 30
         mx_range_options = {(0, 1000.): (5.85, 100, num_steps),
-#        mx_range_options = {(0, 1000.): (7.95, 100, num_steps),
+#        mx_range_options = {(0, 1000.): (7.6, 100, num_steps),
                             (0, 0.): (5.80, 130, num_steps),
                             (-30, 1000.): (3.95, 100, num_steps),
                             (-30, 0.): (3.95, 100, num_steps),
@@ -122,8 +123,8 @@ def main():
 
     plot_dots = F
 
-    inputs = [(0, 0, 1000.), (-1/16.4, 0, 1000.), (0, 0, 0.), (0, -30, 1000.), (0, -30, 0.), (0, -50, 1000.), \
-        (0, 50, 1000.), (0, 100, 1000.), (0, 100, 0.)]
+    inputs = [(-1/16.4, 0, 1000.), (0, 0, 1000.), (0, -30, 1000.),  (0, -50, 1000.), \
+        (0, 50, 1000.), (0, 100, 1000.), (0, 0, 0.), (0, -30, 0.), (0, 100, 0.)]
 
     RUN_PROGRAM = T
     MAKE_PLOT = F
@@ -138,12 +139,12 @@ def main():
                       "DAMA2010NaSmRebinned_TotRateLimit": qDAMANa_Rate_list,
     }
 
-    exper_list = [implemented_exper[i] for i in [6]]
+    exper_list = [implemented_exper[i] for i in [9]]
     filename_tail_list = [""]
     plt.close()
     for exper_name in exper_list:
         for filename_tail in filename_tail_list:
-            for (fn, delta, mPhi) in inputs[8:9]:
+            for (fn, delta, mPhi) in (inputs[i] for i in [0,1,2,3]):
                 for quenching in quenching_list.get(exper_name, [None]):
                     (mx_min, mx_max, num_steps) = DM_mass_range(exper_name, delta, mPhi, quenching)
                     print(mx_min, " ", mx_max, " ", num_steps)

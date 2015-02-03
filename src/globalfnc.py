@@ -173,6 +173,6 @@ def MaximumGapC0scaled(x, mu_over_x):
         return 1. - np.exp(-x) * (1. + mu_over_x * x - x)
     else:
         l = np.array([ ((k - mu_over_x) * x)**(k-1) * np.exp(-k * x) / math.factorial(k) * \
-            (x * (mu_over_x - k) + k) for k in range(math.trunc(np.floor(mu_over_x)))])
+            (x * (mu_over_x - k) + k) for k in range(1,math.trunc(np.floor(mu_over_x)))])
         return 1. - l.sum()
         

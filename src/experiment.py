@@ -379,6 +379,7 @@ class MaxGapExperiment(Experiment):
             y_guess = np.real(-lambertw(-0.1 / mu_over_x, -1))
 #            print("y_guess = ", y_guess)
             y = fsolve(lambda x: MaximumGapC0scaled(x, mu_over_x) - ConfidenceLevel, y_guess)
+#            print("y = ", y)
             result =  y / x_scaled / self.Exposure
         print("mx = ", mx, "   mu_over_x = ", mu_over_x)
         print("xtable = ", xtable)
