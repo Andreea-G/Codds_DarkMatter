@@ -8,7 +8,8 @@ from __future__ import print_function
 from __future__ import division
 #import profile
 from runprogram import *
-
+import os   # for speaking
+    
 def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
     if exper_name == "superCDMS":
         num_steps = 60
@@ -19,6 +20,7 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
                             (-30, 0.): (2, 100, num_steps),
                             (-50, 1000.): (1.8, 50, num_steps),
                             (50, 1000.): (20, 100, num_steps),
+                            (100, 1000.): (30, 100, num_steps),
         }
     elif "LUX" in exper_name:
         num_steps = 30
@@ -29,6 +31,8 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
                             (-30, 0.): (3.95, 100, num_steps),
                             (-50, 1000.): (3.197, 50, num_steps),
                             (50, 1000.): (17.66, 100, num_steps),
+                            (100, 1000.): (40, 100, num_steps),
+                            (100, 0.): (40, 300, num_steps),
         }
     elif exper_name == "KIMS2012":
         num_steps = 40
@@ -38,8 +42,9 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
                             (-30, 0.): (10, 100, num_steps),
                             (-50, 1000.): (6, 50, num_steps),
                             (50, 1000.): (17, 100, num_steps),
+                            (50, 0.): (17, 100, num_steps),
                             (100, 1000.): (41, 100, num_steps),
-                            (100, 0.): (41.132, 300, num_steps),
+                            (100, 0.): (41.08, 300, num_steps),
         }
     elif exper_name == "SIMPLEModeStage2":
         num_steps = 200
@@ -49,6 +54,7 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
                             (-30, 0.): (2, 100, num_steps),
                             (-50, 1000.): (1.5, 50, num_steps),
                             (50, 1000.): (18, 100, num_steps),
+                            (100, 1000.): (30, 100, num_steps),
         }
     elif exper_name == "DAMA2010NaSmRebinned":
         num_steps = 60
@@ -78,8 +84,10 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
                                 (-30, 0.): (30, 50, num_steps),
                                 (-50, 1000.): (20, 40, num_steps),
                                 (50, 1000.): (30, 80, num_steps),
+                                (50, 0.): (40, 100, num_steps),
                                 (100, 1000.): (42, 65, num_steps),
                                 (100, 0.): (50, 300, num_steps),
+#                                (100, 0.): (42, 65, num_steps),
             }
         else:
             mx_range_options = {(0, 1000.): (35, 90, num_steps),
@@ -89,8 +97,10 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
                                 (-30, 0.): (40, 70, num_steps),
                                 (-50, 1000.): (30, 50, num_steps),
                                 (50, 1000.): (40, 100, num_steps),
+                                (50, 0.): (55, 100, num_steps),
                                 (100, 1000.): (50, 90, num_steps),
                                 (100, 0.): (100, 300, num_steps),
+#                                (100, 0.): (50, 90, num_steps),
             }
     elif exper_name == "DAMA2010NaSmRebinned_TotRateLimit":
         num_steps = 60
@@ -108,6 +118,7 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
                             (-30, 0.): (1, 100, num_steps),
                             (-50, 1000.): (1, 50, num_steps),
                             (50, 1000.): (10, 100, num_steps),
+                            (100, 1000.): (30, 100, num_steps),
         }
     return mx_range_options[(delta, mPhi)]
 
@@ -116,15 +127,18 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
 def main():
     implemented_exper = ["superCDMS", \
         "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many", \
-        "KIMS2012", "PICASSO", "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned", "DAMA2010NaSmRebinned_TotRateLimit", \
-        "SIMPLEModeStage2", "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
+        "SIMPLEModeStage2", "PICASSO", "KIMS2012", "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned", \
+        "DAMA2010NaSmRebinned_TotRateLimit", \
+        ]
+#        "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
     scattering_type = 'SD66'
     fp = 1.
 
     plot_dots = F
 
-    inputs = [(-1/16.4, 0, 1000.), (0, 0, 1000.), (0, -30, 1000.),  (0, -50, 1000.), \
-        (0, 50, 1000.), (0, 100, 1000.), (0, 0, 0.), (0, -30, 0.), (0, 100, 0.)]
+    inputs = [(-1/16.4, 0, 1000.), \
+        (0, 0, 1000.), (0, -30, 1000.),  (0, -50, 1000.), (0, 50, 1000.), (0, 0, 0.), \
+        (0, -30, 0.), (0, 100, 1000.), (0, 50, 0.), (0, 100, 0.)]
 
     RUN_PROGRAM = T
     MAKE_PLOT = F
@@ -139,12 +153,13 @@ def main():
                       "DAMA2010NaSmRebinned_TotRateLimit": qDAMANa_Rate_list,
     }
 
-    exper_list = [implemented_exper[i] for i in [9]]
+    exper_list = [implemented_exper[i] for i in [10]]
+#    exper_list = implemented_exper
     filename_tail_list = [""]
     plt.close()
     for exper_name in exper_list:
         for filename_tail in filename_tail_list:
-            for (fn, delta, mPhi) in (inputs[i] for i in [0,1,2,3]):
+            for (fn, delta, mPhi) in inputs[8:9]:
                 for quenching in quenching_list.get(exper_name, [None]):
                     (mx_min, mx_max, num_steps) = DM_mass_range(exper_name, delta, mPhi, quenching)
                     print(mx_min, " ", mx_max, " ", num_steps)
@@ -152,6 +167,9 @@ def main():
                         mx_min, mx_max, num_steps, RUN_PROGRAM, MAKE_PLOT, \
                         filename_tail, plot_dots = plot_dots, quenching = quenching)
     plt.show()
+    
+    if RUN_PROGRAM:
+        os.system("say 'Finished running program'")
     
 if __name__ == '__main__':
     main()
