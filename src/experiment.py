@@ -8,7 +8,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
-
 INPUT_DIR = "Data/"
 
 def import_file(full_path_to_module):
@@ -305,11 +304,12 @@ class PoissonExperiment(Experiment):
             self.PoissonUpperBoundSHM(mx, fp, fn, delta), mx_list)))
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
-        to_print = np.log10(np.transpose([mx_list, upper_limit]))
-        to_print = to_print[to_print[:, 1] != np.inf]
+        upper_limit = 1/conversion_factor * mx_list * upper_limit
+        result = np.log10(np.transpose([mx_list, upper_limit]))
+        result = result[result[:, 1] != np.inf]
         with open(output_file,'ab') as f_handle:
-            np.savetxt(f_handle, to_print)
-        return to_print
+            np.savetxt(f_handle, result)
+        return result
 
 class GaussianExperiment(Experiment):
     def __init__(self, expername, scattering_type, mPhi = mPhiRef, quenching_factor = None):
@@ -346,10 +346,10 @@ class GaussianExperiment(Experiment):
     def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
         upper_limit = np.array(list(map(lambda mx: \
-            self.GaussianUpperBoundSHM(mx, fp, fn, delta, output_file), mx_list)))
+            self.GaussianUpperBoundSHM(mx, fp, fn, delta, output_file), mx_list))).flatten()
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
-        result = np.transpose([mx_list, upper_limit.flatten()])
+        result = np.log10(np.transpose([mx_list, upper_limit]))
         return result[result[:, 1] != np.inf]
 
 
@@ -391,12 +391,12 @@ class MaxGapExperiment(Experiment):
     def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
         upper_limit = np.array(list(map(lambda mx: \
-            self.MaximumGapUpperBoundSHM(mx, fp, fn, delta, output_file), mx_list)))
+            self.MaximumGapUpperBoundSHM(mx, fp, fn, delta, output_file), mx_list))).flatten()
+        upper_limit = 1./conversion_factor * mx_list * upper_limit
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
-        result = np.log10(np.transpose([mx_list, upper_limit.flatten()]))
+        result = np.log10(np.transpose([mx_list, upper_limit]))
         return result[result[:, 1] != np.inf]
-
 
 
 class DAMAExperiment(Experiment):

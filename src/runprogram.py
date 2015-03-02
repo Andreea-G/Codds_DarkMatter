@@ -19,20 +19,26 @@ def Plot_Upper_Limit(exper_name, upper_limit, plot_dots = True, plot_close = Tru
     if upper_limit.size == 0:
         print("upper_limit is empty!")
     elif upper_limit.ndim == 1:
-        if exper_name in MaximumGapLimit_exper or exper_name in Poisson_Exper:
-            x = [upper_limit[0]]
-            y = [-np.log10(conversion_factor) + upper_limit[0] + upper_limit[1]]
-        else:
-            x = np.log10([upper_limit[0]])
-            y = np.log10(upper_limit[1])
+        x = [upper_limit[0]]
+        y = [upper_limit[1]]
+#        Old version: use only to plot old data.        
+#        if exper_name in MaximumGapLimit_exper or exper_name in Poisson_Exper:
+#            x = [upper_limit[0]]
+#            y = [-np.log10(conversion_factor) + upper_limit[0] + upper_limit[1]]
+#        else:
+#            x = np.log10([upper_limit[0]])
+#            y = np.log10([upper_limit[1]])
         plt.plot(x, y, "o")
     else:
-        if exper_name in MaximumGapLimit_exper or exper_name in Poisson_Exper:
-            x = upper_limit[:,0]
-            y = -np.log10(conversion_factor) + upper_limit[:,0] + upper_limit[:,1]
-        else:
-            x = np.log10(upper_limit[:,0])
-            y = np.log10(upper_limit[:,1])
+        x = upper_limit[:,0]
+        y = upper_limit[:,1]
+#        Old version: use only to plot old data.
+#        if exper_name in MaximumGapLimit_exper or exper_name in Poisson_Exper:
+#            x = upper_limit[:,0]
+#            y = -np.log10(conversion_factor) + upper_limit[:,0] + upper_limit[:,1] # old version, don't use on new data
+#        else:
+#            x = np.log10(upper_limit[:,0])
+#            y = np.log10(upper_limit[:,1])
         num_points = x.size
         if num_points == 2:
             interp_kind = "linear"
