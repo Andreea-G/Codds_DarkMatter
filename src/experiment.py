@@ -124,9 +124,10 @@ class Experiment:
 
     def CrossSectionFactors_SI(self, ER, mx, fp, fn, delta):
         mu_p = ProtonMass * mx / (ProtonMass + mx)
+#        print("FF = ", self.FF(ER, self.A, self.mT))
         return self.mass_fraction * 1./(2.*mu_p**2) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2. * self.mT))**2) * \
-            ((self.Z + (self.A - self.Z) * fn/fp)**2) * self.FormFactor(ER) 
+            ((self.Z + (self.A - self.Z) * fn/fp)**2) * self.FF(ER, self.A, self.mT) 
 
     def FF66normlalized(self, ER, N1, N2):
         y = ER * self._y_over_ER
@@ -192,6 +193,7 @@ class Experiment:
         return r_list.sum()
         
     def ResponseSHM_Dirac(self, ER, Eee1, Eee2, mx, fp, fn, delta): 
+        self.count_response_calls += 1
         q = self.QuenchingFactor(ER)
         qER = q * ER
         vmin = VMin(ER, self.mT, mx, delta)
@@ -199,12 +201,11 @@ class Experiment:
         r_list = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
             self.Efficiency(Eee1, qER) * self.Efficiency_ER(qER) * \
             integrated_delta * self.etaMaxwellian(vmin, vobs, v0bar, vesc)
-        self.count_response_calls += 1
-        r = r_list.sum()
-#        print(ER, " ", Eee1, " ", Eee2, " ", r)
+        r_list_sum = r_list.sum()
+#        print(ER, " ", Eee1, " ", Eee2, " ", r_list_sum)
 #        print(vmin)
 #        print(self.etaMaxwellian(vmin, vobs, v0bar, vesc))
-        return r
+        return r_list_sum
         
     def ResponseSHM_Other(self, ER, Eee1, Eee2, mx, fp, fn, delta):
         self.count_response_calls += 1

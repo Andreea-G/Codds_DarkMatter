@@ -11,7 +11,7 @@ pi = np.pi
 #from scipy.interpolate import interp1d
 from interp import interp1d
 
-name = "LUX2013zero"
+name = "CDMSSi2012"
 modulated = False
 
 energy_resolution_type = "Gaussian"
@@ -32,8 +32,8 @@ num_target_nuclides = target_nuclide_mass_list.size
 QuenchingFactor = lambda e: 1
 
 Ethreshold = 7.
-Emaximum = 12.3
-ERmaximum = 12.3
+Emaximum = 100.
+ERmaximum = 100.
 
 Efficiency_ER = lambda er: 1.
 

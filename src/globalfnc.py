@@ -74,6 +74,34 @@ def OutputDirectory(output_main_dir, scattering_type, mPhi, delta):
     out_dir += str(math.trunc(abs(delta))) + "/"
     return out_dir
 
+def Output_file_name(exper_name, scattering_type, mPhi, mx, fp, fn, delta, HALO_DEP, \
+    filename_tail, OUTPUT_MAIN_DIR, quenching):
+    output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
+    if exper_name in DAMARegion_exper or exper_name in DAMALimit_exper:
+        output_file_no_extension = "./" + output_dir + "pbesebTab_" + exper_name
+    else:
+        output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper_name
+
+    if HALO_DEP:
+        output_file_no_extension += "_mxsigma"
+        if vesc != default_vesc:
+            output_file_no_extension += "_vesc" \
+                + str(math.trunc(round(vesc)))
+        if vobs != default_vobs:
+            output_file_no_extension += "_vobs" \
+                + str(math.trunc(round(vobs)))
+    else:
+        output_file_no_extension += "_mx_" + str(mx) + "GeV"
+
+    output_file_no_extension += FileNameTail(fp, fn, mPhi) + filename_tail
+
+    if quenching != None:
+        output_file_no_extension += "_q" + str(quenching)
+    print(output_file_no_extension)
+    return output_file_no_extension
+
+
+
 def Gaussian(x, mu, sigma):
     return np.exp(-(x-mu)**2 / (2 * sigma**2)) / (np.sqrt(2 * pi) * sigma)
 
@@ -131,6 +159,11 @@ def ERecoilBranch(vmin, mT, mx, delta, sign):
     muT = mx * mT /(mx + mT)
     return 1.e6 / SpeedOfLight**2 * muT**2 * vmin**2 / (2.*mT) * \
         (1. + sign * np.sqrt(1. - 2.*delta / (muT * vmin**2) * SpeedOfLight**2 * 1.e-6))**2
+
+def dERecoildVmin(vmin, mT, mx, delta, sign):
+    muT = mx * mT /(mx + mT)
+    sqrt_factor = np.sqrt(1. - 2.*delta / (muT * vmin**2) * SpeedOfLight**2 * 1.e-6)
+    return sign * muT**2 * vmin / mT * (1. + sign * sqrt_factor)**2 / sqrt_factor
 
 def eta0Maxwellian(vmin, vobs, v0bar, vesc):
     x = vmin/v0bar
