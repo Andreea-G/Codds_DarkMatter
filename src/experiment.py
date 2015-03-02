@@ -10,7 +10,6 @@ from __future__ import division
 
 
 INPUT_DIR = "Data/"
-OUTPUT_MAIN_DIR = "Output/"
 
 def import_file(full_path_to_module):
     import os, sys

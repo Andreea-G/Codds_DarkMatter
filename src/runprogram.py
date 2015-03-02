@@ -52,7 +52,7 @@ def Plot_Upper_Limit(exper_name, upper_limit, plot_dots = True, plot_close = Tru
 
 
 def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, mx_min, mx_max, \
-    num_steps, RUN_PROGRAM, MAKE_PLOT, filename_tail = "", plot_dots = True, quenching = None):
+    num_steps, RUN_PROGRAM, MAKE_PLOT, filename_tail = "", OUTPUT_MAIN_DIR = "Output/", plot_dots = True, quenching = None):
     print('name = ', exper_name)
     if exper_name in MaximumGapLimit_exper:
         exper = MaxGapExperiment(exper_name, scattering_type, mPhi)

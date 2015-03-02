@@ -39,6 +39,8 @@ def main():
     exper_list = [implemented_exper[i] for i in [0,1,2,3,4,5,6,7,8,9]]
 #    exper_list = implemented_exper
     filename_tail_list = [""]
+    OUTPUT_MAIN_DIR = "Output/"
+
     plt.close()
     for exper_name in exper_list:
         for filename_tail in filename_tail_list:
@@ -48,7 +50,8 @@ def main():
                     print(mx_min, " ", mx_max, " ", num_steps)
                     run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                         mx_min, mx_max, num_steps, RUN_PROGRAM, MAKE_PLOT, \
-                        filename_tail, plot_dots = plot_dots, quenching = quenching)
+                        filename_tail, OUTPUT_MAIN_DIR = OUTPUT_MAIN_DIR, \
+                        plot_dots = plot_dots, quenching = quenching)
     plt.show()
     
     if RUN_PROGRAM:
