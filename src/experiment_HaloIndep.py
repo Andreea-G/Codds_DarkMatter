@@ -67,11 +67,7 @@ class Experiment_HaloIndep(Experiment):
         midpoints = []
         integr = integrate.quad(self.Response_Other, vmin1, vmin2, \
             args=(Eee1, Eee2, mx, fp, fn, delta), points = midpoints, epsrel = PRECISSION, epsabs = 0)
-        '''
-        integr = integrate.dblquad(self.DifferentialResponse, vmin1, vmin2, \
-            lambda Eee: Eee1, lambda Eee: Eee2, \
-            args=(mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
-        '''
+        print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
         return integr[0]
 
     def IntegratedResponse_Dirac(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
@@ -135,9 +131,7 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
                 to_print = np.log10(np.array([[mx, result]]))
                 with open(output_file,'ab') as f_handle:
                     np.savetxt(f_handle, to_print)
-#            upperlimit_table = result
             upperlimit_table = np.append(upperlimit_table, [result])
-            print("ul_table = ", upperlimit_table)
         return upperlimit_table
         
     def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step, output_file):
