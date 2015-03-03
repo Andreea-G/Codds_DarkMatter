@@ -16,25 +16,30 @@ class Experiment_HaloIndep(Experiment):
         else:
             self.IntegratedResponse = self.IntegratedResponse_Other
 
-    def DifferentialResponse(self, Eee, vmin, mx, fp, fn, delta): 
+    def DifferentialResponse(self, Eee, qER, const_factor): 
         self.count_diffresponse_calls += 1
+        res = np.array([self.ResolutionFunction(Eee, i, self.EnergyResolution(i)) for i in qER])
+        r_list = const_factor * self.Efficiency(Eee) * res
+        return r_list.sum()
+
+    def Response_Other(self, vmin, Eee1, Eee2, mx, fp, fn, delta):
+        self.count_response_calls += 1
         if delta == 0:
             branches = [1]
         else:
             branches = [1, -1]
-        r_list_sum = 0
+        result = 0
         for sign in branches:
             ER = ERecoilBranch(vmin, self.mT, mx, delta, sign)
             q = np.array(list(map(self.QuenchingFactor, ER)))
             qER = q * ER
             efficiencyER = np.array(list(map(self.Efficiency_ER, ER)))
-            res = np.array([self.ResolutionFunction(Eee, i, self.EnergyResolution(i)) for i in qER])
-            r_list = kilogram/SpeedOfLight**2 * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
-                dERecoildVmin(vmin, self.mT, mx, delta, sign) * \
-                self.Efficiency(Eee) * efficiencyER * res
-            r_list_sum += r_list.sum()
-        return r_list_sum
-        
+            const_factor = kilogram/SpeedOfLight**2 * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
+                dERecoildVmin(vmin, self.mT, mx, delta, sign) * efficiencyER
+            result += integrate.quad(self.DifferentialResponse, Eee1, Eee2, \
+                args=(qER, const_factor), epsrel = PRECISSION, epsabs = 0)[0]
+        return result
+
     def Response_Dirac(self, vmin, Eee1, Eee2, mx, fp, fn, delta): 
         self.count_response_calls += 1
         if delta == 0:
@@ -56,19 +61,7 @@ class Experiment_HaloIndep(Experiment):
                 dERecoildVmin(vmin, self.mT, mx, delta, sign) * \
                 efficiencyEee * efficiencyER * integrated_delta
             r_list_sum += r_list.sum()
-        return r_list_sum        
-        
-    def Response_Other(self, vmin, Eee1, Eee2, mx, fp, fn, delta):
-        self.count_response_calls += 1
-        result = integrate.quad(self.DifferentialResponse, Eee1, Eee2, \
-            args=(vmin, mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)[0]
-        return result
-
-    def IntegratedResponse_Dirac(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
-        integr = integrate.quad(self.Response_Dirac, vmin1, vmin2, \
-            args=(Eee1, Eee2, mx, fp, fn, delta)) #, vec_func=False
-        print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
-        return integr[0]
+        return r_list_sum
 
     def IntegratedResponse_Other(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
         midpoints = []
@@ -79,6 +72,26 @@ class Experiment_HaloIndep(Experiment):
             lambda Eee: Eee1, lambda Eee: Eee2, \
             args=(mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
         '''
+        return integr[0]
+
+    def IntegratedResponse_Dirac(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
+        #TODO! This is only valid for quenching factor 1!!! Extend to arbitrary q!
+        E_delta = - delta * mx / (self.mT + mx)  #  = muT * delta / self.mT for delta <= 0
+        vmin_of_E1 = VMin(Eee1, self.mT, mx, delta)
+        vmin_of_E2 = VMin(Eee2, self.mT, mx, delta)
+        if Eee1 <= max(E_delta) or Eee2 >= min(E_delta):
+            vmin_min = 0
+        else:
+            vmin_min = min(min(vmin_of_E1), min(vmin_of_E2))
+        vmin_max = max(max(vmin_of_E1), max(vmin_of_E2))
+        vmin1 = max(vmin_min, vmin1)
+        vmin2 = min(vmin_max, vmin2)
+        if vmin1 > vmin2:
+            return 0
+        
+        integr = integrate.quad(self.Response_Dirac, vmin1, vmin2, \
+            args=(Eee1, Eee2, mx, fp, fn, delta)) #, vec_func=False
+        print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
         return integr[0]
 
 

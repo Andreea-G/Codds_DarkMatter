@@ -180,7 +180,7 @@ class Experiment:
  
     def Resolution(self, Eee, qER):
         return self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
-        
+
     def DifferentialResponseSHM(self, Eee, ER, mx, fp, fn, delta): 
         self.count_diffresponse_calls += 1
         q = self.QuenchingFactor(ER)
@@ -191,7 +191,14 @@ class Experiment:
             self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER)) * \
             self.etaMaxwellian(vmin, vobs, v0bar, vesc)
         return r_list.sum()
-        
+
+    def ResponseSHM_Other(self, ER, Eee1, Eee2, mx, fp, fn, delta):
+        self.count_response_calls += 1
+        result = integrate.quad(self.DifferentialResponseSHM, Eee1, Eee2, \
+            args=(ER, mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)[0]
+#        print(ER, " ", result)
+        return result
+
     def ResponseSHM_Dirac(self, ER, Eee1, Eee2, mx, fp, fn, delta): 
         self.count_response_calls += 1
         q = self.QuenchingFactor(ER)
@@ -206,38 +213,7 @@ class Experiment:
 #        print(vmin)
 #        print(self.etaMaxwellian(vmin, vobs, v0bar, vesc))
         return r_list_sum
-        
-    def ResponseSHM_Other(self, ER, Eee1, Eee2, mx, fp, fn, delta):
-        self.count_response_calls += 1
-        result = integrate.quad(self.DifferentialResponseSHM, Eee1, Eee2, \
-            args=(ER, mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)[0]
-#        print(ER, " ", result)
-        return result
 
-    def IntegratedResponseSHM_Dirac(self, Eee1, Eee2, mx, fp, fn, delta):
-        vmax = vesc + vobs
-        muT = self.mT * mx / (self.mT + mx)
-        vdelta = SpeedOfLight / 500. * np.sqrt(delta / 2. / muT) if delta > 0 \
-            else np.array([0] * self.numT)
-        ER_plus_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, 1) \
-            if j < vmax else 0., self.mT, vdelta))
-        ER_minus_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1) \
-            if j < vmax else 1.e6, self.mT, vdelta))
-#        print("ER_plus_list = ", ER_plus_list)
-#        print(min(np.max(ER_plus_list), self.ERmaximum))
-#        print(Eee2)
-        #TODO! This is only valid for quenching factor 1!!! Extend to arbitrary q!
-        ER_plus = min(min(np.max(ER_plus_list), self.ERmaximum), Eee2)
-        ER_minus = max(np.min(ER_minus_list), Eee1)
-#        print("ER+- = ", ER_minus, " ", ER_plus)
-        if ER_minus < ER_plus:
-            integr = integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus, \
-                args=(Eee1, Eee2, mx, fp, fn, delta)) #, vec_func=False
-#            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
-            return integr[0]
-        else:
-            return 0.
-            
     def IntegratedResponseSHM_Other(self, Eee1, Eee2, mx, fp, fn, delta):
         vmax = vesc + vobs
         muT = self.mT * mx / (self.mT + mx)
@@ -269,6 +245,31 @@ class Experiment:
             return integr[0]
         else:
             return 0.
+
+    def IntegratedResponseSHM_Dirac(self, Eee1, Eee2, mx, fp, fn, delta):
+        vmax = vesc + vobs
+        muT = self.mT * mx / (self.mT + mx)
+        vdelta = SpeedOfLight / 500. * np.sqrt(delta / 2. / muT) if delta > 0 \
+            else np.array([0] * self.numT)
+        ER_plus_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, 1) \
+            if j < vmax else 0., self.mT, vdelta))
+        ER_minus_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1) \
+            if j < vmax else 1.e6, self.mT, vdelta))
+#        print("ER_plus_list = ", ER_plus_list)
+#        print(min(np.max(ER_plus_list), self.ERmaximum))
+#        print(Eee2)
+        #TODO! This is only valid for quenching factor 1!!! Extend to arbitrary q!
+        ER_plus = min(min(np.max(ER_plus_list), self.ERmaximum), Eee2)
+        ER_minus = max(np.min(ER_minus_list), Eee1)
+#        print("ER+- = ", ER_minus, " ", ER_plus)
+        if ER_minus < ER_plus:
+            integr = integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus, \
+                args=(Eee1, Eee2, mx, fp, fn, delta)) #, vec_func=False
+#            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
+            return integr[0]
+        else:
+            return 0.
+
 
 class PoissonExperiment(Experiment):
     def __init__(self, expername, scattering_type, mPhi = mPhiRef, quenching_factor = None):
