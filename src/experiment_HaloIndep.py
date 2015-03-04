@@ -17,12 +17,19 @@ class Experiment_HaloIndep(Experiment):
             self.IntegratedResponse = self.IntegratedResponse_Other
 
     def DifferentialResponse(self, Eee, qER, const_factor): 
+        ''' Differential response function d**2 R / (d Eee d ER), as a function of measured energy Eee and recoil energy ER,
+         NOT including eta0
+        '''
         self.count_diffresponse_calls += 1
-        res = np.array([self.ResolutionFunction(Eee, i, self.EnergyResolution(i)) for i in qER])
-        r_list = const_factor * self.Efficiency(Eee) * res
+#        res = np.array([self.ResolutionFunction(Eee, i, self.EnergyResolution(i)) for i in qER])
+        r_list = const_factor * self.Efficiency(Eee) * self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
         return r_list.sum()
 
     def Response_Other(self, vmin, Eee1, Eee2, mx, fp, fn, delta):
+        ''' Response function integral d**2 R / (d Eee d ER) between measured energies Eee1 and Eee2, 
+        as a function of recoil energy ER, NOT including eta0.
+            For any finite resolution function (i.e. other than Dirac Delta).
+        '''
         self.count_response_calls += 1
         if delta == 0:
             branches = [1]
@@ -31,9 +38,9 @@ class Experiment_HaloIndep(Experiment):
         result = 0
         for sign in branches:
             ER = ERecoilBranch(vmin, self.mT, mx, delta, sign)
-            q = np.array(list(map(self.QuenchingFactor, ER)))
+            q = self.QuenchingFactor(ER)
             qER = q * ER
-            efficiencyER = np.array(list(map(self.Efficiency_ER, ER)))
+            efficiencyER = self.Efficiency_ER(ER)
             const_factor = kilogram/SpeedOfLight**2 * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
                 dERecoildVmin(vmin, self.mT, mx, delta, sign) * efficiencyER
             result += integrate.quad(self.DifferentialResponse, Eee1, Eee2, \
@@ -41,6 +48,10 @@ class Experiment_HaloIndep(Experiment):
         return result
 
     def Response_Dirac(self, vmin, Eee1, Eee2, mx, fp, fn, delta): 
+        ''' Response function integral d**2 R / (d Eee d ER) between measured energies Eee1 and Eee2, 
+        as a function of recoil energy ER, NOT including eta0.
+            For Dirac Delta resolution function.
+        '''
         self.count_response_calls += 1
         if delta == 0:
             branches = [1]
@@ -49,10 +60,11 @@ class Experiment_HaloIndep(Experiment):
         r_list_sum = 0
         for sign in branches:
             ER = ERecoilBranch(vmin, self.mT, mx, delta, sign)
-            q = np.array(list(map(self.QuenchingFactor, ER)))
+            q = self.QuenchingFactor(ER)
             qER = q * ER
             integrated_delta = np.array([1. if Eee1 <= i < Eee2 else 0. for i in qER])
-            efficiencyEee = np.array([self.Efficiency(Eee1, i) for i in qER])
+            efficiencyEee = self.Efficiency(Eee1, qER)
+#            efficiencyER = self.Efficiency_ER(qER)
             efficiencyER = np.array(list(map(self.Efficiency_ER, qER)))
 #            print("ER, q, qER, intdelta, effEee, effER = ", ER, "; ", q, "; ", qER, "; ", integrated_delta, "; ", efficiencyEee, "; ", efficiencyER)
 #            print("CSfactors = ", self.CrossSectionFactors(ER, mx, fp, fn, delta))
@@ -64,6 +76,10 @@ class Experiment_HaloIndep(Experiment):
         return r_list_sum
 
     def IntegratedResponse_Other(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
+        ''' Integrated Response Function between measured energies Eee1 and Eee2, and all of recoil energies ER,
+        NOT including eta0.
+            For any finite resolution function (i.e. other than Dirac Delta).
+        '''
         midpoints = []
         integr = integrate.quad(self.Response_Other, vmin1, vmin2, \
             args=(Eee1, Eee2, mx, fp, fn, delta), points = midpoints, epsrel = PRECISSION, epsabs = 0)
@@ -71,6 +87,10 @@ class Experiment_HaloIndep(Experiment):
         return integr[0]
 
     def IntegratedResponse_Dirac(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
+        ''' Integrated Response Function between measured energies Eee1 and Eee2, and all of recoil energies ER,
+        NOT including eta0.
+            For Dirac Delta resolution function.
+        '''
         #TODO! This is only valid for quenching factor 1!!! Extend to arbitrary q!
         E_delta = - delta * mx / (self.mT + mx)  #  = muT * delta / self.mT for delta <= 0
         vmin_of_E1 = VMin(Eee1, self.mT, mx, delta)

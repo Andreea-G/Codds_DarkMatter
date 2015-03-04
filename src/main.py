@@ -9,8 +9,8 @@ from __future__ import division
 #import profile
 from runprogram import *
 import os   # for speaking
+#from input_DAMApaper import *
 from input_HaloIndep import *
-
 
 
 def main():

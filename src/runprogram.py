@@ -12,18 +12,30 @@ from experiment_HaloIndep import *
 import matplotlib.pyplot as plt
 
 def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, plot_dots = True, plot_close = True, plot_show = True):
+    ''' Make plots for the upper limits.
+        Input:
+            exper_name = name of experiment
+            upper_limit = list of x and y coordinates for points represnting the upper limit on the plot
+            HALO_DEP = True or False, whether the analysis is halo-dependent or halo-independent
+            plot_dots = True or False, whether the plot should show the data points or just the interpolation
+            plot_close = True or False, whether the plot should be cleared and started from scratch,
+                or new limits should be added to a previous plot
+            plot_show = True or False, whether the plot should be shown or not.
+
+    '''
     from scipy.interpolate import interp1d
 
     if plot_close:
         plt.close()
 
-    if upper_limit.size == 0:
+    # make a list of the x and y coordinates of the plots, and plot them
+    if upper_limit.size == 0:   # nothing to plot
         print("upper_limit is empty!")
-    elif upper_limit.ndim == 1:
+    elif upper_limit.ndim == 1: # only one point, so no interpolation
         x = [upper_limit[0]]
         y = [upper_limit[1]]
         plt.plot(x, y, "o")
-    else:
+    else:   # more than one point, so decide on the interpolation order and plot
         x = upper_limit[:,0]
         y = upper_limit[:,1]
         num_points = x.size
@@ -39,6 +51,7 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, plot_dots = True, plot_c
             plt.plot(x, y, "o")
         plt.plot(x1, interp(x1))
 
+    # set axis labels, depending on whether it is for halo-dependent or not
     if HALO_DEP:
         plt.xlabel('Log10(m [GeV])')
         plt.ylabel('Log10(sigma)')
@@ -46,6 +59,7 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, plot_dots = True, plot_c
         plt.xlabel('vmin [km/s]')
         plt.ylabel('eta rho sigma / m [days^-1]')
 
+    # show plot
     if plot_show:
         plt.show()
 
@@ -54,8 +68,27 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
     RUN_PROGRAM, MAKE_PLOT, HALO_DEP, \
     mx = None, mx_range = None, vmin_range = None, \
     filename_tail = "", OUTPUT_MAIN_DIR = "Output/", plot_dots = True, quenching = None):
+    ''' Main run of the program.
+        Input:
+            exper_name = name of experiment
+            scattering_type: 'SI' for spin-dependent, 'SDPS' for pseudo-scalar, 'SDAV' for avial-vector
+            mPhi = mass of mediator
+            fp and fn = couplings to proton and neutron
+            delta = DM mass split
+            RUN_PROGRAM = True or False, whether the data should be (re-)computed
+            MAKE_PLOT = True or False, whether the data should be plotted
+            HALO_DEP = True or False, whether the analysis is halo-dependent or halo-independent
+            mx = DM mass, only give for halo-independent analysis
+            mx_range = (mx_min, mx_max, num_steps) = DM mass range and number or steps, only for halo-dependent
+            vmin_range = (vmin_start, vmin_end, vmin_step) = vmin range and step size, only for halo-independent
+            filename_tail = optional tag to be added to the file name 
+            OUTPUT_MAIN_DIR = name of main output directory, if different from "Output/"
+            plot_dots = True or False, whether the plot should show the data points or just the interpolation
+            quenching = quenching factor, needed for experiments that can have multiple options (such as KIMS or DAMA).
+    '''
 
     print('name = ', exper_name)
+    # Select which experiment class we must use, depending on what statistical analysis we need.
     if HALO_DEP:
         print('Halo Dependent')
         if exper_name in MaximumGapLimit_exper:
@@ -79,14 +112,17 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
             print("Error! This experiment was not implemented!")
             return
 
+    # get the file name specific to the parameters used for this run
     output_file_no_extension = Output_file_name(exper_name, scattering_type, mPhi, mx, fp, fn, delta, \
         HALO_DEP, filename_tail, OUTPUT_MAIN_DIR, quenching)
 
+    # (re-)compute the data
     if RUN_PROGRAM:
         output_file = output_file_no_extension + "_temp.dat" 
         f_handle = open(output_file, 'w')   # clear the file first
         f_handle.close()
 
+        # calculate the upper limit, for halo-dependent or halo-independent
         if HALO_DEP:
             (mx_min, mx_max, num_steps) = mx_range
             upper_limit = exper.UpperLimit(fp, fn, delta, mx_min, mx_max, num_steps, \
@@ -99,9 +135,10 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
         print("diff response calls = " , exper.count_diffresponse_calls)
         print("response calls = " , exper.count_response_calls)
         output_file = output_file_no_extension + ".dat"
-        print(output_file)
+        print(output_file)  # write to file
         np.savetxt(output_file, upper_limit)
 
+    # produce plot
     if MAKE_PLOT:
         output_file = output_file_no_extension + ".dat"
         upper_limit = np.loadtxt(output_file)

@@ -81,20 +81,20 @@ class Experiment:
             FFSigmaPJ.get((np.trunc(a), np.trunc(z)), FF_default), \
             self.A, self.Z)))
 
-        self.FF = FF_options[self.scattering_type][module.FF[scattering_type]]
-        self.ffelemQ = FFElementQ(self.Z)
+        self.FF = FF_options[self.scattering_type][module.FF[scattering_type]]  # form factor
+        self.ffelemQ = FFElementQ(self.Z)   # tests if it's been implemented in Haxton paper
         if ((self.ffelemQ == 1).all()):
             print("Haxton")
-            self.CrossSectionFactors_SD44 = self.CrossSectionFactors_SD44_Haxton
-            self.CrossSectionFactors_SD66 = self.CrossSectionFactors_SD66_Haxton
+            self.CrossSectionFactors_SDAV = self.CrossSectionFactors_SDAV_Haxton
+            self.CrossSectionFactors_SDPS = self.CrossSectionFactors_SDPS_Haxton
         else:
             print("mixed")
-            self.CrossSectionFactors_SD44 = self.CrossSectionFactors_SD44_Mixed
-            self.CrossSectionFactors_SD66 = self.CrossSectionFactors_SD66_Mixed
+            self.CrossSectionFactors_SDAV = self.CrossSectionFactors_SDAV_Mixed
+            self.CrossSectionFactors_SDPS = self.CrossSectionFactors_SDPS_Mixed
 
         CrossSectionFactors_options = {'SI' : self.CrossSectionFactors_SI,
-           'SD66' : self.CrossSectionFactors_SD66,
-           'SD44' : self.CrossSectionFactors_SD44,
+           'SDPS' : self.CrossSectionFactors_SDPS,
+           'SDAV' : self.CrossSectionFactors_SDAV,
         }
         self.CrossSectionFactors = CrossSectionFactors_options[self.scattering_type]
         if self.energy_resolution_type == "Dirac":
@@ -115,14 +115,20 @@ class Experiment:
 
         self._bsq = 41.467/(45. * self.A**(-1./3) - 25. * self.A**(-2./3)) * fermiGeV**2
         self._y_over_ER =  2.e-6 * self.mT * self._bsq / 4.
-        self._cross_sec_factors_SD66 =  (SpeedOfLight/v0bar)**4 * \
+        self._cross_sec_factors_SDPS =  (SpeedOfLight/v0bar)**4 * \
             self.mass_fraction * self.mT**2 
 
     def FormFactor(self, ER):
+        ''' Form factor including spin-dependence for the spin-dependent interaction, when 
+        the Haxton FF is not used.
+        '''
         result = (4./3. * (4. * pi)/(2 * self.J + 1.)) * self.FF(ER, self.A, self.mT)
         return result
 
     def CrossSectionFactors_SI(self, ER, mx, fp, fn, delta):
+        ''' Factors specific to the cross-section for the spin-independent interaction.
+            Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
+        '''
         mu_p = ProtonMass * mx / (ProtonMass + mx)
 #        print("FF = ", self.FF(ER, self.A, self.mT))
         return self.mass_fraction * 1./(2.*mu_p**2) * \
@@ -144,25 +150,36 @@ class Experiment:
                 self._FFSigmaPJ_function_list[i, N1, N2](y[i]))
         return l * np.exp(-2. * y)
     
-    def CrossSectionFactors_SD66_Haxton(self, ER, mx, fp, fn, delta):
+    def CrossSectionFactors_SDPS_Haxton(self, ER, mx, fp, fn, delta):
+        ''' Factors specific to the cross-section for the spin-dependent pseudo-scalar interaction, 
+        with Haxton form factors.
+            Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
+        '''
         mu_p = ProtonMass * mx / (ProtonMass + mx)
         return 1.e-12 * ER**2 * 3./(8. * mu_p**6) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/ 2 / self.mT)**2) * \
-            self._cross_sec_factors_SD66 * \
+            self._cross_sec_factors_SDPS * \
             (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
             (fn/fp)**2 * self.FF66normlalized(ER, 1, 1))
-#            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER)
 
-    def CrossSectionFactors_SD66_Mixed(self, ER, mx, fp, fn, delta):
+    def CrossSectionFactors_SDPS_Mixed(self, ER, mx, fp, fn, delta):
+        ''' Factors specific to the cross-section for the spin-dependent pseudo-scalar interaction, 
+        with mixed form factors (some target elements from Haxton, and some not).
+            Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
+        '''
         mu_p = ProtonMass * mx / (ProtonMass + mx)
         return 1.e-12 * ER**2 * 3./(8. * mu_p**6) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/ 2 / self.mT)**2) * \
-            self._cross_sec_factors_SD66 * \
+            self._cross_sec_factors_SDPS * \
             (self.ffelemQ * (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) + \
             (fn/fp)**2 * self.FF66normlalized(ER, 1, 1)) + \
             (1-self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
 
-    def CrossSectionFactors_SD44_Haxton(self, ER, mx, fp, fn, delta):
+    def CrossSectionFactors_SDAV_Haxton(self, ER, mx, fp, fn, delta):
+        ''' Factors specific to the cross-section for the spin-dependent axial-vector interaction, 
+        with Haxton form factors.
+            Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
+        '''
         mu_p = ProtonMass * mx / (ProtonMass + mx)
         return self.mass_fraction / (2 * mu_p**2) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
@@ -170,7 +187,11 @@ class Experiment:
             (fn/fp)**2 * self.FF44normlalized(ER, 1, 1))
 #            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER)
 
-    def CrossSectionFactors_SD44_Mixed(self, ER, mx, fp, fn, delta):
+    def CrossSectionFactors_SDAV_Mixed(self, ER, mx, fp, fn, delta):
+        ''' Factors specific to the cross-section for the spin-dependent axial-vector interaction, 
+        with mixed form factors (some target elements from Haxton, and some not).
+            Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
+        '''
         mu_p = ProtonMass * mx / (ProtonMass + mx)
         return self.mass_fraction / (2 * mu_p**2) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
@@ -179,27 +200,39 @@ class Experiment:
             (1-self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
  
     def Resolution(self, Eee, qER):
+        ''' Energy resolution G(Eee, ER) for given measured energy Eee and recoil energy ER
+        '''
         return self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
-
-    def DifferentialResponseSHM(self, Eee, ER, mx, fp, fn, delta): 
+        
+    def DifferentialResponseSHM(self, Eee, qER, const_factor): 
+        ''' Differential response function d**2 R / (d Eee d ER), as a function of measured energy Eee and recoil energy ER
+        '''
         self.count_diffresponse_calls += 1
+        r_list = const_factor * self.Efficiency(Eee) * \
+            self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
+        return r_list.sum()
+        
+    def ResponseSHM_Other(self, ER, Eee1, Eee2, mx, fp, fn, delta):
+        ''' Response function integral d**2 R / (d Eee d ER) between measured energies Eee1 and Eee2, 
+        as a function of recoil energy ER.
+            For any finite resolution function (i.e. other than Dirac Delta).
+        '''
+        self.count_response_calls += 1
         q = self.QuenchingFactor(ER)
         qER = q * ER
         vmin = VMin(ER, self.mT, mx, delta)
-        r_list = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
-            self.Efficiency(Eee) * self.Efficiency_ER(ER) * \
-            self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER)) * \
-            self.etaMaxwellian(vmin, vobs, v0bar, vesc)
-        return r_list.sum()
-
-    def ResponseSHM_Other(self, ER, Eee1, Eee2, mx, fp, fn, delta):
-        self.count_response_calls += 1
+        const_factor = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
+            self.Efficiency_ER(ER) * self.etaMaxwellian(vmin, vobs, v0bar, vesc)
         result = integrate.quad(self.DifferentialResponseSHM, Eee1, Eee2, \
-            args=(ER, mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)[0]
+            args=(qER, const_factor), epsrel = PRECISSION, epsabs = 0)[0]
 #        print(ER, " ", result)
         return result
-
+        
     def ResponseSHM_Dirac(self, ER, Eee1, Eee2, mx, fp, fn, delta): 
+        ''' Response function integral d**2 R / (d Eee d ER) between measured energies Eee1 and Eee2, 
+        as a function of recoil energy ER.
+            For Dirac Delta resolution function.
+        '''
         self.count_response_calls += 1
         q = self.QuenchingFactor(ER)
         qER = q * ER
@@ -215,6 +248,9 @@ class Experiment:
         return r_list_sum
 
     def IntegratedResponseSHM_Other(self, Eee1, Eee2, mx, fp, fn, delta):
+        ''' Integrated Response Function between measured energies Eee1 and Eee2, and all of recoil energies ER.
+            For any finite resolution function (i.e. other than Dirac Delta).
+        '''
         vmax = vesc + vobs
         muT = self.mT * mx / (self.mT + mx)
         vdelta = SpeedOfLight / 500. * np.sqrt(delta / 2. / muT) if delta > 0 \
@@ -247,6 +283,9 @@ class Experiment:
             return 0.
 
     def IntegratedResponseSHM_Dirac(self, Eee1, Eee2, mx, fp, fn, delta):
+        ''' Integrated Response Function between measured energies Eee1 and Eee2, and all of recoil energies ER.
+            For Dirac Delta resolution function.
+        '''
         vmax = vesc + vobs
         muT = self.mT * mx / (self.mT + mx)
         vdelta = SpeedOfLight / 500. * np.sqrt(delta / 2. / muT) if delta > 0 \

@@ -11,10 +11,11 @@ from math import erf
 import math
 pi = np.pi
 
-T = True
+T = True    # short-hand notation
 F = False
 
 PRECISSION = 1.e-3
+# Unit conversions
 fermiGeV = 1./0.1973269602 #Natural[GeV femto Meter]
 kilogram = 1e-9/1.782661758e-36
 SpeedOfLight = 299792.458 #km/s
@@ -24,7 +25,7 @@ mPhiRef = 1000.
 rho = 0.3
 conversion_factor = rho * SpeedOfLight**2 * 1e5 * 3600 * 24
 ConfidenceLevel = 0.9
-        
+
 v0bar = default_v0bar = 220.
 vobs = default_vobs = default_v0bar + 12.
 vesc = default_vesc = 533.
@@ -33,6 +34,8 @@ vesc = default_vesc = 533.
 #vobs = v0bar + 12
 #vesc = 544 - 3 * 39
 
+''' List of experiment names corresponding to each type of statistical analysis
+'''
 MaximumGapLimit_exper = ["superCDMS", \
         "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many", \
         "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
@@ -42,6 +45,9 @@ DAMALimit_exper = ["DAMA2010NaSmRebinned_TotRateLimit"]
 Poisson_Exper = ["SIMPLEModeStage2"]
 
 def FileNameTail(fp, fn, mPhi):
+    ''' Gives a file name-tail that is added to each output file, to distinguish 
+    between different input parameters
+    '''
     if mPhi == 1000.:
         mPhi_string = ""
     else:
@@ -63,6 +69,8 @@ def FileNameTail(fp, fn, mPhi):
     return mPhi_string + fnfp_string
       
 def OutputDirectory(output_main_dir, scattering_type, mPhi, delta):
+    ''' Gives the name of the output directory for the given input parameters.
+    '''
     out_dir = output_main_dir
     if mPhi == 1000.:
         out_dir += "Contact"
@@ -76,6 +84,8 @@ def OutputDirectory(output_main_dir, scattering_type, mPhi, delta):
 
 def Output_file_name(exper_name, scattering_type, mPhi, mx, fp, fn, delta, HALO_DEP, \
     filename_tail, OUTPUT_MAIN_DIR, quenching):
+    ''' Gives the name of the output file name for the given input parameters.
+    '''
     output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
     if exper_name in DAMARegion_exper or exper_name in DAMALimit_exper:
         output_file_no_extension = "./" + output_dir + "pbesebTab_" + exper_name
@@ -101,11 +111,15 @@ def Output_file_name(exper_name, scattering_type, mPhi, mx, fp, fn, delta, HALO_
     return output_file_no_extension
 
 
-
 def Gaussian(x, mu, sigma):
+    ''' Gaussian resolution function.
+    '''
     return np.exp(-(x-mu)**2 / (2 * sigma**2)) / (np.sqrt(2 * pi) * sigma)
 
 def GPoisson(x, nu, sigma):
+    ''' Resolution function for the Xe experiment; it is a combination of Poisson and Gaussian resolution.
+        nu is the expected # of events.
+    '''
     eps = 1.e-4
     n = 1
     add = nu * np.exp(-(x-1.)**2 / (2 * sigma**2))
@@ -121,6 +135,9 @@ def GPoisson(x, nu, sigma):
     return result
 
 def HelmFF(ER, A, mT):
+    ''' Helm Form Factor for a given recoil energy ER, mass number A, and target nuclide mass mT.
+        See http://arxiv.org/abs/hep-ph/0608035.
+    '''
     q = np.sqrt(2e-6 * mT * ER)
     s = 0.9
     ha = 0.52
@@ -136,36 +153,56 @@ def HelmFF(ER, A, mT):
     return f**2 * np.exp(-y**2)
 
 def GaussianFFSD(ER, A, mT):
+    ''' Gaussian Form Factor for spin-dependent interactions for a given recoil energy ER, 
+    atomic mass A, and target nuclide mass mT.
+    '''
     q = np.sqrt(2e-6 * mT * ER)
     R = 0.92 * A**(1./3) + 2.68 - 0.78 * np.sqrt((A**(1./3) - 3.8)**2 + 0.2)
     x = np.abs(q * R * fermiGeV)
     return np.exp(-x**2 / 4.)
     
-
+''' Form factor options are used to select the correct FF depending on the type of interaction 
+(spin-independent, spin-dependent with axial-vector or pseudo-scalar coupling).
+'''
 FFSI_options = {'HelmFF' : HelmFF,
 }
 FFSD_options = {'GaussianFFSD' : GaussianFFSD,
 }
 FF_options = {'SI' : FFSI_options,
-              'SD66' : FFSD_options,
-              'SD44' : FFSD_options,
+              'SDPS' : FFSD_options,
+              'SDAV' : FFSD_options,
 }
 
 def VMin(ER, mT, mx, delta):
+    ''' Minimum velocity for a given recoil energy ER, target mass mT, DM mass mx, 
+    and mass split delta.
+    '''
     muT = mx * mT / (mx + mT)
     return SpeedOfLight * 1.e-3 / np.sqrt(2. * ER * mT) * abs(delta + ER * mT / muT)
     
 def ERecoilBranch(vmin, mT, mx, delta, sign):
+    ''' Recoil energy corresponding to a given minimum velocity vmin, target mass mT, 
+    DM mass mx, and mass split delta.
+        sign is +1 or -1, corresponding to the upper and lower branch, respectively.
+    '''
     muT = mx * mT /(mx + mT)
     return 1.e6 / SpeedOfLight**2 * muT**2 * vmin**2 / (2.*mT) * \
         (1. + sign * np.sqrt(1. - 2.*delta / (muT * vmin**2) * SpeedOfLight**2 * 1.e-6))**2
 
 def dERecoildVmin(vmin, mT, mx, delta, sign):
+    ''' Derivative of recoil energy ER with respect to velocity vmin, for given vmin, 
+    target mass mT, DM mass mx, and mass split delta.
+        sign is +1 or -1, corresponding to the upper and lower branch, respectively.    
+    '''
     muT = mx * mT /(mx + mT)
     sqrt_factor = np.sqrt(1. - 2.*delta / (muT * vmin**2) * SpeedOfLight**2 * 1.e-6)
     return sign * muT**2 * vmin / mT * (1. + sign * sqrt_factor)**2 / sqrt_factor
 
 def eta0Maxwellian(vmin, vobs, v0bar, vesc):
+    ''' Velocity integral eta0 for a given DM minumum velocity vmin, 
+    in a Standard Halo Model with observed velocity vobs, velocity dispersion v0bar, 
+    and escape velocity vesc.
+    '''
     x = vmin/v0bar
     y = vobs/v0bar
     z = vesc/v0bar
@@ -181,6 +218,11 @@ def eta0Maxwellian(vmin, vobs, v0bar, vesc):
     return eta / (-2. * exp_z_sq_z / sqrt_pi + erfz) / v0bar
 
 def eta1Maxwellian(vmin, vobs, v0bar, vesc):
+    ''' Same as eta0Maxwellian, but this is the modulation velocity integral 
+    eta1 = d eta0 / d vobs * delta_v. 
+        delta_v = v_Earth * cos(gamma) where the velocity of the Earth is v_Earth = 30 km/s 
+    and is inclined at an angle of gamma = 60 deg wrt the galactic plane.
+    '''
     x = vmin/v0bar
     y = vobs/v0bar
     z = vesc/v0bar
@@ -200,6 +242,11 @@ def eta1Maxwellian(vmin, vobs, v0bar, vesc):
     return eta / (-2. * exp_z_sq_z / sqrt_pi + erfz) * delta_v / v0bar**2
 
 def MaximumGapC0scaled(x, mu_over_x):
+    ''' Scaled probability C0 of the maximum gap size being smaller than a particular value of x, 
+    where x is the size of the maximum gap in the random experiment and mu is the total expected number of 
+    events. Based on Maximum Gap Method (Eq 2 of Yellin paper):
+    PHYSICAL REVIEW D 66, 032005, 2002
+    '''
     if mu_over_x < 1.:
         return 1.
     elif 1. <= mu_over_x < 2.:

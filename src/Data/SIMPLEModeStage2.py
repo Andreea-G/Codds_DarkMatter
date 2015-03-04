@@ -21,8 +21,8 @@ EnergyResolution = lambda e: 1.
 FFSD = 'GaussianFFSD'
 FFSI = 'HelmFF'
 FF = {'SI' : FFSI,
-      'SD66' : FFSD, 
-      'SD44' : FFSD,
+      'SDPS' : FFSD, 
+      'SDAV' : FFSD,
 }
 target_nuclide_AZC_list = np.array([[12, 6, 0.153648], [13, 6, 0.00186884], \
     [35, 17, 0.171531], [37, 17, 0.0579854], [19, 9, 0.614966]])

@@ -7,7 +7,7 @@ Created on Sun Mar  1 21:28:44 2015
 
 def Vmin_range(exper_name, mx, delta, mPhi = 1000., quenching = None):
     if exper_name == "superCDMS":
-        vmin_step = 200
+        vmin_step = 10
         vmin_range_options = {(9., 0, 1000.): (200, 1000, vmin_step),
                               (3.5, -50, 1000.): (vmin_step, 1000, vmin_step),
         }
@@ -17,7 +17,7 @@ def Vmin_range(exper_name, mx, delta, mPhi = 1000., quenching = None):
                               (3.5, -50, 1000.): (600, 1000, vmin_step),
         }
     else:
-        vmin_step = 50
+        vmin_step = 10
         vmin_range_options = {(9., 0, 1000.): (300, 900, vmin_step),
                               (3.5, -50, 1000.): (100, 1000, vmin_step),
         }
