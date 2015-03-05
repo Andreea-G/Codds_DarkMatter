@@ -145,6 +145,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                 if FOX_METHOD[2]:
                     vminStar = 500
                     logetaStar = -25.5
+                    exper.ImportOptimalLikelihood(output_file_tail)
                     exper.ConstrainedOptimalLikelihood(vminStar, logetaStar, output_file_no_extension)
                 if FOX_METHOD[3]:
                     exper.ImportOptimalLikelihood(output_file_no_extension)

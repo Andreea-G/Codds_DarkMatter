@@ -179,8 +179,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             plt_close = False)
         return
 
-    def ConstrainedOptimalLikelihood(self, vminStar, logetaStar, output_file_tail, logeta_guess = -25.):
-        self.ImportOptimalLikelihood(output_file_tail)
+    def ConstrainedOptimalLikelihood(self, vminStar, logetaStar, logeta_guess = -25., plot = False):
         vars_guess = np.append(self.optimal_vmin, self.optimal_logeta)
         print("vars_guess = ", vars_guess)
         size = self.optimal_vmin.size
@@ -208,6 +207,47 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.constr_optimal_logeta = vars_result[vars_result.size/2:]
         print(self.constr_optimal_vmin)
         print(self.constr_optimal_logeta)
-        self.PlotConstrainedOptimum(vminStar, logetaStar, vminStar_index)
+        if plot:
+            self.PlotConstrainedOptimum(vminStar, logetaStar, vminStar_index)
+        return self.constr_optimal_logl
+
+    def ImportSamplingTable(self, output_file_tail):
+        self.ImportOptimalLikelihood(output_file_tail)
+        file = output_file_tail + "_vminLogetaSamplingTable.dat"
+        with open(file, 'r') as f_handle:
+            self.vmin_logeta_sampling_table = np.loadtxt(f_handle)
+        return
+
+    def LogLikelihoodList(self, output_file_tail):
+        ''' Gives a list of the form [[logetaStar_i0, logL_i0], [logetaStar_i1, logL_i1], ...] needed for 1D interpolation, 
+        where i is the index corresponding to vminStar_i.
+            Input:
+            - vmin_logeta_sampling_table list of {vminStar, logetaStar} at which the constrained optimal likelihood will be computed. 
+            It is in the form:
+                vmin_logeta_sampling_table[i] is a list of [[vminStar_i, logetaStar_0], [vminStar_i, logetaStar_1], ...] corresponding to vminStar_i
+        '''
+        self.ImportSamplingTable(output_file_tail)
+        self.logL_list_table = np.empty((0, 2))
+        for index in range(vmin_logeta_sampling_table.size):
+            vminStar = vmin_logeta_sampling_table[index, 0, 0]
+            logetaStar_list = self.vmin_logeta_sampling_table[index, All, 1]
+            table = np.array([[logetaStar, ConstrainedOptimalLikelihood(vminStar, logetaStar)] for logetaStar in logetaStar_list])
+            self.logL_list_table = np.append(self.constr_optimal_logl, table, axis = 0)
         
-        return 
+        file = output_file_tail + "_LogetaStarLogLikelihoodList.dat"
+        print(file)  # write to file
+        np.savetxt(file, self.logL_list_table)
+        return
+            
+
+
+
+
+
+
+
+
+
+
+
+
