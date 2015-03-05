@@ -142,11 +142,14 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                     exper.ResponseTables(vmin_min, vmin_max, vmin_step, mx, fp, fn, delta, output_file_no_extension)
                 if FOX_METHOD[1]:
                     exper.OptimalLikelihood(output_file_no_extension)
-#                    myvminlist = np.array([0., 480.4119044064006, 507.3112205819222, 580.6606403970949])
-#                    mylogetalist = np.array([-24.958592310964786, -24.95859231101542, -25.40086650501478])
-#                    print("VminIntegratedResponseTable = ", exper.VminIntegratedResponseTable(myvminlist))
-#                    print("IntegratedResponseTable = ", exper.IntegratedResponseTable(myvminlist))
-#                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(np.append(myvminlist[1:], mylogetalist)))
+                if FOX_METHOD[2]:
+                    vminStar = 500
+                    logetaStar = -25.5
+                    exper.ConstrainedOptimalLikelihood(vminStar, logetaStar, output_file_no_extension)
+                if FOX_METHOD[3]:
+                    exper.ImportOptimalLikelihood(output_file_no_extension)
+                    exper.PlotOptimum()
+
                 
         if HALO_DEP or not np.any(FOX_METHOD):
             print("upper_limit = ", upper_limit)

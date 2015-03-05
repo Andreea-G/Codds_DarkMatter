@@ -105,7 +105,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.diff_response_interp = np.array([interp1d(self.vmin_linspace, dr) for dr in self.diff_response_tab])
         self.response_interp = interp1d(self.vmin_linspace, self.response_tab)
         return
-        
+
     def VminIntegratedResponseTable(self, vmin_list):
         return np.array([[integrate.quad(self.diff_response_interp[i], vmin_list[a], vmin_list[a + 1], epsrel = PRECISSION, epsabs = 0)[0] \
             for a in range(vmin_list.size - 1)] for i in range(self.ERecoilList.size)])
@@ -114,10 +114,16 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         return np.array([integrate.quad(self.response_interp, vmin_list[a], vmin_list[a + 1], epsrel = PRECISSION, epsabs = 0)[0] \
             for a in range(vmin_list.size - 1)])
 
-    def MinusLogLikelihood(self, vars_list):
+    def MinusLogLikelihood(self, vars_list, vminStar = None, logetaStar = None, vminStar_index = None):
 #        print("vars_list = ", vars_list)
-        vmin_list_w0 = np.insert(vars_list[: vars_list.size/2], 0, 0)
-        logeta_list = vars_list[vars_list.size/2 :]
+#        print("Star vars: ", vminStar, " ", logetaStar)
+        if vminStar == None:
+            vmin_list_w0 = vars_list[: vars_list.size/2]
+            logeta_list = vars_list[vars_list.size/2 :]
+        else:
+            vmin_list_w0 = np.insert(vars_list[: vars_list.size/2], vminStar_index, vminStar)
+            logeta_list = np.insert(vars_list[vars_list.size/2 :], vminStar_index, logetaStar)
+        vmin_list_w0 = np.insert(vmin_list_w0, 0, 0)
         mu_i = self.Exposure * np.dot(self.VminIntegratedResponseTable(vmin_list_w0), 10**logeta_list)
         Nsignal = self.Exposure * np.dot(10**logeta_list, self.IntegratedResponseTable(vmin_list_w0))
         result = self.NBKG + Nsignal - np.log10(self.mu_BKG_i + mu_i).sum()
@@ -128,12 +134,80 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.ImportResponseTables(output_file_tail)
         vars_guess = np.append(self.vmin_sorted_list, logeta_guess * np.ones(self.vmin_sorted_list.size))
         print("vars_guess = ", vars_guess)
-        bounds = np.array([(0, 1000)] * 3 + [(None, 0)] * 3)
+        bounds = np.array([(0, 1000)] * self.vmin_sorted_list.size + [(None, 0)] * self.vmin_sorted_list.size)
         constr_func = lambda x:  np.append(np.diff(x[:x.size/2]), np.diff(-x[x.size/2:]))
         constr = ({'type': 'ineq', 'fun': constr_func})
         optimum_log_likelihood = minimize(self.MinusLogLikelihood, vars_guess, bounds = bounds, constraints = constr)
         print(optimum_log_likelihood)
-        self.optimal_vmin = optimum_log_likelihood.x
-        self.optimal_logl = optimum_log_likelihood.fun
+        file = output_file_tail + "_GloballyOptimalLikelihood.dat"
+        print(file)  # write to file
+        np.savetxt(file, np.append([optimum_log_likelihood.fun], optimum_log_likelihood.x))
         return 
 
+    def ImportOptimalLikelihood(self, output_file_tail):
+        self.ImportResponseTables(output_file_tail)
+        file = output_file_tail + "_GloballyOptimalLikelihood.dat"
+        with open(file, 'r') as f_handle:
+            optimal_result = np.loadtxt(f_handle)
+        self.optimal_logl = optimal_result[0]
+        self.optimal_vmin = optimal_result[1 : optimal_result.size/2 + 1]
+        self.optimal_logeta = optimal_result[optimal_result.size/2 + 1 :]
+        return
+
+    def PlotStepFunction(self, vmin_list, logeta_list, plt_close = True, plt_show = True):
+        if plt_close: 
+            plt.close()
+        print(vmin_list)
+        print(logeta_list)
+        plt.step(np.insert(vmin_list, 0, 0),np.insert(logeta_list, 0, logeta_list[0]))
+        plt.xlim([vmin_list[0] * 0.9, vmin_list[-1] * 1.1])
+        plt.ylim([logeta_list[-1] * 1.02, logeta_list[0] * 0.99])
+        plt.xlim([0, vmin_list[-1] * 1.1])
+        plt.ylim([logeta_list[-1] * 1.02, logeta_list[0] * 0.99])
+        if plt_show:
+            plt.show()
+        return
+
+    def PlotOptimum(self):
+        self.PlotStepFunction(self.optimal_vmin, self.optimal_logeta)
+        return
+
+    def PlotConstrainedOptimum(self, vminStar, logetaStar, vminStar_index):
+        self.PlotStepFunction(self.optimal_vmin, self.optimal_logeta, plt_show = False)
+        self.PlotStepFunction(np.insert(self.constr_optimal_vmin, vminStar_index, vminStar), \
+            np.insert(self.constr_optimal_logeta, vminStar_index, logetaStar), \
+            plt_close = False)
+        return
+
+    def ConstrainedOptimalLikelihood(self, vminStar, logetaStar, output_file_tail, logeta_guess = -25.):
+        self.ImportOptimalLikelihood(output_file_tail)
+        vars_guess = np.append(self.optimal_vmin, self.optimal_logeta)
+        print("vars_guess = ", vars_guess)
+        size = self.optimal_vmin.size
+        
+        vminStar_index = 0
+        while vminStar > self.optimal_vmin[vminStar_index]:
+            vminStar_index += 1
+        print("index = ", vminStar_index)
+        
+        bounds = np.array([(0, 1000)] * size + [(None, 0)] * size)
+        
+        constr_func = lambda x, vminStar = vminStar, logetaStar = logetaStar : \
+            np.append(np.append(np.append(np.append(np.append(np.diff(x[:x.size/2]), np.diff(-x[x.size/2:])), \
+            vminStar - x[:vminStar_index]), x[vminStar_index : x.size/2] - vminStar), \
+            x[x.size/2 : x.size/2 + vminStar_index] - logetaStar), logetaStar - x[x.size/2 + vminStar_index :])
+        constr = ({'type': 'ineq', 'fun': constr_func})
+        constr_optimum_log_likelihood = minimize(self.MinusLogLikelihood, vars_guess, \
+            args = (vminStar, logetaStar, vminStar_index), bounds = bounds, constraints = constr)
+        print(constr_optimum_log_likelihood)
+        
+        self.constr_optimal_logl = constr_optimum_log_likelihood.fun
+        vars_result = constr_optimum_log_likelihood.x
+        print("vars_result = ", vars_result)
+        self.constr_optimal_vmin = vars_result[: vars_result.size/2]
+        self.constr_optimal_logeta = vars_result[vars_result.size/2:]
+        print(self.constr_optimal_vmin)
+        print(self.constr_optimal_logeta)
+        self.PlotConstrainedOptimum(vminStar, logetaStar, vminStar_index)
+        
+        return 

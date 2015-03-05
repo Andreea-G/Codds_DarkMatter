@@ -27,7 +27,7 @@ def main():
     MAKE_PLOT = T
     HALO_DEP = F
     HALO_INDEP = not HALO_DEP
-    FOX_METHOD = [F, T]
+    FOX_METHOD = [F, F, T, F]
 
     qKIMS_list = [0.05, 0.1]
     qDAMANa_list = [0.4, 0.3]
@@ -73,8 +73,8 @@ def main():
        
     plt.show()
     
-    if RUN_PROGRAM:
-        os.system("say 'Finished running program'")
+#    if RUN_PROGRAM:
+#        os.system("say 'Finished running program'")
     
 if __name__ == '__main__':
     main()
