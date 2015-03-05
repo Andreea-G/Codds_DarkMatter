@@ -27,6 +27,7 @@ def main():
     MAKE_PLOT = T
     HALO_DEP = F
     HALO_INDEP = not HALO_DEP
+    FOX_METHOD = [F, T]
 
     qKIMS_list = [0.05, 0.1]
     qDAMANa_list = [0.4, 0.3]
@@ -52,7 +53,7 @@ def main():
                         (vmin_start, vmin_end, vmin_step) = Vmin_range(exper_name, mx, delta, mPhi, quenching)
                         print(vmin_start, " ", vmin_end, " ", vmin_step)
                         run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
-                            RUN_PROGRAM, MAKE_PLOT, HALO_DEP, \
+                            RUN_PROGRAM, MAKE_PLOT, HALO_DEP, FOX_METHOD, \
                             mx = mx, vmin_range = (vmin_start, vmin_end, vmin_step), \
                             filename_tail = filename_tail, OUTPUT_MAIN_DIR = OUTPUT_MAIN_DIR, \
                             plot_dots = plot_dots, quenching = quenching)
@@ -65,7 +66,7 @@ def main():
                         (mx_min, mx_max, num_steps) = DM_mass_range(exper_name, delta, mPhi, quenching)
                         print(mx_min, " ", mx_max, " ", num_steps)
                         run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
-                            RUN_PROGRAM, MAKE_PLOT, HALO_DEP, \
+                            RUN_PROGRAM, MAKE_PLOT, HALO_DEP, FOX_METHOD, \
                             mx_range = (mx_min, mx_max, num_steps), \
                             filename_tail = filename_tail, OUTPUT_MAIN_DIR = OUTPUT_MAIN_DIR, \
                             plot_dots = plot_dots, quenching = quenching)

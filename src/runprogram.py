@@ -9,6 +9,7 @@ from __future__ import print_function
 from __future__ import division
 from experiment import *
 from experiment_HaloIndep import *
+from experiment_FoxMethod import *
 import matplotlib.pyplot as plt
 
 def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, plot_dots = True, plot_close = True, plot_show = True):
@@ -65,7 +66,7 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, plot_dots = True, plot_c
 
 
 def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
-    RUN_PROGRAM, MAKE_PLOT, HALO_DEP, \
+    RUN_PROGRAM, MAKE_PLOT, HALO_DEP, FOX_METHOD, \
     mx = None, mx_range = None, vmin_range = None, \
     filename_tail = "", OUTPUT_MAIN_DIR = "Output/", plot_dots = True, quenching = None):
     ''' Main run of the program.
@@ -78,6 +79,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
             RUN_PROGRAM = True or False, whether the data should be (re-)computed
             MAKE_PLOT = True or False, whether the data should be plotted
             HALO_DEP = True or False, whether the analysis is halo-dependent or halo-independent
+            FOX_METHOD = array of True or False, whether each step of the Fox Method is to be performed
             mx = DM mass, only give for halo-independent analysis
             mx_range = (mx_min, mx_max, num_steps) = DM mass range and number or steps, only for halo-dependent
             vmin_range = (vmin_start, vmin_end, vmin_step) = vmin range and step size, only for halo-independent
@@ -95,7 +97,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
             exper = MaxGapExperiment(exper_name, scattering_type, mPhi)
         elif exper_name in GaussianLimit_exper:
             exper = GaussianExperiment(exper_name, scattering_type, mPhi, quenching)
-        elif exper_name in Poisson_Exper:
+        elif exper_name in Poisson_exper:
             exper = PoissonExperiment(exper_name, scattering_type, mPhi)
         elif exper_name in DAMARegion_exper:
             exper = DAMAExperiment(exper_name, scattering_type, mPhi, quenching)
@@ -106,7 +108,10 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
             return
     else:
         print('Halo Independent')
-        if exper_name in MaximumGapLimit_exper:
+        if exper_name in FoxMethod_exper and np.any(FOX_METHOD):
+            print('Fox Method')
+            exper = Experiment_FoxMethod(exper_name, scattering_type, mPhi)
+        elif exper_name in MaximumGapLimit_exper:
             exper = MaxGapExperiment_HaloIndep(exper_name, scattering_type, mPhi)
         else:
             print("Error! This experiment was not implemented!")
@@ -128,18 +133,31 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
             upper_limit = exper.UpperLimit(fp, fn, delta, mx_min, mx_max, num_steps, \
                 output_file)
         else:
-            (vmin_start, vmin_end, vmin_step) = vmin_range
-            upper_limit = exper.UpperLimit(mx, fp, fn, delta, vmin_start, vmin_end, vmin_step, \
-                output_file)
-        print("upper_limit = ", upper_limit)
-        print("diff response calls = " , exper.count_diffresponse_calls)
-        print("response calls = " , exper.count_response_calls)
-        output_file = output_file_no_extension + ".dat"
-        print(output_file)  # write to file
-        np.savetxt(output_file, upper_limit)
+            (vmin_min, vmin_max, vmin_step) = vmin_range
+            if not np.any(FOX_METHOD):
+                upper_limit = exper.UpperLimit(mx, fp, fn, delta, vmin_start, vmin_end, vmin_step, \
+                    output_file)
+            else:
+                if FOX_METHOD[0]:
+                    exper.ResponseTables(vmin_min, vmin_max, vmin_step, mx, fp, fn, delta, output_file_no_extension)
+                if FOX_METHOD[1]:
+                    exper.OptimalLikelihood(output_file_no_extension)
+#                    myvminlist = np.array([0., 480.4119044064006, 507.3112205819222, 580.6606403970949])
+#                    mylogetalist = np.array([-24.958592310964786, -24.95859231101542, -25.40086650501478])
+#                    print("VminIntegratedResponseTable = ", exper.VminIntegratedResponseTable(myvminlist))
+#                    print("IntegratedResponseTable = ", exper.IntegratedResponseTable(myvminlist))
+#                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(np.append(myvminlist[1:], mylogetalist)))
+                
+        if HALO_DEP or not np.any(FOX_METHOD):
+            print("upper_limit = ", upper_limit)
+            print("diff response calls = " , exper.count_diffresponse_calls)
+            print("response calls = " , exper.count_response_calls)
+            output_file = output_file_no_extension + ".dat"
+            print(output_file)  # write to file
+            np.savetxt(output_file, upper_limit)
 
     # produce plot
-    if MAKE_PLOT:
+    if MAKE_PLOT and not np.any(FOX_METHOD):
         output_file = output_file_no_extension + ".dat"
         upper_limit = np.loadtxt(output_file)
         print("upper_limit = ", upper_limit)

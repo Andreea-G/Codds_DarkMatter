@@ -50,4 +50,5 @@ Efficiency_ER = lambda er: np.ones(er.size)
 Exposure = 140.2
 ERecoilList = np.array([8.2, 9.5, 12.3])
 
-            
+mu_BKG_i = np.array([0.0185176,0.0203303,0.0217355])
+NBKG = 0.7

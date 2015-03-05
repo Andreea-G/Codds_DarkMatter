@@ -42,7 +42,8 @@ MaximumGapLimit_exper = ["superCDMS", \
 GaussianLimit_exper = ["KIMS2012", "PICASSO"]
 DAMARegion_exper = ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]
 DAMALimit_exper = ["DAMA2010NaSmRebinned_TotRateLimit"]
-Poisson_Exper = ["SIMPLEModeStage2"]
+Poisson_exper = ["SIMPLEModeStage2"]
+FoxMethod_exper = ["CDMSSi2012"]
 
 def FileNameTail(fp, fn, mPhi):
     ''' Gives a file name-tail that is added to each output file, to distinguish 
@@ -90,7 +91,7 @@ def Output_file_name(exper_name, scattering_type, mPhi, mx, fp, fn, delta, HALO_
     if exper_name in DAMARegion_exper or exper_name in DAMALimit_exper:
         output_file_no_extension = "./" + output_dir + "pbesebTab_" + exper_name
     else:
-        output_file_no_extension = "./" + output_dir + "UpperLimitSHM_" + exper_name
+        output_file_no_extension = "./" + output_dir + "UpperLimit_" + exper_name
 
     if HALO_DEP:
         output_file_no_extension += "_mxsigma"

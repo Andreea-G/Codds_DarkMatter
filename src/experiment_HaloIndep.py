@@ -8,7 +8,7 @@ Created on Sun Mar  1 19:51:42 2015
 from experiment import *
 
 class Experiment_HaloIndep(Experiment):
-    def __init__(self, expername, scattering_type, mPhi = mPhiRef, quenching_factor = None):
+    def __init__(self, expername, scattering_type, mPhi = mPhiRef):
         Experiment.__init__(self, expername, scattering_type, mPhi)
 #        module = import_file(INPUT_DIR + expername + ".py")
         if self.energy_resolution_type == "Dirac":
@@ -21,9 +21,20 @@ class Experiment_HaloIndep(Experiment):
          NOT including eta0
         '''
         self.count_diffresponse_calls += 1
-#        res = np.array([self.ResolutionFunction(Eee, i, self.EnergyResolution(i)) for i in qER])
         r_list = const_factor * self.Efficiency(Eee) * self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
         return r_list.sum()
+
+    def ConstFactor(self, vmin, mx, fp, fn, delta, sign):
+        ''' Collects the factors that don't depend on Eee, so they only need to be computed once in Response fnc
+            Returns a touple of qER and const_factor
+        '''
+        ER = ERecoilBranch(vmin, self.mT, mx, delta, sign)
+        q = self.QuenchingFactor(ER)
+        qER = q * ER
+        efficiencyER = self.Efficiency_ER(ER)
+        const_factor = kilogram/SpeedOfLight**2 * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
+            dERecoildVmin(vmin, self.mT, mx, delta, sign) * efficiencyER
+        return (qER, const_factor)
 
     def Response_Other(self, vmin, Eee1, Eee2, mx, fp, fn, delta):
         ''' Response function integral d**2 R / (d Eee d ER) between measured energies Eee1 and Eee2, 
@@ -37,12 +48,7 @@ class Experiment_HaloIndep(Experiment):
             branches = [1, -1]
         result = 0
         for sign in branches:
-            ER = ERecoilBranch(vmin, self.mT, mx, delta, sign)
-            q = self.QuenchingFactor(ER)
-            qER = q * ER
-            efficiencyER = self.Efficiency_ER(ER)
-            const_factor = kilogram/SpeedOfLight**2 * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
-                dERecoildVmin(vmin, self.mT, mx, delta, sign) * efficiencyER
+            (qER, const_factor) = _ConstFactor(self, vmin, mx, fp, fn, delta, sign)
             result += integrate.quad(self.DifferentialResponse, Eee1, Eee2, \
                 args=(qER, const_factor), epsrel = PRECISSION, epsabs = 0)[0]
         return result
@@ -129,10 +135,10 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
         vmin_list0 = np.insert(vmin_list,0,0.)
         xtable = np.zeros(self.ElistMaxGap.size - 1)
         upperlimit_table = np.array([])
-        for v in range(vmin_list.size):
-            print("vmin = ", vmin_list[v])
+        for v_index in range(vmin_list.size):
+            print("vmin = ", vmin_list[v_index])
             xtable += np.array(list(map(lambda i, j: \
-                self.IntegratedResponse(vmin_list0[v], vmin_list[v], i, j, mx, fp, fn, delta), \
+                self.IntegratedResponse(vmin_list0[v_index], vmin_list[v_index], i, j, mx, fp, fn, delta), \
                 self.ElistMaxGap[:-1], self.ElistMaxGap[1:])))
             mu_scaled = xtable.sum()
             x_scaled = np.max(xtable)
@@ -145,7 +151,7 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
                 y = fsolve(lambda x: MaximumGapC0scaled(x, mu_over_x) - ConfidenceLevel, y_guess)
                 result =  y / x_scaled / self.Exposure
                 result = result[0]
-                print("vmin = ", vmin_list[v], "   mu_over_x = ", mu_over_x)
+                print("vmin = ", vmin_list[v_index], "   mu_over_x = ", mu_over_x)
                 print("xtable = ", xtable)
                 print("result = ", result)
                 to_print = np.log10(np.array([[mx, result]]))

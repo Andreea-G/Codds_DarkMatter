@@ -17,8 +17,8 @@ def Vmin_range(exper_name, mx, delta, mPhi = 1000., quenching = None):
                               (3.5, -50, 1000.): (600, 1000, vmin_step),
         }
     else:
-        vmin_step = 10
-        vmin_range_options = {(9., 0, 1000.): (300, 900, vmin_step),
+        vmin_step = 0.5
+        vmin_range_options = {(9., 0, 1000.): (vmin_step, 1000, vmin_step),
                               (3.5, -50, 1000.): (100, 1000, vmin_step),
         }
     return vmin_range_options[(mx, delta, mPhi)]
