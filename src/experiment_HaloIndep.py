@@ -48,7 +48,7 @@ class Experiment_HaloIndep(Experiment):
             branches = [1, -1]
         result = 0
         for sign in branches:
-            (qER, const_factor) = _ConstFactor(self, vmin, mx, fp, fn, delta, sign)
+            (qER, const_factor) = self.ConstFactor(vmin, mx, fp, fn, delta, sign)
             result += integrate.quad(self.DifferentialResponse, Eee1, Eee2, \
                 args=(qER, const_factor), epsrel = PRECISSION, epsabs = 0)[0]
         return result
