@@ -8,8 +8,8 @@ Created on Wed Mar  4 00:47:37 2015
 #TODO! This only works for CDMSSi! 
 
 from experiment_HaloIndep import *
-#from interp import interp1d
-from scipy.interpolate import interp1d
+from interp import interp1d
+#from scipy.interpolate import interp1d
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 
