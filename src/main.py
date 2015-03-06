@@ -27,7 +27,7 @@ def main():
     MAKE_PLOT = T
     HALO_DEP = F
     HALO_INDEP = not HALO_DEP
-    FOX_METHOD = [F, F, T, F]
+    FOX_METHOD = [F, F, F, F, T]
 
     qKIMS_list = [0.05, 0.1]
     qDAMANa_list = [0.4, 0.3]

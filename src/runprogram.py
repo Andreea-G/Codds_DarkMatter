@@ -82,7 +82,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
             FOX_METHOD = array of True or False, whether each step of the Fox Method is to be performed
             mx = DM mass, only give for halo-independent analysis
             mx_range = (mx_min, mx_max, num_steps) = DM mass range and number or steps, only for halo-dependent
-            vmin_range = (vmin_start, vmin_end, vmin_step) = vmin range and step size, only for halo-independent
+            vmin_range = (vmin_min, vmin_max, vmin_step) = vmin range and step size, only for halo-independent
             filename_tail = optional tag to be added to the file name 
             OUTPUT_MAIN_DIR = name of main output directory, if different from "Output/"
             plot_dots = True or False, whether the plot should show the data points or just the interpolation
@@ -135,7 +135,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
         else:
             (vmin_min, vmin_max, vmin_step) = vmin_range
             if not np.any(FOX_METHOD):
-                upper_limit = exper.UpperLimit(mx, fp, fn, delta, vmin_start, vmin_end, vmin_step, \
+                upper_limit = exper.UpperLimit(mx, fp, fn, delta, vmin_min, vmin_max, vmin_step, \
                     output_file)
             else:
                 if FOX_METHOD[0]:
@@ -150,6 +150,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                 if FOX_METHOD[3]:
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     exper.PlotOptimum()
+                if FOX_METHOD[4]:
+                    exper.VminLogetaDamplingTable(output_file_no_extension, vmin_min, vmin_max)
 
                 
         if HALO_DEP or not np.any(FOX_METHOD):

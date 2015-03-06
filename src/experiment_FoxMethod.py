@@ -10,7 +10,7 @@ Created on Wed Mar  4 00:47:37 2015
 from experiment_HaloIndep import *
 from interp import interp1d
 #from scipy.interpolate import interp1d
-from scipy.optimize import minimize
+from scipy.optimize import minimize, brentq
 import matplotlib.pyplot as plt
 
 class Experiment_FoxMethod(Experiment_HaloIndep):
@@ -221,17 +221,18 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
     def LogLikelihoodList(self, output_file_tail):
         ''' Gives a list of the form [[logetaStar_i0, logL_i0], [logetaStar_i1, logL_i1], ...] needed for 1D interpolation, 
         where i is the index corresponding to vminStar_i.
-            Input:
+            Imports:
             - vmin_logeta_sampling_table list of {vminStar, logetaStar} at which the constrained optimal likelihood will be computed. 
-            It is in the form:
-                vmin_logeta_sampling_table[i] is a list of [[vminStar_i, logetaStar_0], [vminStar_i, logetaStar_1], ...] corresponding to vminStar_i
+            Produces a table of the form:
+            - vmin_logeta_sampling_table[i] is a list of [[vminStar_i, logetaStar_0], [vminStar_i, logetaStar_1], ...] corresponding to vminStar_i
         '''
         self.ImportSamplingTable(output_file_tail)
         self.logL_list_table = np.empty((0, 2))
         for index in range(vmin_logeta_sampling_table.size):
             vminStar = vmin_logeta_sampling_table[index, 0, 0]
             logetaStar_list = self.vmin_logeta_sampling_table[index, All, 1]
-            table = np.array([[logetaStar, ConstrainedOptimalLikelihood(vminStar, logetaStar)] for logetaStar in logetaStar_list])
+            table = np.array([[logetaStar, ConstrainedOptimalLikelihood(vminStar, logetaStar)] \
+                for logetaStar in logetaStar_list])
             self.logL_list_table = np.append(self.constr_optimal_logl, table, axis = 0)
         
         file = output_file_tail + "_LogetaStarLogLikelihoodList.dat"
@@ -239,7 +240,63 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         np.savetxt(file, self.logL_list_table)
         return
             
+    def VminLogetaSamplingTable(self, output_file_tail, vmin_min, vmin_max, steepnessVmin = 1.5, steepnessVminCenter = 2.5, plot = True):
+        self.ImportOptimalLikelihood(output_file_tail)
+        xmin = vmin_min
+        xmax = vmin_max
+        s = steepnessVmin
+        sc = steepnessVminCenter
+        
+        x_lin = np.linspace(xmin, xmax, 1000)
+        x0_list = self.optimal_vmin
+        numx0 = x0_list.size
+        
+#        print("x = ", x_lin)
+        print("x0 = ", x0_list)
+        UnitStep = lambda x: (np.sign(x) + 1) / 2
+        g1 = lambda x, x0, s0, xmin = xmin: np.log10(UnitStep(x0 - x) * (x0 - xmin)/ (x + 10**s0 * (-x + x0) - xmin) + UnitStep(x - x0))
+        g2 = lambda x, x0, s0, xmax = xmax: np.log10(UnitStep(x - x0) * (x + 10**s0 * (-x + x0) - xmax)/ (x0 - xmax) + UnitStep(x0 - x))
+#        print("g1 = ", np.array([[x, g1(x, x0_list[0], s)] for x in x_lin]))
+#        print("g2 = ", np.array([[x, g2(x, x0_list[0], s)] for x in x_lin]))
+        
+        g = lambda x, x0, s1, s2: g1(x, x0, s1) + g2(x, x0, s2) * UnitStep(x - x0)
+        
+        s_list = np.array([[s, sc]] + [[sc,sc]] * (numx0 - 2) + [[sc, s]])
+        g_total = lambda x, sign = 1, x0 = x0_list, s_list = s_list: \
+            np.array([sign * g(x, x0_list[i], s_list[i,0], s_list[i,1]) for i in range(x0_list.size)]).prod(axis = 0)
+        
+        g_lin = g_total(x_lin)
+#        print("g = ", g_lin)
+        
+        xT_guess = (x0_list[:-1] + x0_list[1:]) / 2
+        print("xT_guess = ", xT_guess)
+        bounds = np.array([(x0_list[i], x0_list[i + 1]) for i in range(x0_list.size - 1)])
+        print("bounds = ", bounds)
+        print("gtot = ", g_total(xT_guess))
+        x_turns_max = np.array([minimize(g_total, np.array(xT_guess[i]), args = (-1,), bounds = [bounds[i]]).x for i in range(0, xT_guess.size, 2)])
+        x_turns_min = np.array([minimize(g_total, np.array(xT_guess[i]), bounds = [bounds[i]]).x for i in range(1, xT_guess.size, 2)])
+        x_turns = np.sort(np.append(x_turns_max, x_turns_min))
+        y_turns = g_total(x_turns)
+        print("x_turns = ", x_turns)
+        print("y_turns = ", y_turns)
+        
+        g_inverse = lambda y, x1, x2: brentq(lambda x: g_total(x) - y, x1, x2)
+        y0 = -5
+        root = g_inverse(y0, 0, 500)
+        print("root = ", root)
+        
+        if plot:
+            plt.close()
+            plt.plot(x_lin, g_lin)
+            plt.plot(x_lin, np.ones(x_lin.size) * y0)
+            plt.plot(x_turns, y_turns, 'o')
+            plt.xlim([xmin, xmax])
+            plt.ylim([-s * sc**(numx0 - 1), s * sc**(numx0 - 1)])
+            plt.show()
+        
+        return
 
+        
 
 
 
