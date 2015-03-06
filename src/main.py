@@ -27,7 +27,7 @@ def main():
     MAKE_PLOT = T
     HALO_DEP = F
     HALO_INDEP = not HALO_DEP
-    FOX_METHOD = [F, F, F, F, T, T, F]
+    FOX_METHOD = [F, F, F, F, F, F, T]
 
     qKIMS_list = [0.05, 0.1]
     qDAMANa_list = [0.4, 0.3]
@@ -41,7 +41,7 @@ def main():
 
     exper_list = [implemented_exper[i] for i in [14]]
 #    exper_list = implemented_exper
-    filename_tail_list = [""]
+    filename_tail_list = ["_short"]
     OUTPUT_MAIN_DIR = "Output1/"
     plt.close()
 
@@ -76,8 +76,8 @@ def main():
        
     plt.show()
     
-    if RUN_PROGRAM:
-        os.system("say 'Finished running program'")
+#    if RUN_PROGRAM:
+#        os.system("say 'Finished running program'")
     
 if __name__ == '__main__':
     main()

@@ -24,6 +24,7 @@ def Vmin_range(exper_name, mx, delta, mPhi = 1000., quenching = None):
     return vmin_range_options[(mx, delta, mPhi)]
 
 input_list = [(9., 1, 0, 1000.), (3.5, 1, -50, 1000.)]
-vmin_FoxBand_range = (300, 800, 30)
-logeta_FoxBand_percent_range = (0.2, 0.2, 15)
+vmin_FoxBand_range = (300, 800, 60)
+vmin_FoxBand_range = (300, 800, 20)
+logeta_FoxBand_percent_range = (0.2, 0.2, 10)
 steepness = None
