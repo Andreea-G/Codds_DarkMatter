@@ -55,6 +55,9 @@ def main():
                         run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                             RUN_PROGRAM, MAKE_PLOT, HALO_DEP, FOX_METHOD, \
                             mx = mx, vmin_range = (vmin_start, vmin_end, vmin_step), \
+                            vmin_FoxBand_range = vmin_FoxBand_range, \
+                            logeta_FoxBand_percent_range = logeta_FoxBand_percent_range, \
+                            steepness = steepness, \
                             filename_tail = filename_tail, OUTPUT_MAIN_DIR = OUTPUT_MAIN_DIR, \
                             plot_dots = plot_dots, quenching = quenching)
 

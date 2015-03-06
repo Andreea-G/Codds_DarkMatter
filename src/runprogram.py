@@ -68,6 +68,7 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, plot_dots = True, plot_c
 def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
     RUN_PROGRAM, MAKE_PLOT, HALO_DEP, FOX_METHOD, \
     mx = None, mx_range = None, vmin_range = None, \
+    vmin_FoxBand_range = None, logeta_FoxBand_percent_range = None, steepness = None, \
     filename_tail = "", OUTPUT_MAIN_DIR = "Output/", plot_dots = True, quenching = None):
     ''' Main run of the program.
         Input:
@@ -143,17 +144,27 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                 if FOX_METHOD[1]:
                     exper.OptimalLikelihood(output_file_no_extension)
                 if FOX_METHOD[2]:
-                    vminStar = 500
-                    logetaStar = -25.5
-                    exper.ImportOptimalLikelihood(output_file_tail)
-                    exper.ConstrainedOptimalLikelihood(vminStar, logetaStar, output_file_no_extension)
-                if FOX_METHOD[3]:
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     exper.PlotOptimum()
+                if FOX_METHOD[3]:
+                    vminStar = 500
+                    logetaStar = -25.5
+                    exper.ImportOptimalLikelihood(output_file_no_extension)
+                    exper.ConstrainedOptimalLikelihood(vminStar, logetaStar, output_file_no_extension)
                 if FOX_METHOD[4]:
-                    vmin_num_steps = 20
-                    exper.VminSamplingList(output_file_no_extension, vmin_min, vmin_max, vmin_num_steps)
-
+                    (vmin_band_min, vmin_band_max, vmin_num_steps) = vmin_FoxBand_range
+                    (logeta_percent_minus, logeta_percent_plus, logeta_num_steps) = logeta_FoxBand_percent_range
+                    if steepness != None:
+                        (steepness_vmin, steepness_vmin_center, steepness_logeta) = steepness
+                        exper.VminSamplingList(output_file_no_extension, \
+                            vmin_min, vmin_max, vmin_num_steps, steepness_vmin, steepness_vmin_center)
+                        exper.VminLogetaSamplingTable(output_file_no_extension, \
+                            logeta_percent_minus, logeta_percent_plus, logeta_num_steps, steepness_logeta)
+                    else:
+                        exper.VminSamplingList(output_file_no_extension, \
+                            vmin_min, vmin_max, vmin_num_steps)
+                        exper.VminLogetaSamplingTable(output_file_no_extension, \
+                            logeta_percent_minus, logeta_percent_plus, logeta_num_steps)
                 
         if HALO_DEP or not np.any(FOX_METHOD):
             print("upper_limit = ", upper_limit)

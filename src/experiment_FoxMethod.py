@@ -154,32 +154,34 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.optimal_logeta = optimal_result[optimal_result.size/2 + 1 :]
         return
 
-    def PlotStepFunction(self, vmin_list, logeta_list, plt_close = True, plt_show = True):
-        if plt_close: 
+    def PlotStepFunction(self, vmin_list, logeta_list, xlim_percentage = 1.1, ylim_percentage = (1.01, 0.99), plot_close = True, plot_show = True):
+        if plot_close: 
             plt.close()
         print(vmin_list)
         print(logeta_list)
         plt.step(np.insert(vmin_list, 0, 0),np.insert(logeta_list, 0, logeta_list[0]))
-        plt.xlim([vmin_list[0] * 0.9, vmin_list[-1] * 1.1])
-        plt.ylim([logeta_list[-1] * 1.02, logeta_list[0] * 0.99])
-        plt.xlim([0, vmin_list[-1] * 1.1])
-        plt.ylim([logeta_list[-1] * 1.02, logeta_list[0] * 0.99])
-        if plt_show:
+        plt.xlim([0, vmin_list[-1] * xlim_percentage])
+        plt.ylim([logeta_list[-1] * ylim_percentage[0], logeta_list[0] * ylim_percentage[1]])
+        if plot_show:
             plt.show()
         return
 
-    def PlotOptimum(self):
-        self.PlotStepFunction(self.optimal_vmin, self.optimal_logeta)
+    def PlotOptimum(self, xlim_percentage = 1.1, ylim_percentage = (1.01, 0.99), plot_close = True, plot_show = True):
+        self.PlotStepFunction(self.optimal_vmin, self.optimal_logeta,\
+            xlim_percentage = xlim_percentage, ylim_percentage = ylim_percentage,
+            plot_close = plot_close, plot_show = plot_show)
         return
 
-    def PlotConstrainedOptimum(self, vminStar, logetaStar, vminStar_index):
-        self.PlotStepFunction(self.optimal_vmin, self.optimal_logeta, plt_show = False)
+    def PlotConstrainedOptimum(self, vminStar, logetaStar, vminStar_index, \
+        xlim_percentage = 1.1, ylim_percentage = (1.01, 0.99), plot_close = True, plot_show = True):
+        self.PlotStepFunction(self.optimal_vmin, self.optimal_logeta, plot_close = plot_close, plot_show = False)
         self.PlotStepFunction(np.insert(self.constr_optimal_vmin, vminStar_index, vminStar), \
             np.insert(self.constr_optimal_logeta, vminStar_index, logetaStar), \
-            plt_close = False)
+            xlim_percentage = xlim_percentage, ylim_percentage = ylim_percentage,
+            plot_close = False, plot_show = plot_show)
         return
 
-    def ConstrainedOptimalLikelihood(self, vminStar, logetaStar, logeta_guess = -25., plot = False):
+    def ConstrainedOptimalLikelihood(self, vminStar, logetaStar, logeta_guess = -25., plot = True):
         vars_guess = np.append(self.optimal_vmin, self.optimal_logeta)
         print("vars_guess = ", vars_guess)
         size = self.optimal_vmin.size
@@ -210,6 +212,115 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         if plot:
             self.PlotConstrainedOptimum(vminStar, logetaStar, vminStar_index)
         return self.constr_optimal_logl
+            
+    def VminSamplingList(self, output_file_tail, vmin_min, vmin_max, vmin_num_steps, \
+        steepness_vmin = 1.5, steepness_vmin_center = 2.5, plot = True):
+        self.ImportOptimalLikelihood(output_file_tail)
+        xmin = vmin_min
+        xmax = vmin_max
+        x_num_steps = vmin_num_steps
+        s = steepness_vmin
+        sc = steepness_vmin_center
+        
+        x_lin = np.linspace(xmin, xmax, 1000)
+        x0_list = self.optimal_vmin
+        numx0 = x0_list.size
+        
+        print("x0 = ", x0_list)
+        UnitStep = lambda x: (np.sign(x) + 1) / 2
+        g1 = lambda x, x0, s0, xmin = xmin: np.log10(UnitStep(x - x0) + \
+            UnitStep(x0 - x) * (x0 - xmin)/ (x + 10**s0 * (-x + x0) - xmin))
+        g2 = lambda x, x0, s0, xmax = xmax: np.log10(UnitStep(x0 - x) + \
+            UnitStep(x - x0) * (x + 10**s0 * (-x + x0) - xmax)/ (x0 - xmax))        
+        g = lambda x, x0, s1, s2: g1(x, x0, s1) + g2(x, x0, s2) * UnitStep(x - x0)
+        
+        s_list = np.array([[s, sc]] + [[sc,sc]] * (numx0 - 2) + [[sc, s]])
+        g_total = lambda x, sign = 1, x0 = x0_list, s_list = s_list: \
+            np.array([sign * g(x, x0_list[i], s_list[i,0], s_list[i,1]) \
+            for i in range(x0_list.size)]).prod(axis = 0)
+        g_lin = g_total(x_lin)
+        
+        xT_guess = (x0_list[:-1] + x0_list[1:]) / 2
+        print("xT_guess = ", xT_guess)
+        bounds = np.array([(x0_list[i], x0_list[i + 1]) for i in range(x0_list.size - 1)])
+        print("bounds = ", bounds)
+        print("gtot = ", g_total(xT_guess))
+        x_turns_max = np.array([minimize(g_total, np.array(xT_guess[i]), \
+            args = (-1,), bounds = [bounds[i]]).x for i in range(0, xT_guess.size, 2)])
+        x_turns_min = np.array([minimize(g_total, np.array(xT_guess[i]), \
+            bounds = [bounds[i]]).x for i in range(1, xT_guess.size, 2)])
+        x_turns = np.sort(np.append(x_turns_max, x_turns_min))
+        x_turns = np.append(np.insert(x_turns, 0, xmin), [xmax])
+        y_turns = g_total(x_turns)
+        print("x_turns = ", x_turns)
+        print("y_turns = ", y_turns)
+        
+        g_inverse = lambda y, x1, x2: brentq(lambda x: g_total(x) - y, x1, x2)
+        g_inverse_list = lambda y_list, x1, x2: np.array([g_inverse(y, x1, x2) for  y in y_list])
+        y_diff = np.diff(y_turns)
+        y_diff_sum = y_diff.sum()
+        num_steps = np.array([max(1, np.floor(x_num_steps * np.abs(yd)/y_diff_sum)) for yd in y_diff])
+        y_list = np.array([np.linspace(y_turns[i], y_turns[i+1], num_steps[i]) for i in range(num_steps.size)])
+        x_list = np.array([g_inverse_list(y_list[i], x_turns[i], x_turns[i+1]) for i in range(y_list.size)])
+        x_list = np.concatenate(x_list)
+        y_list = np.concatenate(y_list)
+        x_list = x_list[np.array([x_list[i] != x_list[i+1] for i in range(x_list.size-1)] + [True])]
+        y_list = y_list[np.array([y_list[i] != y_list[i+1] for i in range(y_list.size-1)] + [True])]
+        print("x_list = ", x_list)        
+        print("y_list = ", y_list)
+        self.vmin_star_list = x_list
+
+        if plot:
+            plt.close()
+            plt.plot(x_lin, g_lin)
+            plt.plot(x_turns, y_turns, 'o')
+            plt.plot(x_list, y_list, '*')
+            plt.xlim([xmin, xmax])
+            plt.ylim([-s * sc**(numx0 - 1), s * sc**(numx0 - 1)])
+            plt.show()
+        
+        return
+
+    def OptimumStepFunction(self, vmin):
+        index = 0
+        while index < self.optimal_vmin.size and vmin > self.optimal_vmin[index]:
+            index += 1
+        if index == self.optimal_vmin.size:
+            return self.optimal_logeta[-1]*10
+        return self.optimal_logeta[index]
+
+    def VminLogetaSamplingTable(self, output_file_tail, \
+        logeta_percent_minus, logeta_percent_plus, logeta_num_steps, \
+        steepness_logeta = 1, plot = True):
+        print(self.optimal_vmin)
+        print(self.optimal_logeta)
+        
+        logeta_num_steps_minus = logeta_num_steps * \
+            logeta_percent_minus / (logeta_percent_minus + logeta_percent_plus)
+        logeta_num_steps_plus = logeta_num_steps * \
+            logeta_percent_plus / (logeta_percent_minus + logeta_percent_plus)
+        
+        s = steepness_logeta
+        
+        f = lambda x, xm, i, s0 = s: \
+            (xm - x) / (10**s0 - 1) * 10**i + (10**s0 * x - xm) / (10**s0 - 1)
+        self.vmin_logeta_sampling_table = []
+        for vmin in self.vmin_star_list:
+            logeta_opt = self.OptimumStepFunction(vmin)
+            logeta_min = logeta_opt * (1 + logeta_percent_minus)
+            logeta_max = logeta_opt * (1 - logeta_percent_plus)
+            logeta_list_minus = [[vmin, f(logeta_opt, logeta_min, i)] for i in np.linspace(s, 0, logeta_num_steps_minus)]
+            logeta_list_plus = [[vmin, f(logeta_opt, logeta_max, i)] for i in np.linspace(s / logeta_num_steps_plus, s, logeta_num_steps_plus)]
+            self.vmin_logeta_sampling_table += [logeta_list_minus + logeta_list_plus]
+        
+        self.vmin_logeta_sampling_table = np.array(self.vmin_logeta_sampling_table)
+        
+        if plot:
+            plt.close()
+            for tab in self.vmin_logeta_sampling_table:
+                plt.plot(tab[:,0], tab[:,1], 'o')
+            self.PlotOptimum(xlim_percentage = 1.1, ylim_percentage = (1.2, 0.8), plot_close = False, plot_show = True)
+        return
 
     def ImportSamplingTable(self, output_file_tail):
         self.ImportOptimalLikelihood(output_file_tail)
@@ -239,85 +350,6 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         print(file)  # write to file
         np.savetxt(file, self.logL_list_table)
         return
-            
-    def VminSamplingList(self, output_file_tail, vmin_min, vmin_max, vmin_num_steps, \
-        steepnessVmin = 1.5, steepnessVminCenter = 2.5, plot = True):
-        self.ImportOptimalLikelihood(output_file_tail)
-        xmin = vmin_min
-        xmax = vmin_max
-        x_num_steps = vmin_num_steps
-        s = steepnessVmin
-        sc = steepnessVminCenter
-        
-        x_lin = np.linspace(xmin, xmax, 1000)
-        x0_list = self.optimal_vmin
-        numx0 = x0_list.size
-        
-#        print("x = ", x_lin)
-        print("x0 = ", x0_list)
-        UnitStep = lambda x: (np.sign(x) + 1) / 2
-        g1 = lambda x, x0, s0, xmin = xmin: np.log10(UnitStep(x - x0) + \
-            UnitStep(x0 - x) * (x0 - xmin)/ (x + 10**s0 * (-x + x0) - xmin))
-        g2 = lambda x, x0, s0, xmax = xmax: np.log10(UnitStep(x0 - x) + \
-            UnitStep(x - x0) * (x + 10**s0 * (-x + x0) - xmax)/ (x0 - xmax))
-#        print("g1 = ", np.array([[x, g1(x, x0_list[0], s)] for x in x_lin]))
-#        print("g2 = ", np.array([[x, g2(x, x0_list[0], s)] for x in x_lin]))
-        
-        g = lambda x, x0, s1, s2: g1(x, x0, s1) + g2(x, x0, s2) * UnitStep(x - x0)
-        
-        s_list = np.array([[s, sc]] + [[sc,sc]] * (numx0 - 2) + [[sc, s]])
-        g_total = lambda x, sign = 1, x0 = x0_list, s_list = s_list: \
-            np.array([sign * g(x, x0_list[i], s_list[i,0], s_list[i,1]) \
-            for i in range(x0_list.size)]).prod(axis = 0)
-        
-        g_lin = g_total(x_lin)
-#        print("g = ", g_lin)
-        
-        xT_guess = (x0_list[:-1] + x0_list[1:]) / 2
-        print("xT_guess = ", xT_guess)
-        bounds = np.array([(x0_list[i], x0_list[i + 1]) for i in range(x0_list.size - 1)])
-        print("bounds = ", bounds)
-        print("gtot = ", g_total(xT_guess))
-        x_turns_max = np.array([minimize(g_total, np.array(xT_guess[i]), \
-            args = (-1,), bounds = [bounds[i]]).x for i in range(0, xT_guess.size, 2)])
-        x_turns_min = np.array([minimize(g_total, np.array(xT_guess[i]), \
-            bounds = [bounds[i]]).x for i in range(1, xT_guess.size, 2)])
-        x_turns = np.sort(np.append(x_turns_max, x_turns_min))
-        x_turns = np.append(np.insert(x_turns, 0, xmin), [xmax])
-        y_turns = g_total(x_turns)
-        print("x_turns = ", x_turns)
-        print("y_turns = ", y_turns)
-        
-
-        g_inverse = lambda y, x1, x2: brentq(lambda x: g_total(x) - y, x1, x2)
-        g_inverse_list = lambda y_list, x1, x2: np.array([g_inverse(y, x1, x2) for  y in y_list])
-        y_diff = np.diff(y_turns)
-        y_diff_sum = y_diff.sum()
-        num_steps = np.array([max(1, np.floor(x_num_steps * np.abs(yd)/y_diff_sum)) for yd in y_diff])
-        y_list = np.array([np.linspace(y_turns[i], y_turns[i+1], num_steps[i]) for i in range(num_steps.size)])
-        x_list = np.array([g_inverse_list(y_list[i], x_turns[i], x_turns[i+1]) for i in range(y_list.size)])
-        x_list = np.concatenate(x_list)
-        y_list = np.concatenate(y_list)
-        x_list = x_list[np.array([x_list[i] != x_list[i+1] for i in range(x_list.size-1)] + [True])]
-        y_list = y_list[np.array([y_list[i] != y_list[i+1] for i in range(y_list.size-1)] + [True])]
-        print("x_list = ", x_list)        
-        print("y_list = ", y_list)
-        self.vmin_star_list = x_list
-
-        if plot:
-            plt.close()
-            plt.plot(x_lin, g_lin)
-            plt.plot(x_turns, y_turns, 'o')
-            plt.plot(x_list, y_list, '*')
-            plt.xlim([xmin, xmax])
-            plt.ylim([-s * sc**(numx0 - 1), s * sc**(numx0 - 1)])
-            plt.show()
-        
-        return
-
-        
-
-
 
 
 
