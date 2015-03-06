@@ -147,11 +147,11 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     exper.PlotOptimum()
                 if FOX_METHOD[3]:
-                    vminStar = 500
+                    vminStar = 612.853861611
                     logetaStar = -25.5
                     exper.ImportOptimalLikelihood(output_file_no_extension)
-                    exper.ConstrainedOptimalLikelihood(vminStar, logetaStar, output_file_no_extension)
-                if FOX_METHOD[4]:
+                    exper.ConstrainedOptimalLikelihood(vminStar, logetaStar, output_file_no_extension, plot = True)
+                if FOX_METHOD[4] or FOX_METHOD[5]:
                     (vmin_band_min, vmin_band_max, vmin_num_steps) = vmin_FoxBand_range
                     (logeta_percent_minus, logeta_percent_plus, logeta_num_steps) = logeta_FoxBand_percent_range
                     if steepness != None:
@@ -162,9 +162,14 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                             logeta_percent_minus, logeta_percent_plus, logeta_num_steps, steepness_logeta)
                     else:
                         exper.VminSamplingList(output_file_no_extension, \
-                            vmin_min, vmin_max, vmin_num_steps)
+                            vmin_min, vmin_max, vmin_num_steps, plot = not FOX_METHOD[5])
                         exper.VminLogetaSamplingTable(output_file_no_extension, \
-                            logeta_percent_minus, logeta_percent_plus, logeta_num_steps)
+                            logeta_percent_minus, logeta_percent_plus, logeta_num_steps, plot = not FOX_METHOD[5])
+                if FOX_METHOD[5]:
+                    exper.LogLikelihoodList(output_file_no_extension)
+                if FOX_METHOD[6]:
+                    exper.ImportOptimalLikelihood(output_file_no_extension)
+                    
                 
         if HALO_DEP or not np.any(FOX_METHOD):
             print("upper_limit = ", upper_limit)
