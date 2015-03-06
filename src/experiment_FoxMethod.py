@@ -240,10 +240,12 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         np.savetxt(file, self.logL_list_table)
         return
             
-    def VminLogetaSamplingTable(self, output_file_tail, vmin_min, vmin_max, steepnessVmin = 1.5, steepnessVminCenter = 2.5, plot = True):
+    def VminSamplingList(self, output_file_tail, vmin_min, vmin_max, vmin_num_steps, \
+        steepnessVmin = 1.5, steepnessVminCenter = 2.5, plot = True):
         self.ImportOptimalLikelihood(output_file_tail)
         xmin = vmin_min
         xmax = vmin_max
+        x_num_steps = vmin_num_steps
         s = steepnessVmin
         sc = steepnessVminCenter
         
@@ -254,8 +256,10 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
 #        print("x = ", x_lin)
         print("x0 = ", x0_list)
         UnitStep = lambda x: (np.sign(x) + 1) / 2
-        g1 = lambda x, x0, s0, xmin = xmin: np.log10(UnitStep(x0 - x) * (x0 - xmin)/ (x + 10**s0 * (-x + x0) - xmin) + UnitStep(x - x0))
-        g2 = lambda x, x0, s0, xmax = xmax: np.log10(UnitStep(x - x0) * (x + 10**s0 * (-x + x0) - xmax)/ (x0 - xmax) + UnitStep(x0 - x))
+        g1 = lambda x, x0, s0, xmin = xmin: np.log10(UnitStep(x - x0) + \
+            UnitStep(x0 - x) * (x0 - xmin)/ (x + 10**s0 * (-x + x0) - xmin))
+        g2 = lambda x, x0, s0, xmax = xmax: np.log10(UnitStep(x0 - x) + \
+            UnitStep(x - x0) * (x + 10**s0 * (-x + x0) - xmax)/ (x0 - xmax))
 #        print("g1 = ", np.array([[x, g1(x, x0_list[0], s)] for x in x_lin]))
 #        print("g2 = ", np.array([[x, g2(x, x0_list[0], s)] for x in x_lin]))
         
@@ -263,7 +267,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         
         s_list = np.array([[s, sc]] + [[sc,sc]] * (numx0 - 2) + [[sc, s]])
         g_total = lambda x, sign = 1, x0 = x0_list, s_list = s_list: \
-            np.array([sign * g(x, x0_list[i], s_list[i,0], s_list[i,1]) for i in range(x0_list.size)]).prod(axis = 0)
+            np.array([sign * g(x, x0_list[i], s_list[i,0], s_list[i,1]) \
+            for i in range(x0_list.size)]).prod(axis = 0)
         
         g_lin = g_total(x_lin)
 #        print("g = ", g_lin)
@@ -273,23 +278,37 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         bounds = np.array([(x0_list[i], x0_list[i + 1]) for i in range(x0_list.size - 1)])
         print("bounds = ", bounds)
         print("gtot = ", g_total(xT_guess))
-        x_turns_max = np.array([minimize(g_total, np.array(xT_guess[i]), args = (-1,), bounds = [bounds[i]]).x for i in range(0, xT_guess.size, 2)])
-        x_turns_min = np.array([minimize(g_total, np.array(xT_guess[i]), bounds = [bounds[i]]).x for i in range(1, xT_guess.size, 2)])
+        x_turns_max = np.array([minimize(g_total, np.array(xT_guess[i]), \
+            args = (-1,), bounds = [bounds[i]]).x for i in range(0, xT_guess.size, 2)])
+        x_turns_min = np.array([minimize(g_total, np.array(xT_guess[i]), \
+            bounds = [bounds[i]]).x for i in range(1, xT_guess.size, 2)])
         x_turns = np.sort(np.append(x_turns_max, x_turns_min))
+        x_turns = np.append(np.insert(x_turns, 0, xmin), [xmax])
         y_turns = g_total(x_turns)
         print("x_turns = ", x_turns)
         print("y_turns = ", y_turns)
         
+
         g_inverse = lambda y, x1, x2: brentq(lambda x: g_total(x) - y, x1, x2)
-        y0 = -5
-        root = g_inverse(y0, 0, 500)
-        print("root = ", root)
-        
+        g_inverse_list = lambda y_list, x1, x2: np.array([g_inverse(y, x1, x2) for  y in y_list])
+        y_diff = np.diff(y_turns)
+        y_diff_sum = y_diff.sum()
+        num_steps = np.array([max(1, np.floor(x_num_steps * np.abs(yd)/y_diff_sum)) for yd in y_diff])
+        y_list = np.array([np.linspace(y_turns[i], y_turns[i+1], num_steps[i]) for i in range(num_steps.size)])
+        x_list = np.array([g_inverse_list(y_list[i], x_turns[i], x_turns[i+1]) for i in range(y_list.size)])
+        x_list = np.concatenate(x_list)
+        y_list = np.concatenate(y_list)
+        x_list = x_list[np.array([x_list[i] != x_list[i+1] for i in range(x_list.size-1)] + [True])]
+        y_list = y_list[np.array([y_list[i] != y_list[i+1] for i in range(y_list.size-1)] + [True])]
+        print("x_list = ", x_list)        
+        print("y_list = ", y_list)
+        self.vmin_star_list = x_list
+
         if plot:
             plt.close()
             plt.plot(x_lin, g_lin)
-            plt.plot(x_lin, np.ones(x_lin.size) * y0)
             plt.plot(x_turns, y_turns, 'o')
+            plt.plot(x_list, y_list, '*')
             plt.xlim([xmin, xmax])
             plt.ylim([-s * sc**(numx0 - 1), s * sc**(numx0 - 1)])
             plt.show()

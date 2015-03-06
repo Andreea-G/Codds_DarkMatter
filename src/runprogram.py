@@ -151,7 +151,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     exper.PlotOptimum()
                 if FOX_METHOD[4]:
-                    exper.VminLogetaDamplingTable(output_file_no_extension, vmin_min, vmin_max)
+                    vmin_num_steps = 20
+                    exper.VminSamplingList(output_file_no_extension, vmin_min, vmin_max, vmin_num_steps)
 
                 
         if HALO_DEP or not np.any(FOX_METHOD):
