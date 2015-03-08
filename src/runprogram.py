@@ -147,8 +147,10 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     exper.PlotOptimum()
                 if FOX_METHOD[3]:
-                    vminStar = 612.853861611
-                    logetaStar = -25.5
+#                    vminStar = 612.853861611
+#                    logetaStar = -25.5
+                    vminStar = 500
+                    logetaStar = -25
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     exper.ConstrainedOptimalLikelihood(vminStar, logetaStar, output_file_no_extension, plot = True)
                 if np.any(FOX_METHOD[4:]):
@@ -156,10 +158,13 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                     (logeta_percent_minus, logeta_percent_plus, logeta_num_steps) = logeta_FoxBand_percent_range
                     if steepness != None:
                         (steepness_vmin, steepness_vmin_center, steepness_logeta) = steepness
+                        print("Steepness: ", steepness_vmin, ", ", steepness_vmin_center, ", ", steepness_logeta)
                         exper.VminSamplingList(output_file_no_extension, \
-                            vmin_band_min, vmin_band_max, vmin_num_steps, steepness_vmin, steepness_vmin_center)
+                            vmin_band_min, vmin_band_max, vmin_num_steps, steepness_vmin, steepness_vmin_center, \
+                            plot = not np.any(FOX_METHOD[5:]))
                         exper.VminLogetaSamplingTable(output_file_no_extension, \
-                            logeta_percent_minus, logeta_percent_plus, logeta_num_steps, steepness_logeta)
+                            logeta_percent_minus, logeta_percent_plus, logeta_num_steps, steepness_logeta, \
+                            plot = not np.any(FOX_METHOD[5:]))
                     else:
                         exper.VminSamplingList(output_file_no_extension, \
                             vmin_band_min, vmin_band_max, vmin_num_steps, plot = not np.any(FOX_METHOD[5:]))
@@ -171,9 +176,10 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                     exper.LogLikelihoodList(output_file_no_extension)
                 if FOX_METHOD[6]:
                     exper.ImportOptimalLikelihood(output_file_no_extension)
-                    delta_logL = 1
-                    interpolation_order = 1
-                    exper.FoxBand(output_file_no_extension, delta_logL, interpolation_order)
+                    interpolation_order = 2
+                    for delta_logL in [1]:
+                        exper.FoxBand(output_file_no_extension, delta_logL, interpolation_order)
+                        
                 
         if HALO_DEP or not np.any(FOX_METHOD):
             print("upper_limit = ", upper_limit)

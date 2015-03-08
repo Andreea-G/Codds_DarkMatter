@@ -11,6 +11,10 @@ from math import erf
 import math
 pi = np.pi
 
+#np.set_printoptions(formatter={'all':lambda x: str(x)+','})
+#set_printoptions_formatter={'all':lambda x: str(x)+','}
+#np.set_printoptions(formatter=set_printoptions_formatter)
+
 T = True    # short-hand notation
 F = False
 

@@ -33,7 +33,7 @@ class Experiment_HaloIndep(Experiment):
         qER = q * ER
         efficiencyER = self.Efficiency_ER(ER)
         const_factor = kilogram/SpeedOfLight**2 * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
-            dERecoildVmin(vmin, self.mT, mx, delta, sign) * efficiencyER
+            np.abs(dERecoildVmin(vmin, self.mT, mx, delta, sign)) * efficiencyER
         return (qER, const_factor)
 
     def Response_Other(self, vmin, Eee1, Eee2, mx, fp, fn, delta):
