@@ -155,7 +155,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             raise ValueError
         mu_i = self.Exposure * np.dot(vmin_resp_integr, 10**logeta_list)
         Nsignal = self.Exposure * np.dot(10**logeta_list, resp_integr)
-        result = self.NBKG + Nsignal - np.log10(self.mu_BKG_i + mu_i).sum()
+        result = self.NBKG + Nsignal - np.log(self.mu_BKG_i + mu_i).sum()
 #        print("result = ", result)
         return result
 
@@ -176,7 +176,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             return -constr_list.sum() * 10**6
         return self.MinusLogLikelihood(vars_list, vminStar = vminStar, logetaStar = logetaStar, vminStar_index = vminStar_index)
 
-    def OptimalLikelihood(self, output_file_tail, logeta_guess = -25.):
+    def OptimalLikelihood(self, output_file_tail, logeta_guess = -23.85):
         self.ImportResponseTables(output_file_tail, plot = False)
         vars_guess = np.append(self.vmin_sorted_list, logeta_guess * np.ones(self.vmin_sorted_list.size))
         print("vars_guess = ", vars_guess)
@@ -194,8 +194,10 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 print("tf = ", res > 0)
             return res
         constr = ({'type': 'ineq', 'fun': constr_func})
-        optimum_log_likelihood = minimize(self.MinusLogLikelihood, vars_guess, constraints = constr)
+#        optimum_log_likelihood = minimize(self.MinusLogLikelihood, vars_guess, constraints = constr)
+        optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, args = (constr_func,), constraints = constr)
         print(optimum_log_likelihood)
+        print("vars_guess = ", repr(vars_guess))
         file = output_file_tail + "_GloballyOptimalLikelihood.dat"
         print(file)  # write to file
         np.savetxt(file, np.append([optimum_log_likelihood.fun], optimum_log_likelihood.x))

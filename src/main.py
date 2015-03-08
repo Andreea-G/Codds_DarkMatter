@@ -28,9 +28,10 @@ def main():
     HALO_DEP = F
     HALO_INDEP = not HALO_DEP
 #    FOX_METHOD = [T, T, T, T, T, F, F]     # Multiple
-#    FOX_METHOD = [F, T, F, F, F, F, F]     # OptimalLikelihood
+#    FOX_METHOD = [T, F, F, F, F, F, F]     # ResponseTables
+    FOX_METHOD = [F, T, T, F, F, F, F]     # OptimalLikelihood
 #    FOX_METHOD = [F, F, T, F, F, F, F]     # ImportOptimalLikelihood
-    FOX_METHOD = [F, F, F, T, F, F, F]     # ConstrainedOptimalLikelihood
+#    FOX_METHOD = [F, F, F, T, F, F, F]     # ConstrainedOptimalLikelihood
 #    FOX_METHOD = [F, F, F, F, T, F, F]     # VminLogetaSamplingTable
 #    FOX_METHOD = [F, F, F, F, F, T, F]     # LogLikelihoodList
 #    FOX_METHOD = [F, F, F, F, F, F, T]     # FoxBand
