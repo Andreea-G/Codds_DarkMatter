@@ -156,7 +156,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                     logetaStar = -25
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     exper.ConstrainedOptimalLikelihood(vminStar, logetaStar, output_file_no_extension, plot = True)
-                    vars_list = np.array([509.763, 517.667, 589.725, -25., -25., -25.])
+                    vars_list = [500., 512.94884721,  583.73085857, -22.86421235, -25., -25.]
+#                    vars_list = np.array([509.763, 517.667, 589.725, -25., -25., -25.])
                     print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list))
                 if np.any(FOX_METHOD[4:]):
                     (vmin_band_min, vmin_band_max, vmin_num_steps) = vmin_FoxBand_range

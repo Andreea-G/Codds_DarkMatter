@@ -10,7 +10,7 @@ Created on Wed Mar  4 00:47:37 2015
 from experiment_HaloIndep import *
 from interp import interp1d
 #from scipy.interpolate import interp1d
-from scipy.optimize import brentq, minimize
+from scipy.optimize import brentq, minimize, basinhopping
 import matplotlib.pyplot as plt
 import os   # for speaking
 
@@ -200,7 +200,10 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             return res
         constr = ({'type': 'ineq', 'fun': constr_func})
 #        optimum_log_likelihood = minimize(self.MinusLogLikelihood, vars_guess, constraints = constr)
-        optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, args = (constr_func,), constraints = constr)
+#        optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, args = (constr_func,), constraints = constr)
+        minimizer_kwargs = {"constraints": constr, "args": (constr_func,)}
+        optimum_log_likelihood = basinhopping(self._MinusLogLikelihood, vars_guess, \
+            minimizer_kwargs = minimizer_kwargs, niter = 3, stepsize = 1)
         print(optimum_log_likelihood)
         print("MinusLogLikelihood = ", self.MinusLogLikelihood(optimum_log_likelihood.x))
         print("vars_guess = ", repr(vars_guess))
@@ -288,9 +291,11 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         
         constr = ({'type': 'ineq', 'fun': constr_func})
 
-        constr_optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, \
-            args = (constr_func, vminStar, logetaStar, vminStar_index), constraints = constr, \
-            method = "differential_evolution")
+        minimizer_kwargs = {"constraints": constr, "args": (constr_func, vminStar, logetaStar, vminStar_index)}
+        constr_optimum_log_likelihood = basinhopping(self._MinusLogLikelihood, vars_guess, \
+            minimizer_kwargs = minimizer_kwargs, niter = 3, stepsize = 1)
+#        constr_optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, \
+#            args = (constr_func, vminStar, logetaStar, vminStar_index), constraints = constr)
         print(constr_optimum_log_likelihood)
         print("optimum_logL = ", self.optimal_logL)
         if DEBUG:
