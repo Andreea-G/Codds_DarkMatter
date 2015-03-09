@@ -29,9 +29,9 @@ def main():
     HALO_INDEP = not HALO_DEP
 #    FOX_METHOD = [T, T, T, T, T, F, F]     # Multiple
 #    FOX_METHOD = [T, F, F, F, F, F, F]     # ResponseTables
-    FOX_METHOD = [F, T, T, F, F, F, F]     # OptimalLikelihood
+#    FOX_METHOD = [F, T, T, F, F, F, F]     # OptimalLikelihood
 #    FOX_METHOD = [F, F, T, F, F, F, F]     # ImportOptimalLikelihood
-#    FOX_METHOD = [F, F, F, T, F, F, F]     # ConstrainedOptimalLikelihood
+    FOX_METHOD = [F, F, F, T, F, F, F]     # ConstrainedOptimalLikelihood
 #    FOX_METHOD = [F, F, F, F, T, F, F]     # VminLogetaSamplingTable
 #    FOX_METHOD = [F, F, F, F, F, T, F]     # LogLikelihoodList
 #    FOX_METHOD = [F, F, F, F, F, F, T]     # FoxBand
@@ -57,7 +57,7 @@ def main():
         if HALO_INDEP:
             for exper_name in exper_list:
                 for filename_tail in filename_tail_list:
-                    for (mx, fn, delta, mPhi) in input_list[2:3]:
+                    for (mx, fn, delta, mPhi) in input_list[0:1]:
                         for quenching in quenching_list.get(exper_name, [None]):
                             (vmin_start, vmin_end, vmin_step) = Vmin_range(exper_name, mx, delta, mPhi, quenching)
                             print(vmin_start, " ", vmin_end, " ", vmin_step)
@@ -67,6 +67,7 @@ def main():
                                 vmin_FoxBand_range = vmin_FoxBand_range, \
                                 logeta_FoxBand_percent_range = logeta_FoxBand_percent_range, \
                                 steepness = Steepness(exper_name, mx, delta, mPhi), \
+                                logeta_guess = Logeta_guess(exper_name, mx, delta, mPhi), \
                                 filename_tail = filename_tail, OUTPUT_MAIN_DIR = OUTPUT_MAIN_DIR, \
                                 plot_dots = plot_dots, quenching = quenching)
 
@@ -87,8 +88,8 @@ def main():
         
     finally:
         if RUN_PROGRAM:
-#            os.system("say 'Finished running program'")
-            None
+            os.system("say 'Finished running program'")
+#            None
     
 if __name__ == '__main__':
     main()

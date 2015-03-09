@@ -68,7 +68,7 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, plot_dots = True, plot_c
 def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
     RUN_PROGRAM, MAKE_PLOT, HALO_DEP, FOX_METHOD, \
     mx = None, mx_range = None, vmin_range = None, \
-    vmin_FoxBand_range = None, logeta_FoxBand_percent_range = None, steepness = None, \
+    vmin_FoxBand_range = None, logeta_FoxBand_percent_range = None, steepness = None, logeta_guess = None, \
     filename_tail = "", OUTPUT_MAIN_DIR = "Output/", plot_dots = True, quenching = None):
     ''' Main run of the program.
         Input:
@@ -142,17 +142,22 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                 if FOX_METHOD[0]:
                     exper.ResponseTables(vmin_min, vmin_max, vmin_step, mx, fp, fn, delta, output_file_no_extension)
                 if FOX_METHOD[1]:
-                    exper.OptimalLikelihood(output_file_no_extension)
+                    if logeta_guess == None:
+                        exper.OptimalLikelihood(output_file_no_extension)
+                    else: 
+                        exper.OptimalLikelihood(output_file_no_extension, logeta_guess = logeta_guess)
                 if FOX_METHOD[2]:
                     exper.ImportOptimalLikelihood(output_file_no_extension)
+                    vars_list = np.array([509.763, 517.667, 589.725, -25., -25., -25.])
+                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list))
                     exper.PlotOptimum()
                 if FOX_METHOD[3]:
-#                    vminStar = 612.853861611
-#                    logetaStar = -25.5
                     vminStar = 500
                     logetaStar = -25
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     exper.ConstrainedOptimalLikelihood(vminStar, logetaStar, output_file_no_extension, plot = True)
+                    vars_list = np.array([509.763, 517.667, 589.725, -25., -25., -25.])
+                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list))
                 if np.any(FOX_METHOD[4:]):
                     (vmin_band_min, vmin_band_max, vmin_num_steps) = vmin_FoxBand_range
                     (logeta_percent_minus, logeta_percent_plus, logeta_num_steps) = logeta_FoxBand_percent_range
@@ -166,6 +171,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                             logeta_percent_minus, logeta_percent_plus, logeta_num_steps, steepness_logeta, \
                             plot = not np.any(FOX_METHOD[5:]))
                     else:
+                        print("Steepness: Default")
                         exper.VminSamplingList(output_file_no_extension, \
                             vmin_band_min, vmin_band_max, vmin_num_steps, plot = not np.any(FOX_METHOD[5:]))
                         exper.VminLogetaSamplingTable(output_file_no_extension, \

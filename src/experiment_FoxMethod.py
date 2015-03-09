@@ -10,7 +10,7 @@ Created on Wed Mar  4 00:47:37 2015
 from experiment_HaloIndep import *
 from interp import interp1d
 #from scipy.interpolate import interp1d
-from scipy.optimize import minimize, brentq, fsolve
+from scipy.optimize import brentq, minimize
 import matplotlib.pyplot as plt
 import os   # for speaking
 
@@ -52,7 +52,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         '''
         self.VMinSortedList(mx, fp, fn, delta)
         # write it to file
-        file =  output_file_tail + "_VMinSortedList.dat"
+        file =  output_file_tail + "_VminSortedList.dat"
         print(file)  # write to file
         np.savetxt(file, self.vmin_sorted_list)
 
@@ -137,24 +137,24 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         vmin_list_w0 = np.insert(vmin_list_w0, 0, 0)
         vmin_resp_integr = self.VminIntegratedResponseTable(vmin_list_w0)
         resp_integr = self.IntegratedResponseTable(vmin_list_w0)
-        if np.any(vmin_resp_integr < 0):
+        mu_i = self.Exposure * np.dot(vmin_resp_integr, 10**logeta_list)
+        Nsignal = self.Exposure * np.dot(10**logeta_list, resp_integr)
+        if DEBUG and np.any(vmin_resp_integr < 0):
             print("@@@@@@@@@@@@@ vmin_resp_integr < 0 @@@@@@@@@@@@@")
             print("vmin_list_w0 = ", vmin_list_w0)
             print("vmin_resp_integr = ", vmin_resp_integr)
-            print("@@@@@@@@@@@@@")
             print("vmin_linspace = ", self.vmin_linspace)
-            print("diff resp = ", np.array([self.diff_response_interp[0](v) for v in self.vmin_linspace]))
-            self.PlotDifferentialResponse()
-            raise ValueError
-        if np.any(resp_integr < 0):
+            print("stuff in log = ", self.mu_BKG_i + mu_i)
+            print("@@@@@@@@@@@@@")
+#            self.PlotDifferentialResponse()
+#            raise ValueError
+        if DEBUG and np.any(resp_integr < 0):
             print("@@@@@@@@@@@@@ resp_integr < 0 @@@@@@@@@@@@@")
             print("vmin_list_w0 = ", vmin_list_w0)
             print("resp_integr = ", resp_integr)
             print("@@@@@@@@@@@@@")
-            self.PlotResponse()
-            raise ValueError
-        mu_i = self.Exposure * np.dot(vmin_resp_integr, 10**logeta_list)
-        Nsignal = self.Exposure * np.dot(10**logeta_list, resp_integr)
+#            self.PlotResponse()
+#            raise ValueError
         result = self.NBKG + Nsignal - np.log(self.mu_BKG_i + mu_i).sum()
 #        print("result = ", result)
         return result
@@ -168,15 +168,20 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         constr_not_valid = constraints < 0
         if DEBUG:
             print("constr_not_valid = ", constr_not_valid)
-        if np.any(constr_not_valid):
-            constr_list = constraints[constr_not_valid]
-            if DEBUG: 
-                print("Constraints not valid!!********************************************************************************")
-                print("constr sum = ", -constr_list.sum())
-            return -constr_list.sum() * 10**6
-        return self.MinusLogLikelihood(vars_list, vminStar = vminStar, logetaStar = logetaStar, vminStar_index = vminStar_index)
+        try:
+            return self.MinusLogLikelihood(vars_list, vminStar = vminStar, logetaStar = logetaStar, vminStar_index = vminStar_index)
+        except:
+            if np.any(constr_not_valid):
+                constr_list = constraints[constr_not_valid]
+                if DEBUG: 
+                    print("Constraints not valid!!********************************************************************************")
+                    print("constr sum = ", -constr_list.sum())
+                return -constr_list.sum() * 10**6
+            else:
+                print("What just happened???")
+                return self.MinusLogLikelihood(vars_list, vminStar = vminStar, logetaStar = logetaStar, vminStar_index = vminStar_index)
 
-    def OptimalLikelihood(self, output_file_tail, logeta_guess = -23.85):
+    def OptimalLikelihood(self, output_file_tail, logeta_guess = -24):
         self.ImportResponseTables(output_file_tail, plot = False)
         vars_guess = np.append(self.vmin_sorted_list, logeta_guess * np.ones(self.vmin_sorted_list.size))
         print("vars_guess = ", vars_guess)
@@ -197,6 +202,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
 #        optimum_log_likelihood = minimize(self.MinusLogLikelihood, vars_guess, constraints = constr)
         optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, args = (constr_func,), constraints = constr)
         print(optimum_log_likelihood)
+        print("MinusLogLikelihood = ", self.MinusLogLikelihood(optimum_log_likelihood.x))
         print("vars_guess = ", repr(vars_guess))
         file = output_file_tail + "_GloballyOptimalLikelihood.dat"
         print(file)  # write to file
@@ -213,7 +219,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.optimal_logeta = optimal_result[optimal_result.size/2 + 1 :]
         return
 
-    def PlotStepFunction(self, vmin_list, logeta_list, xlim_percentage = (0., 1.1), ylim_percentage = (1.01, 0.99), plot_close = True, plot_show = True):
+    def PlotStepFunction(self, vmin_list, logeta_list, xlim_percentage = (0., 1.1), ylim_percentage = (1.01, 0.99), \
+        plot_close = True, plot_show = True, mark = 'o', color = None):
         if plot_close: 
             plt.close()
         print(vmin_list)
@@ -221,8 +228,12 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         x = np.insert(vmin_list, 0, 0)
         y = np.insert(logeta_list, 0, logeta_list[0])
         plt.step(x, y)
-        plt.plot(x, y, 'o')
-        plt.xlim([vmin_list[0] * xlim_percentage[0], vmin_list[-1] * xlim_percentage[1]])
+        if color != None:
+            plt.plot(x, y, mark, color = color)
+        else:
+            plt.plot(x, y, mark)
+#        plt.xlim([vmin_list[0] * xlim_percentage[0], vmin_list[-1] * xlim_percentage[1]])
+        plt.xlim([0, 1000])
         plt.ylim([max(logeta_list[-1] * ylim_percentage[0], -60), max(logeta_list[0] * ylim_percentage[1], -35)])
         if plot_show:
             plt.show()
@@ -240,7 +251,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.PlotStepFunction(np.insert(self.constr_optimal_vmin, vminStar_index, vminStar), \
             np.insert(self.constr_optimal_logeta, vminStar_index, logetaStar), \
             xlim_percentage = xlim_percentage, ylim_percentage = ylim_percentage,
-            plot_close = False, plot_show = False)
+            plot_close = False, plot_show = False, mark = 'x', color = 'k')
         plt.plot(vminStar, logetaStar, '*')
         if plot_show:
             plt.show()
@@ -278,9 +289,11 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         constr = ({'type': 'ineq', 'fun': constr_func})
 
         constr_optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, \
-            args = (constr_func, vminStar, logetaStar, vminStar_index), constraints = constr)
+            args = (constr_func, vminStar, logetaStar, vminStar_index), constraints = constr, \
+            method = "differential_evolution")
+        print(constr_optimum_log_likelihood)
+        print("optimum_logL = ", self.optimal_logL)
         if DEBUG:
-            print(constr_optimum_log_likelihood)
             constraints = constr_func(constr_optimum_log_likelihood.x)
             print("constraints = ", repr(constraints))
             is_not_close = np.logical_not(np.isclose(constraints, np.zeros_like(constraints)))
@@ -477,10 +490,13 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         with open(file, 'r') as f_handle:
             self.logL_list_table = np.loadtxt(f_handle)
         
-        n = self.vmin_sampling_list.size
+        n = self.vmin_sampling_list.size+1
+        print("self.logL_list_table = ", self.logL_list_table)        
+        print("n = ", n)
+        print("shape = ", self.logL_list_table.shape)
         shape = self.logL_list_table.shape[0]
         self.logL_list_table = self.logL_list_table.reshape(n, shape/n, self.logL_list_table.shape[1])
-#        print("self.logL_list_table = ", self.logL_list_table)
+        print("self.logL_list_table = ", self.logL_list_table)        
         print("self.vmin_sampling_list = ", self.vmin_sampling_list)
         print("self.logL_list_table = ", self.logL_list_table)
         
