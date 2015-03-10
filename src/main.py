@@ -6,7 +6,7 @@ Created on Thu Nov 20 22:52:11 2014
 """
 from __future__ import print_function
 from __future__ import division
-#import profile
+import profile
 from runprogram import *
 import os   # for speaking
 #from input_DAMApaper import *
@@ -27,15 +27,16 @@ def main():
     MAKE_PLOT = F
     HALO_DEP = F
     HALO_INDEP = not HALO_DEP
-#    FOX_METHOD = [T, T, T, T, T, F, F]     # Multiple
-#    FOX_METHOD = [T, F, F, F, F, F, F]     # ResponseTables
-#    FOX_METHOD = [F, T, T, F, F, F, F]     # OptimalLikelihood
-#    FOX_METHOD = [F, F, T, F, F, F, F]     # ImportOptimalLikelihood
-    FOX_METHOD = [F, F, F, T, F, F, F]     # ConstrainedOptimalLikelihood
-#    FOX_METHOD = [F, F, F, F, T, F, F]     # VminLogetaSamplingTable
-#    FOX_METHOD = [F, F, F, F, F, T, F]     # LogLikelihoodList
-#    FOX_METHOD = [F, F, F, F, F, F, T]     # FoxBand
-
+#    FOX_METHOD = [T, T, T, F, F, F, F, F]     # Multiple
+#    FOX_METHOD = [T, F, F, F, F, F, F, F]     # ResponseTables
+#    FOX_METHOD = [F, T, F, F, F, F, F, F]     # OptimalLikelihood
+#    FOX_METHOD = [F, F, T, F, F, F, F, F]     # ImportOptimalLikelihood
+#    FOX_METHOD = [F, F, F, T, F, F, F, F]     # ConstrainedOptimalLikelihood
+#    FOX_METHOD = [F, F, F, F, T, F, F, F]     # VminLogetaSamplingTable
+    FOX_METHOD = [F, F, F, F, F, T, F, F]     # LogLikelihoodList
+#    FOX_METHOD = [F, F, F, F, F, F, T, F]     # FoxBand
+#    FOX_METHOD = [F, F, F, F, F, F, F, T]     # FoxBandPlot
+    
     qKIMS_list = [0.05, 0.1]
     qDAMANa_list = [0.4, 0.3]
     qDAMAI_list = [0.09, 0.06]
@@ -48,7 +49,7 @@ def main():
 
     exper_list = [implemented_exper[i] for i in [14]]
 #    exper_list = implemented_exper
-    filename_tail_list = ["_test"]
+    filename_tail_list = [""]
     OUTPUT_MAIN_DIR = "Output1/"
 
     try:
@@ -88,10 +89,10 @@ def main():
         
     finally:
         if RUN_PROGRAM:
-            os.system("say 'Finished running program'")
-#            None
+#            os.system("say 'Finished running program'")
+            None
     
 if __name__ == '__main__':
-    main()
-#    profile.run("main()")
+#    main()
+    profile.run("main()")
 

@@ -28,9 +28,9 @@ def Steepness(exper_name, mx, delta, mPhi = 1000.):
     # defaults are (steepness_vmin, steepness_vmin_center, steepness_logeta) = (1.5, 2.5, 1)
     if exper_name != "CDMSSi2012":
         return None
-    steepness_options = { (9., 0, 1000.): (1., 2.5, 1.5),
-                          (3.5, -50, 1000.): (0.2, 1, 1.5),
-                          (1.3, -200, 1000.): (0.1, 0.6, 1.5),
+    steepness_options = { (9., 0, 1000.): (1., 2.5, 1),
+                          (3.5, -50, 1000.): (0.2, 1, 1),
+                          (1.3, -200, 1000.): (0.1, 0.6, 1),
     }
     return steepness_options[(mx, delta, mPhi)]
 

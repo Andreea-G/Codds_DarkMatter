@@ -147,19 +147,36 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                     else: 
                         exper.OptimalLikelihood(output_file_no_extension, logeta_guess = logeta_guess)
                 if FOX_METHOD[2]:
+                    exper.ImportResponseTables(output_file_no_extension, plot = True)
                     exper.ImportOptimalLikelihood(output_file_no_extension)
-                    vars_list = np.array([509.763, 517.667, 589.725, -25., -25., -25.])
-                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list))
+#                    vars_list = np.array([509.763, 517.667, 589.725, -25., -25., -25.])
+#                    vars_list = np.array([463.77679263,  473.22865581,  577.73929226,  -21.60988328, -21.60988328,  -21.60988328])
+#                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list))
+#                    #[ 463.77679263  473.22865581  577.73929226]
+#                    #[-22.91418748 -22.91417759 -23.20046299]
+#                    vminStar =  792.135332076
+#                    logetaStar =  -21.60988328
+#                    vminStar_index = 1
+#                    vars_list = np.array([  373.47714939,   792.13533208,   792.13534776,   -21.5935412 , -381.86896989, -5582.16087053])
+#                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list, vminStar, logetaStar, 1))
+#                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list, vminStar, logetaStar, 2))
+#                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list, vminStar, logetaStar, 3))
                     exper.PlotOptimum()
                 if FOX_METHOD[3]:
-                    vminStar = 500
-                    logetaStar = -25
+#                    (vminStar, logetaStar) = (500, -25)
+#                    (vminStar, logetaStar) = (32.1343304717, -24.48487343)
+#                    (vminStar, logetaStar) = (218.271870856, -23.23683411)
+#                    (vminStar, logetaStar) = (497.685658861, -25.60815296)
+#                    (vminStar, logetaStar) = (559.972321719, -26.99971248)
+#                    (vminStar, logetaStar) = (655.267138374, -20.48554508)
+#                    (vminStar, logetaStar) = (792.135332076, -21.60988328)
+                    (vminStar, logetaStar) = (32.2467823008, -23.1311911267)
                     exper.ImportOptimalLikelihood(output_file_no_extension)
-                    exper.ConstrainedOptimalLikelihood(vminStar, logetaStar, output_file_no_extension, plot = True)
-                    vars_list = [500., 512.94884721,  583.73085857, -22.86421235, -25., -25.]
+                    exper.ConstrainedOptimalLikelihood(vminStar, logetaStar, plot = True)
+#                    vars_list = np.array([500., 512.94884721,  583.73085857, -22.86421235, -25., -25.])
 #                    vars_list = np.array([509.763, 517.667, 589.725, -25., -25., -25.])
-                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list))
-                if np.any(FOX_METHOD[4:]):
+#                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list))
+                if np.any(FOX_METHOD[4:7]):
                     (vmin_band_min, vmin_band_max, vmin_num_steps) = vmin_FoxBand_range
                     (logeta_percent_minus, logeta_percent_plus, logeta_num_steps) = logeta_FoxBand_percent_range
                     if steepness != None:
@@ -186,6 +203,9 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                     interpolation_order = 2
                     for delta_logL in [1]:
                         exper.FoxBand(output_file_no_extension, delta_logL, interpolation_order)
+                if FOX_METHOD[7]:
+                    exper.ImportOptimalLikelihood(output_file_no_extension)
+                    exper.ImportFoxBand(output_file_no_extension)
                         
                 
         if HALO_DEP or not np.any(FOX_METHOD):

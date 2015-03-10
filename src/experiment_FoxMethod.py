@@ -14,7 +14,9 @@ from scipy.optimize import brentq, minimize, basinhopping
 import matplotlib.pyplot as plt
 import os   # for speaking
 
-DEBUG = T
+DEBUG = F
+DEBUG_FULL = F
+USE_BASINHOPPING = F
 
 class Experiment_FoxMethod(Experiment_HaloIndep):
     def __init__(self, expername, scattering_type, mPhi = mPhiRef):
@@ -32,7 +34,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         return
 
     def ResponseTables(self, vmin_min, vmin_max, vmin_step, mx, fp, fn, delta, output_file_tail):
-        ''' Computes response tables:
+        ''' Computes response tables
             - self.diff_response_tab is a table of [vmin, DifferentialResponse(Eee_i)] pairs for each vmin in the range 
         [vminmin, vminmax], corresponding to measured recoil energies Eee_i. 
         It is a 3D matrix where
@@ -51,9 +53,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.response_tab are each written to files.
         '''
         self.VMinSortedList(mx, fp, fn, delta)
-        # write it to file
         file =  output_file_tail + "_VminSortedList.dat"
-        print(file)  # write to file
+        print(file)  
         np.savetxt(file, self.vmin_sorted_list)
 
         if delta == 0:
@@ -74,16 +75,16 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             self.diff_response_tab = np.append(self.diff_response_tab, diff_resp_list.transpose(), axis = 1)
             self.response_tab = np.append(self.response_tab, [resp], axis = 0)
         self.vmin_linspace = np.insert(self.vmin_linspace, 0., 0)
-        # write to file
         file = output_file_tail + "_VminLinspace.dat"
-        print(file)  # write to file
+        print(file)  
         np.savetxt(file, self.vmin_linspace)
         file = output_file_tail + "_DiffRespTable.dat"
-        print(file)  # write to file
+        print(file)  
         np.savetxt(file, self.diff_response_tab)
         file = output_file_tail + "_RespTable.dat"
-        print(file)  # write to file
+        print(file)  
         np.savetxt(file, self.response_tab)
+        os.system("say Finished response tables.")
         return
 
     def PlotDifferentialResponse(self):
@@ -126,8 +127,6 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             for a in range(vmin_list.size - 1)])
 
     def MinusLogLikelihood(self, vars_list, vminStar = None, logetaStar = None, vminStar_index = None):
-#        print("vars_list = ", vars_list)
-#        print("Star vars: ", vminStar, " ", logetaStar)
         if vminStar == None:
             vmin_list_w0 = vars_list[: vars_list.size/2]
             logeta_list = vars_list[vars_list.size/2 :]
@@ -139,46 +138,32 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         resp_integr = self.IntegratedResponseTable(vmin_list_w0)
         mu_i = self.Exposure * np.dot(vmin_resp_integr, 10**logeta_list)
         Nsignal = self.Exposure * np.dot(10**logeta_list, resp_integr)
-        if DEBUG and np.any(vmin_resp_integr < 0):
-            print("@@@@@@@@@@@@@ vmin_resp_integr < 0 @@@@@@@@@@@@@")
-            print("vmin_list_w0 = ", vmin_list_w0)
-            print("vmin_resp_integr = ", vmin_resp_integr)
-            print("vmin_linspace = ", self.vmin_linspace)
-            print("stuff in log = ", self.mu_BKG_i + mu_i)
-            print("@@@@@@@@@@@@@")
-#            self.PlotDifferentialResponse()
-#            raise ValueError
-        if DEBUG and np.any(resp_integr < 0):
-            print("@@@@@@@@@@@@@ resp_integr < 0 @@@@@@@@@@@@@")
-            print("vmin_list_w0 = ", vmin_list_w0)
-            print("resp_integr = ", resp_integr)
-            print("@@@@@@@@@@@@@")
-#            self.PlotResponse()
-#            raise ValueError
         result = self.NBKG + Nsignal - np.log(self.mu_BKG_i + mu_i).sum()
-#        print("result = ", result)
+        if np.any(self.mu_BKG_i + mu_i < 0):
+            raise ValueError
         return result
 
     def _MinusLogLikelihood(self, vars_list, constr_func = None, vminStar = None, logetaStar = None, vminStar_index = None):
+        constraints = constr_func(vars_list)
+        constr_not_valid = constraints < 0
+        if DEBUG_FULL:
+            print("vminStar = ", vminStar)
+            print("logetaStar = ", logetaStar)
+            print("constraints = ", constraints)
+            print("constr_not_valid = ", constr_not_valid)
         if DEBUG:
             print("*** vars_list = ", vars_list)
-        constraints = constr_func(vars_list)
-        if DEBUG:
-            print("constraints = ", constraints)
-        constr_not_valid = constraints < 0
-        if DEBUG:
-            print("constr_not_valid = ", constr_not_valid)
         try:
             return self.MinusLogLikelihood(vars_list, vminStar = vminStar, logetaStar = logetaStar, vminStar_index = vminStar_index)
         except:
             if np.any(constr_not_valid):
                 constr_list = constraints[constr_not_valid]
-                if DEBUG: 
+                if DEBUG_FULL: 
                     print("Constraints not valid!!********************************************************************************")
                     print("constr sum = ", -constr_list.sum())
-                return -constr_list.sum() * 10**6
+                return min(max(-constr_list.sum(), 0.001) * 1e6, 1e6)
             else:
-                print("What just happened???")
+                print("What just happened???????????????????????????????????????????????????????????????????????????????")
                 return self.MinusLogLikelihood(vars_list, vminStar = vminStar, logetaStar = logetaStar, vminStar_index = vminStar_index)
 
     def OptimalLikelihood(self, output_file_tail, logeta_guess = -24):
@@ -187,29 +172,33 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         print("vars_guess = ", vars_guess)
         vmin_max = self.vmin_linspace[-1]
         def constr_func(x, vmin_max = vmin_max): 
-            #  0 -  8: bounds: 3 * (x.size/2) constraints = 9 for x.size/2 = 3
-            #  9 - 12: sorted array: 2 * (x.size/2 - 1) constraints = 4 for x.size/2 = 3
+            ''' 0 -  8: bounds: 3 * (x.size/2) constraints = 9 for x.size/2 = 3
+                9 - 12: sorted array: 2 * (x.size/2 - 1) constraints = 4 for x.size/2 = 3 '''
             constraints = np.concatenate([x[:x.size/2], vmin_max - x[:x.size/2], -x[x.size/2:], \
                 np.diff(x[:x.size/2]), np.diff(-x[x.size/2:])])
             is_not_close = np.logical_not(np.isclose(constraints, np.zeros_like(constraints), atol = 1e-5))
             is_not_close[:3 * (x.size/2)] = T
-            res = np.where(is_not_close, constraints, np.abs(constraints))
+            constr = np.where(is_not_close, constraints, np.abs(constraints))
             if DEBUG:
-                print("***constr = ", res)
-                print("tf = ", res > 0)
-            return res
+                print("***constr = ", constr)
+                print("tf = ", constr < 0)
+            return tf
         constr = ({'type': 'ineq', 'fun': constr_func})
-#        optimum_log_likelihood = minimize(self.MinusLogLikelihood, vars_guess, constraints = constr)
-#        optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, args = (constr_func,), constraints = constr)
-        minimizer_kwargs = {"constraints": constr, "args": (constr_func,)}
-        optimum_log_likelihood = basinhopping(self._MinusLogLikelihood, vars_guess, \
-            minimizer_kwargs = minimizer_kwargs, niter = 3, stepsize = 1)
+        
+        if USE_BASINHOPPING:
+            minimizer_kwargs = {"constraints": constr, "args": (constr_func,)}
+            optimum_log_likelihood = basinhopping(self._MinusLogLikelihood, vars_guess, \
+                minimizer_kwargs = minimizer_kwargs, niter = 5, stepsize = 1)
+        else:
+            optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, args = (constr_func,), constraints = constr)
+
         print(optimum_log_likelihood)
         print("MinusLogLikelihood = ", self.MinusLogLikelihood(optimum_log_likelihood.x))
         print("vars_guess = ", repr(vars_guess))
         file = output_file_tail + "_GloballyOptimalLikelihood.dat"
-        print(file)  # write to file
+        print(file)  
         np.savetxt(file, np.append([optimum_log_likelihood.fun], optimum_log_likelihood.x))
+        os.system("say 'Finished finding optimum'")
         return 
 
     def ImportOptimalLikelihood(self, output_file_tail):
@@ -260,7 +249,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             plt.show()
         return
         
-    def ConstrainedOptimalLikelihood(self, vminStar, logetaStar, logeta_guess = -25., plot = False):
+    def ConstrainedOptimalLikelihood(self, vminStar, logetaStar, plot = False):
         vminStar_index = 0
         while vminStar_index < self.optimal_vmin.size and vminStar > self.optimal_vmin[vminStar_index]:
             vminStar_index += 1
@@ -271,46 +260,84 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         logeta_guess = np.concatenate([np.maximum(logeta_guess[:vminStar_index], np.ones(vminStar_index)*logetaStar), \
             np.minimum(logeta_guess[vminStar_index:], np.ones(logeta_guess.size - vminStar_index)*logetaStar)])
         vars_guess = np.append(self.optimal_vmin, logeta_guess)
-                    
+        
         def constr_func(x, vminStar = vminStar, logetaStar = logetaStar, vmin_max = vmin_max, vminStar_index = vminStar_index): 
-            #  0 -  8: bounds: 3 * (x.size/2) constraints = 9 for x.size/2 = 3
-            #  9 - 12: sorted array: 2 * (x.size/2 - 1) constraints = 4 for x.size/2 = 3
-            # 13 - 15: vminStar_index: x.size/2 constraints = 3 for x.size/2 = 3
-            # 16 - 18: vminStar and logetaStar: x.size/2 constraints = 3 for x.size/2 = 3
+            '''  0 -  8: bounds: 3 * (x.size/2) constraints = 9 for x.size/2 = 3
+                 9 - 12: sorted array: 2 * (x.size/2 - 1) constraints = 4 for x.size/2 = 3
+                13 - 15: vminStar_index: x.size/2 constraints = 3 for x.size/2 = 3
+                16 - 18: vminStar and logetaStar: x.size/2 constraints = 3 for x.size/2 = 3 '''
             constraints = np.concatenate([x[:x.size/2], vmin_max - x[:x.size/2], -x[x.size/2:], \
                 np.diff(x[:x.size/2]), np.diff(-x[x.size/2:]), \
                 vminStar - x[:vminStar_index], x[vminStar_index : x.size/2] - vminStar, \
                 (x[:x.size/2] - vminStar) * (-x[x.size/2:] + logetaStar)])
             is_not_close = np.logical_not(np.isclose(constraints, np.zeros_like(constraints), atol = 1e-5))
             is_not_close[:3 * (x.size/2)] = T
-            res = np.where(is_not_close, constraints, np.abs(constraints))
-            if DEBUG:
-                print("***constr = ", res)
-                print("tf = ", res > 0)
-            return res
+            constr = np.where(is_not_close, constraints, np.abs(constraints))
+            if DEBUG and F:
+                print("***constr = ", constr)
+                print("tf = ", constr < 0)
+            if np.any(np.isnan(constr)):
+                raise ValueError
+            return constr
         
         constr = ({'type': 'ineq', 'fun': constr_func})
 
-        minimizer_kwargs = {"constraints": constr, "args": (constr_func, vminStar, logetaStar, vminStar_index)}
-        constr_optimum_log_likelihood = basinhopping(self._MinusLogLikelihood, vars_guess, \
-            minimizer_kwargs = minimizer_kwargs, niter = 3, stepsize = 1)
-#        constr_optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, \
-#            args = (constr_func, vminStar, logetaStar, vminStar_index), constraints = constr)
-        print(constr_optimum_log_likelihood)
-        print("optimum_logL = ", self.optimal_logL)
+        args = (constr_func, vminStar, logetaStar, vminStar_index)
+        if USE_BASINHOPPING:
+#            class TakeStep(object):
+#                def __init__(self, stepsize = 0.1):
+#                    self.stepsize = stepsize
+#                def __call__(self, x):
+#                    x[:x.size/2] += np.random.uniform(-5. * self.stepsize, 5. * self.stepsize, x[x.size/2:].shape)
+#                    x[x.size/2:] += np.random.uniform(-self.stepsize, self.stepsize, x[x.size/2:].shape)
+#                    return x
+#            take_step = TakeStep()
+            minimizer_kwargs = {"constraints": constr, "args": args}
+        
+        sol_not_found = True
+        attempts = 2
+        np.random.seed(0)
+        random_variation = 1e-6
+        while sol_not_found:
+            try:
+                if USE_BASINHOPPING:
+                    constr_optimum_log_likelihood = basinhopping(self._MinusLogLikelihood, vars_guess, \
+                        minimizer_kwargs = minimizer_kwargs, niter = 2, take_step = take_step, stepsize = 0.1)
+                else:
+                    constr_optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, \
+                        args = args, constraints = constr)
+                constraints = constr_func(constr_optimum_log_likelihood.x)
+                is_not_close = np.logical_not(np.isclose(constraints, np.zeros_like(constraints)))
+                constr_not_valid = np.logical_and(constraints < 0, is_not_close)
+                sol_not_found = np.any(constr_not_valid)
+            except ValueError:
+                sol_not_found = True
+                pass
+            
+            attempts -= 1
+            args = (constr_func, vminStar * (1 + random_variation * np.random.uniform(-1, 1)), \
+                    logetaStar * (1 + random_variation * np.random.uniform(-1, 1)), vminStar_index)
+            if USE_BASINHOPPING:
+                minimizer_kwargs = {"constraints": constr, "args": args}
+                
+            if DEBUG and sol_not_found:
+                print(attempts, " attempts left! ####################################################################################################")
+                os.system("say Error"); os.system("say " + str(attempts) + " attempts left")
+            sol_not_found = sol_not_found and attempts > 0
+        if sol_not_found:
+            raise ValueError
+        
         if DEBUG:
-            constraints = constr_func(constr_optimum_log_likelihood.x)
+            print(constr_optimum_log_likelihood)
+            print("optimum_logL = ", self.optimal_logL)
             print("constraints = ", repr(constraints))
-            is_not_close = np.logical_not(np.isclose(constraints, np.zeros_like(constraints)))
-            constr_valid = np.logical_not(np.logical_and(constraints < 0, is_not_close))
-            print("constr_valid = ", repr(constr_valid))
-            print("MinusLogLikelihood = ", self.MinusLogLikelihood(constr_optimum_log_likelihood.x, \
-                vminStar = vminStar, logetaStar = logetaStar, vminStar_index = vminStar_index))
+            print("constr_not_valid = ", repr(constr_not_valid))
             print("vars_guess = ", repr(vars_guess))
             print("optimum_logL = ", self.optimal_logL)
             print("vminStar = ", vminStar)
             print("logetaStar = ", logetaStar)
-
+            print("vminStar_index = ", vminStar_index)
+            
         self.constr_optimal_logl = constr_optimum_log_likelihood.fun
         vars_result = constr_optimum_log_likelihood.x
 
@@ -331,7 +358,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         xmax = vmin_max
         # TODO! This +4 is to compensate for a loss of ~4 points (not always 4 though), 
         # and it's due to taking floor later on.
-        # Fid a better way to deal with this.
+        # Find a better way to deal with this.
         x_num_steps = vmin_num_steps #+ 4  
         s = steepness_vmin
         sc = steepness_vmin_center
@@ -346,9 +373,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             UnitStep(x0 - x) * (x0 - xmin)/ (x + 10**s0 * (-x + x0) - xmin))
         g2 = lambda x, x0, s0, xmax = xmax: np.log10(UnitStep(x0 - x) + \
             UnitStep(x - x0) * (x + 10**s0 * (-x + x0) - xmax)/ (x0 - xmax))        
-#        print("g2 = ", g2(x, x0_list, sc))
         g = lambda x, x0, s1, s2: g1(x, x0, s1) + g2(x, x0, s2)
-#        print("g = ", g(x, x0_list, sc, sc))
         
         s_list = np.array([[s, sc]] + [[sc,sc]] * (numx0 - 2) + [[sc, s]])
         g_total = lambda x, sign = 1, x0 = x0_list, s_list = s_list: \
@@ -357,10 +382,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         g_lin = g_total(x_lin)
         
         xT_guess = (x0_list[:-1] + x0_list[1:]) / 2
-#        print("xT_guess = ", xT_guess)
         bounds = np.array([(x0_list[i], x0_list[i + 1]) for i in range(x0_list.size - 1)])
-#        print("bounds = ", bounds)
-#        print("gtot = ", g_total(xT_guess))
         x_turns_max = np.array([minimize(g_total, np.array(xT_guess[i]), \
             args = (-1,), bounds = [bounds[i]]).x for i in range(0, xT_guess.size, 2)])
         x_turns_min = np.array([minimize(g_total, np.array(xT_guess[i]), \
@@ -392,7 +414,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             plt.plot(x_turns, y_turns, 'o')
             plt.plot(x_list, y_list, '*')
             plt.xlim([xmin, xmax])
-            plt.ylim([-s * sc**(numx0 - 1), s * sc**(numx0 - 1)])
+            plt.ylim([min(-s * sc**(numx0 - 1), np.min(y_turns)), max(s * sc**(numx0 - 1), np.max(y_turns))])
             plt.show()
         
         return
@@ -459,27 +481,35 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         f_handle = open(temp_file, 'w')   # clear the file first
         f_handle.close()
         
-        for index in range(0, self.vmin_logeta_sampling_table.shape[0]):
+        for index in range(1, 2): #self.vmin_logeta_sampling_table.shape[0]):
             print("index = ", index)
             vminStar = self.vmin_logeta_sampling_table[index, 0, 0]
             print("vminStar = ", vminStar)
             logetaStar_list = self.vmin_logeta_sampling_table[index, :, 1]
-#            print("logetaStar_list = ", logetaStar_list)
-            try:
-                table = np.array([[logetaStar, self.ConstrainedOptimalLikelihood(vminStar, logetaStar)] \
-                    for logetaStar in logetaStar_list])
-            except:
-                os.system("say 'Finished program'")
+#            print("logetaStar_list = ", logetaStar_list[12:13])
+#            table = np.array([[logetaStar, self.ConstrainedOptimalLikelihood(vminStar, logetaStar)] \
+#                for logetaStar in logetaStar_list[12:13]]):
+            table = np.empty((0,2))
+            for logetaStar in logetaStar_list:
+                print("logetaStar = ", logetaStar)
+                try:
+                    constr_opt = self.ConstrainedOptimalLikelihood(vminStar, logetaStar)
+                    print("constr_opt = ", constr_opt)
+                    table = np.append(table, [[logetaStar, constr_opt]], axis = 0)
+                except:
+                    os.system("say Error")
+                    pass
             print("table = ", table)
             self.logL_list_table += [table]
-            with open(temp_file,'ab') as f_handle:
-                np.savetxt(f_handle, table)
+            if not DEBUG:
+                with open(temp_file,'ab') as f_handle:
+                    np.savetxt(f_handle, table)
 #            print("self.logL_list_table = ", self.logL_list_table)
         
         self.logL_list_table = np.concatenate(self.logL_list_table)
         
         file = output_file_tail + "_LogetaStarLogLikelihoodList.dat"
-        print(file)  # write to file
+        print(file)  
         np.savetxt(file, self.logL_list_table)
     
     def _logL_interp(vars_list, constraints):
@@ -495,7 +525,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         with open(file, 'r') as f_handle:
             self.logL_list_table = np.loadtxt(f_handle)
         
-        n = self.vmin_sampling_list.size+1
+        n = self.vmin_sampling_list.size
         print("self.logL_list_table = ", self.logL_list_table)        
         print("n = ", n)
         print("shape = ", self.logL_list_table.shape)
@@ -521,7 +551,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 constr_not_valid = constraints(vars_list)[:-1] < 0
                 if np.any(constr_not_valid):
                     constr_list = constraints(vars_list)[constr_not_valid]
-                    return -constr_list.sum() * 10**2
+                    return -constr_list.sum() * 1e2
                 return logL_interp(vars_list)
                         
             print(self.optimal_logL - delta_logL)
@@ -531,7 +561,12 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 logeta_max = np.array([self.logL_list_table[index, -1, 0]]): \
                 np.concatenate([logeta - logeta_min, logeta_max - logeta])
             constr = ({'type': 'ineq', 'fun': constr_func})
-            logeta_minimLogL = minimize(_logL_interp, np.array([logeta_optim]), args = (constr_func,), constraints = constr).x
+            try:
+                logeta_minimLogL = minimize(_logL_interp, np.array([logeta_optim]), args = (constr_func,), constraints = constr).x
+            except ValueError:
+                print("ValueError at logeta_minimLogL")
+                logeta_minimLogL = self.optimal_logL
+                pass
             print(logeta_minimLogL)
             
             print("x = ", x)
@@ -540,6 +575,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 plt.close()
                 plt.plot(x, y, 'o-')
                 plt.plot(x, (self.optimal_logL + delta_logL) * np.ones_like(y))
+                plt.title("v_min = " + str(self.vmin_sampling_list[index]) + "km/s")
                 plt.xlim(x[0], x[-1])
                 plt.ylim(-5, 20)
                 plt.show()
@@ -556,19 +592,19 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                     self.vmin_logeta_band_up += [[self.vmin_sampling_list[index], \
                         brentq(lambda logeta: logL_interp(logeta) - self.optimal_logL - delta_logL, \
                             logeta_minimLogL, self.logL_list_table[index, -1, 0])]]
-#            except ValueError:
-#                plt.close()
-#                plt.plot(x, y, 'o-')
-#                plt.plot(x, (self.optimal_logL + delta_logL) * np.ones_like(y))
-#                plt.xlim(x[0], x[-1])
-#                plt.ylim([3,10])
-#
-#                plt.plot(x, y, 'o')
-#                plt.plot(logeta_optim, logL_interp(logeta_optim), '*')
-#                plt.plot(logeta_optim, self.optimal_logL, '*')
-#                print("ValueError")
-#                plt.show()
-##                pass
+            except ValueError:
+                plt.close()
+                plt.plot(x, (self.optimal_logL + delta_logL) * np.ones_like(y))
+                plt.title("v_min = " + str(self.vmin_sampling_list[index]) + "km/s")
+                plt.xlim(x[0], x[-1])
+                plt.ylim([-5,20])
+                plt.plot(x, y, 'o-', color="r")
+                plt.plot(logeta_optim, logL_interp(logeta_optim), '*')
+                plt.plot(logeta_optim, self.optimal_logL, '*')
+                print("ValueError")
+                plt.show()
+#                raise
+                pass
             finally:
                 None
         if multiplot:
@@ -586,10 +622,24 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.PlotOptimum(ylim_percentage = (1.2, 0.8), plot_close = F, plot_show = T)
         
         file = output_file_tail + "_FoxBand_low.dat"
-        print(file)  # write to file
+        print(file)  
         np.savetxt(file, self.vmin_logeta_band_low)
         file = output_file_tail + "_FoxBand_up.dat"
-        print(file)  # write to file
+        print(file)  
         np.savetxt(file, self.vmin_logeta_band_up)
         
         return
+
+    def ImportFoxBand(self, output_file_tail):
+        file = output_file_tail + "_FoxBand_low.dat"
+        with open(file, 'r') as f_handle:
+            self.vmin_logeta_band_low = np.loadtxt(f_handle)
+        file = output_file_tail + "_FoxBand_up.dat"
+        with open(file, 'r') as f_handle:
+            self.vmin_logeta_band_up = np.loadtxt(f_handle)
+        plt.close()
+        plt.plot(self.vmin_logeta_band_low[:,0], self.vmin_logeta_band_low[:,1], 'o-')
+        plt.plot(self.vmin_logeta_band_up[:,0], self.vmin_logeta_band_up[:, 1], 'o-')
+        self.PlotOptimum(ylim_percentage = (1.2, 0.8), plot_close = F, plot_show = T)
+        return
+        
