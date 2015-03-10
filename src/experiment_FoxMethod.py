@@ -10,13 +10,14 @@ Created on Wed Mar  4 00:47:37 2015
 from experiment_HaloIndep import *
 from interp import interp1d
 #from scipy.interpolate import interp1d
-from scipy.optimize import brentq, minimize, basinhopping
+from scipy.optimize import brentq, minimize
+from basinhopping import *
 import matplotlib.pyplot as plt
 import os   # for speaking
 
 DEBUG = F
 DEBUG_FULL = F
-USE_BASINHOPPING = F
+USE_BASINHOPPING = T
 
 class Experiment_FoxMethod(Experiment_HaloIndep):
     def __init__(self, expername, scattering_type, mPhi = mPhiRef):
@@ -281,28 +282,43 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             return constr
         
         constr = ({'type': 'ineq', 'fun': constr_func})
-
-        args = (constr_func, vminStar, logetaStar, vminStar_index)
-        if USE_BASINHOPPING:
-#            class TakeStep(object):
-#                def __init__(self, stepsize = 0.1):
-#                    self.stepsize = stepsize
-#                def __call__(self, x):
-#                    x[:x.size/2] += np.random.uniform(-5. * self.stepsize, 5. * self.stepsize, x[x.size/2:].shape)
-#                    x[x.size/2:] += np.random.uniform(-self.stepsize, self.stepsize, x[x.size/2:].shape)
-#                    return x
-#            take_step = TakeStep()
-            minimizer_kwargs = {"constraints": constr, "args": args}
-        
         sol_not_found = True
         attempts = 2
         np.random.seed(0)
         random_variation = 1e-6
+
+        args = (constr_func, vminStar, logetaStar, vminStar_index)
+        if USE_BASINHOPPING:
+            class TakeStep(object):
+                def __init__(self, stepsize = 0.1):
+                    pass
+                    self.stepsize = stepsize
+                def __call__(self, x):
+                    x[:x.size/2] += np.random.uniform(-5. * self.stepsize, 5. * self.stepsize, x[x.size/2:].shape)
+                    x[x.size/2:] += np.random.uniform(-self.stepsize, self.stepsize, x[x.size/2:].shape)
+                    return x
+            take_step = TakeStep()
+            
+            class AdaptiveKwargs(object):
+                def __init__(self, random_variation = 1e-6):
+                    self.random_variation = random_variation
+                def __call__(self, **kwargs):
+                    if 'args' in kwargs and kwargs['args'] != ():
+                        new_args = (kwargs['args'][0], \
+                                    kwargs['args'][1] * (1 + self.random_variation * np.random.uniform(-1, 1)), \
+                                    kwargs['args'][2] * (1 + self.random_variation * np.random.uniform(-1, 1)), \
+                                    kwargs['args'][3])
+                        kwargs['args'] = new_args
+                    return kwargs
+    
+            minimizer_kwargs = {"constraints": constr, "args": args}
+            adapt_kwargs = AdaptiveKwargs(random_variation)
+        
         while sol_not_found:
             try:
                 if USE_BASINHOPPING:
                     constr_optimum_log_likelihood = basinhopping(self._MinusLogLikelihood, vars_guess, \
-                        minimizer_kwargs = minimizer_kwargs, niter = 2, take_step = take_step, stepsize = 0.1)
+                        minimizer_kwargs = minimizer_kwargs, niter = 1, take_step = take_step, adapt_kwargs = adapt_kwargs, stepsize = 0.1)
                 else:
                     constr_optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, \
                         args = args, constraints = constr)
@@ -322,7 +338,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 
             if DEBUG and sol_not_found:
                 print(attempts, " attempts left! ####################################################################################################")
-                os.system("say Error"); os.system("say " + str(attempts) + " attempts left")
+#                os.system("say Error"); os.system("say " + str(attempts) + " attempts left")
             sol_not_found = sol_not_found and attempts > 0
         if sol_not_found:
             raise ValueError
