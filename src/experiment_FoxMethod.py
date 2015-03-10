@@ -183,13 +183,14 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             if DEBUG:
                 print("***constr = ", constr)
                 print("tf = ", constr < 0)
-            return tf
+            return constr
         constr = ({'type': 'ineq', 'fun': constr_func})
         
+        np.random.seed(0)
         if USE_BASINHOPPING:
             minimizer_kwargs = {"constraints": constr, "args": (constr_func,)}
             optimum_log_likelihood = basinhopping(self._MinusLogLikelihood, vars_guess, \
-                minimizer_kwargs = minimizer_kwargs, niter = 5, stepsize = 1)
+                minimizer_kwargs = minimizer_kwargs, niter = 20, stepsize = 1)
         else:
             optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, args = (constr_func,), constraints = constr)
 
@@ -292,10 +293,10 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             class TakeStep(object):
                 def __init__(self, stepsize = 0.1):
                     pass
-                    self.stepsize = stepsize
+#                    self.stepsize = stepsize
                 def __call__(self, x):
-                    x[:x.size/2] += np.random.uniform(-5. * self.stepsize, 5. * self.stepsize, x[x.size/2:].shape)
-                    x[x.size/2:] += np.random.uniform(-self.stepsize, self.stepsize, x[x.size/2:].shape)
+#                    x[:x.size/2] += np.random.uniform(-5. * self.stepsize, 5. * self.stepsize, x[x.size/2:].shape)
+#                    x[x.size/2:] += np.random.uniform(-self.stepsize, self.stepsize, x[x.size/2:].shape)
                     return x
             take_step = TakeStep()
             
@@ -497,7 +498,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         f_handle = open(temp_file, 'w')   # clear the file first
         f_handle.close()
         
-        for index in range(1, 2): #self.vmin_logeta_sampling_table.shape[0]):
+        for index in range(0, self.vmin_logeta_sampling_table.shape[0]):
             print("index = ", index)
             vminStar = self.vmin_logeta_sampling_table[index, 0, 0]
             print("vminStar = ", vminStar)
