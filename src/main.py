@@ -49,7 +49,7 @@ def main():
 
     exper_list = [implemented_exper[i] for i in [14]]
 #    exper_list = implemented_exper
-    filename_tail_list = [""]
+    filename_tail_list = ["_jump"]
     OUTPUT_MAIN_DIR = "Output1/"
 
     try:

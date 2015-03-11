@@ -9,7 +9,7 @@ from __future__ import print_function
 from __future__ import division
 from experiment import *
 from experiment_HaloIndep import *
-from experiment_FoxMethod import *
+from experiment_FoxMethod_jump import *
 import matplotlib.pyplot as plt
 
 def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, plot_dots = True, plot_close = True, plot_show = True):

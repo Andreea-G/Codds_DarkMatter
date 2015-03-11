@@ -18,6 +18,7 @@ import os   # for speaking
 DEBUG = F
 DEBUG_FULL = F
 USE_BASINHOPPING = T
+ALLOW_MOVE = T
 
 class Experiment_FoxMethod(Experiment_HaloIndep):
     def __init__(self, expername, scattering_type, mPhi = mPhiRef):
@@ -186,11 +187,10 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             return constr
         constr = ({'type': 'ineq', 'fun': constr_func})
         
-        np.random.seed(0)
         if USE_BASINHOPPING:
             minimizer_kwargs = {"constraints": constr, "args": (constr_func,)}
             optimum_log_likelihood = basinhopping(self._MinusLogLikelihood, vars_guess, \
-                minimizer_kwargs = minimizer_kwargs, niter = 20, stepsize = 1)
+                minimizer_kwargs = minimizer_kwargs, niter = 3, stepsize = 1)
         else:
             optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, args = (constr_func,), constraints = constr)
 
@@ -251,18 +251,17 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             plt.show()
         return
         
-    def ConstrainedOptimalLikelihood(self, vminStar, logetaStar, plot = False):
-        vminStar_index = 0
-        while vminStar_index < self.optimal_vmin.size and vminStar > self.optimal_vmin[vminStar_index]:
-            vminStar_index += 1
+    def _ConstrainedOptimalLikelihood(self, vminStar, logetaStar, vminStar_index, plot = False):
         vmin_max = self.vmin_linspace[-1]
         if DEBUG:
             print("vminStar_index =", vminStar_index)
+        vmin_guess = np.concatenate([np.minimum(self.optimal_vmin[:vminStar_index], np.ones(vminStar_index) * vminStar), \
+            np.maximum(self.optimal_vmin[vminStar_index:], np.ones(self.optimal_vmin.size - vminStar_index) * vminStar)])
         logeta_guess = self.optimal_logeta
         logeta_guess = np.concatenate([np.maximum(logeta_guess[:vminStar_index], np.ones(vminStar_index)*logetaStar), \
             np.minimum(logeta_guess[vminStar_index:], np.ones(logeta_guess.size - vminStar_index)*logetaStar)])
-        vars_guess = np.append(self.optimal_vmin, logeta_guess)
-        
+        vars_guess = np.append(vmin_guess, logeta_guess)
+
         def constr_func(x, vminStar = vminStar, logetaStar = logetaStar, vmin_max = vmin_max, vminStar_index = vminStar_index): 
             '''  0 -  8: bounds: 3 * (x.size/2) constraints = 9 for x.size/2 = 3
                  9 - 12: sorted array: 2 * (x.size/2 - 1) constraints = 4 for x.size/2 = 3
@@ -315,11 +314,11 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             minimizer_kwargs = {"constraints": constr, "args": args}
             adapt_kwargs = AdaptiveKwargs(random_variation)
         
-        while sol_not_found:
+        while sol_not_found and attempts > 0:
             try:
                 if USE_BASINHOPPING:
                     constr_optimum_log_likelihood = basinhopping(self._MinusLogLikelihood, vars_guess, \
-                        minimizer_kwargs = minimizer_kwargs, niter = 1, take_step = take_step, adapt_kwargs = adapt_kwargs, stepsize = 0.1)
+                        minimizer_kwargs = minimizer_kwargs, niter = 1, take_step = take_step, adapt_kwargs = adapt_kwargs, stepsize = 0.2)
                 else:
                     constr_optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, \
                         args = args, constraints = constr)
@@ -340,8 +339,10 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             if DEBUG and sol_not_found:
                 print(attempts, " attempts left! ####################################################################################################")
 #                os.system("say Error"); os.system("say " + str(attempts) + " attempts left")
-            sol_not_found = sol_not_found and attempts > 0
+                print("sol_not_found = ", sol_not_found)
         if sol_not_found:
+            if DEBUG:
+                print("ValueError: sol not found")
             raise ValueError
         
         if DEBUG:
@@ -351,10 +352,61 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             print("constr_not_valid = ", repr(constr_not_valid))
             print("vars_guess = ", repr(vars_guess))
             print("optimum_logL = ", self.optimal_logL)
-            print("vminStar = ", vminStar)
-            print("logetaStar = ", logetaStar)
             print("vminStar_index = ", vminStar_index)
             
+        return constr_optimum_log_likelihood
+
+    def ConstrainedOptimalLikelihood(self, vminStar, logetaStar, plot = False):
+        vminStar_index = 0
+        while vminStar_index < self.optimal_vmin.size and vminStar > self.optimal_vmin[vminStar_index]:
+            vminStar_index += 1
+        
+        try:
+            constr_optimum_log_likelihood = self._ConstrainedOptimalLikelihood(vminStar, logetaStar, vminStar_index, plot = plot)
+            optim_logL = constr_optimum_log_likelihood.fun
+            original_optimum = constr_optimum_log_likelihood
+        except ValueError:
+            optim_logL = 10**6
+            pass
+        
+        vminStar_index_original = vminStar_index
+        index = vminStar_index
+        move_left = ALLOW_MOVE and vminStar_index > 0
+        while move_left:
+            try:
+                index -= 1
+                new_optimum = self._ConstrainedOptimalLikelihood(vminStar, logetaStar, index, plot = plot)
+                if new_optimum.fun < optim_logL:
+#                    os.system("say Moved left")
+                    print("Moved left, index is now ", index)
+                    vminStar_index = index
+                    constr_optimum_log_likelihood = new_optimum
+                    optim_logL = constr_optimum_log_likelihood.fun
+                else:
+                    move_left = False
+            except ValueError:
+                move_left = False
+        index = vminStar_index_original
+        move_right = ALLOW_MOVE and vminStar_index < self.optimal_vmin.size
+        while move_right:
+            try:
+                index += 1
+                new_optimum = self._ConstrainedOptimalLikelihood(vminStar, logetaStar, index, plot = plot)
+                if new_optimum.fun < optim_logL:
+#                    os.system("say Moved right")
+                    print("Moved right, index is now ", index)
+                    vminStar_index = index
+                    constr_optimum_log_likelihood = new_optimum
+                    optim_logL = constr_optimum_log_likelihood.fun
+                else:
+                    move_right = False
+            except ValueError:
+                move_right = False
+                
+        if optim_logL == 10**6:
+#            os.system("say No solution was found")
+            raise ValueError
+        
         self.constr_optimal_logl = constr_optimum_log_likelihood.fun
         vars_result = constr_optimum_log_likelihood.x
 
@@ -362,11 +414,23 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.constr_optimal_logeta = vars_result[vars_result.size/2:]
 #        print(self.constr_optimal_vmin)
 #        print(self.constr_optimal_logeta)
+        
+        if plot:
+            print("vminStar = ", vminStar)
+            print("logetaStar = ", logetaStar)
+            try:
+                print("original: ", original_optimum)
+            except:
+                pass
+            try:
+                print("new: ", constr_optimum_log_likelihood)
+            except:
+                pass
         if plot:
             os.system("say 'Finished plot'")
-            print(constr_optimum_log_likelihood)
             self.PlotConstrainedOptimum(vminStar, logetaStar, vminStar_index, xlim_percentage = (0., 1.1), ylim_percentage = (1.2, 0.8))
         return self.constr_optimal_logl
+        
 
             
     def VminSamplingList(self, output_file_tail, vmin_min, vmin_max, vmin_num_steps, \
