@@ -578,6 +578,28 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             self.vmin_logeta_sampling_table = np.loadtxt(f_handle)
         return
     
+    def _GetTable(self, index, output_file_tail):
+        print("index = ", index)
+        vminStar = self.vmin_logeta_sampling_table[index, 0, 0]
+        print("vminStar = ", vminStar)
+        logetaStar_list = self.vmin_logeta_sampling_table[index, :, 1]
+        table = np.empty((0,2))
+        for logetaStar in logetaStar_list:
+            print("logetaStar = ", logetaStar)
+            try:
+                constr_opt = self.ConstrainedOptimalLikelihood(vminStar, logetaStar)
+                print("constr_opt = ", constr_opt)
+                table = np.append(table, [[logetaStar, constr_opt]], axis = 0)
+            except:
+                os.system("say Error")
+                pass
+        print("table = ", table)
+        if not DEBUG:
+            temp_file = output_file_tail + "_" + str(index) + "_LogetaStarLogLikelihoodList.dat"
+            np.savetxt(temp_file, table)
+#       print("self.logL_list_table = ", self.logL_list_table)
+        return table
+    
     def LogLikelihoodList(self, output_file_tail):
         ''' Gives a list of the form [[logetaStar_i0, logL_i0], [logetaStar_i1, logL_i1], ...] needed for 1D interpolation, 
         where i is the index corresponding to vminStar_i.
@@ -589,29 +611,10 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.logL_list_table = []
         
         for index in range(11, 40, 4):#self.vmin_logeta_sampling_table.shape[0]):
-            print("index = ", index)
-            vminStar = self.vmin_logeta_sampling_table[index, 0, 0]
-            print("vminStar = ", vminStar)
-            logetaStar_list = self.vmin_logeta_sampling_table[index, :, 1]
-            table = np.empty((0,2))
-            for logetaStar in logetaStar_list:
-                print("logetaStar = ", logetaStar)
-                try:
-                    constr_opt = self.ConstrainedOptimalLikelihood(vminStar, logetaStar)
-                    print("constr_opt = ", constr_opt)
-                    table = np.append(table, [[logetaStar, constr_opt]], axis = 0)
-                except:
-                    os.system("say Error")
-                    pass
-            print("table = ", table)
+            table = self._GetTable(index, output_file_tail)
             self.logL_list_table += [table]
-            if not DEBUG:
-                temp_file = output_file_tail + "_" + str(index) + "_LogetaStarLogLikelihoodList.dat"
-                np.savetxt(temp_file, table)
-#            print("self.logL_list_table = ", self.logL_list_table)
         
         self.logL_list_table = np.concatenate(self.logL_list_table)
-        
         file = output_file_tail + "_LogetaStarLogLikelihoodList.dat"
         print(file)  
         np.savetxt(file, self.logL_list_table)
