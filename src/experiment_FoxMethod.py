@@ -8,8 +8,8 @@ Created on Wed Mar  4 00:47:37 2015
 #TODO! This only works for CDMSSi! 
 
 from experiment_HaloIndep import *
-from interp_uniform import interp1d
-#from interp import interp1d
+import interp_uniform as unif
+from interp import interp1d
 #from scipy.interpolate import interp1d
 from scipy.optimize import brentq, minimize
 from basinhopping import *
@@ -113,8 +113,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         file = output_file_tail + "_RespTable.dat"
         with open(file, 'r') as f_handle:
             self.response_tab = np.loadtxt(f_handle)
-        self.diff_response_interp = np.array([interp1d(self.vmin_linspace, dr) for dr in self.diff_response_tab])
-        self.response_interp = interp1d(self.vmin_linspace, self.response_tab)
+        self.diff_response_interp = np.array([unif.interp1d(self.vmin_linspace, dr) for dr in self.diff_response_tab])
+        self.response_interp = unif.interp1d(self.vmin_linspace, self.response_tab)
         if plot:
             self.PlotDifferentialResponse()
             self.PlotResponse()

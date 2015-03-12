@@ -8,8 +8,9 @@ Created on Wed Mar  4 00:47:37 2015
 #TODO! This only works for CDMSSi! 
 
 from experiment_HaloIndep import *
-from interp_uniform import interp1d
-#from interp import interp1d
+#import interp_uniform as unif
+import interp as unif
+from interp import interp1d
 #from scipy.interpolate import interp1d
 from scipy.optimize import brentq, minimize
 from basinhopping import *
@@ -114,8 +115,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         file = output_file_tail + "_RespTable.dat"
         with open(file, 'r') as f_handle:
             self.response_tab = np.loadtxt(f_handle)
-        self.diff_response_interp = np.array([interp1d(self.vmin_linspace, dr) for dr in self.diff_response_tab])
-        self.response_interp = interp1d(self.vmin_linspace, self.response_tab)
+        self.diff_response_interp = np.array([unif.interp1d(self.vmin_linspace, dr) for dr in self.diff_response_tab])
+        self.response_interp = unif.interp1d(self.vmin_linspace, self.response_tab)
         if plot:
             self.PlotDifferentialResponse()
             self.PlotResponse()
@@ -192,7 +193,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         if USE_BASINHOPPING:
             minimizer_kwargs = {"constraints": constr, "args": (constr_func,)}
             optimum_log_likelihood = basinhopping(self._MinusLogLikelihood, vars_guess, \
-                minimizer_kwargs = minimizer_kwargs, niter = 3, stepsize = 1)
+                minimizer_kwargs = minimizer_kwargs, niter = 10, stepsize = 1)
         else:
             optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, args = (constr_func,), constraints = constr)
 
@@ -288,13 +289,13 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 is_not_close = np.logical_not(np.isclose(constraints, np.zeros_like(constraints), atol = 1e-5))
                 is_not_close[:3 * (x.size/2)] = True
                 constr = np.where(is_not_close, constraints, np.abs(constraints))
-                print("~~~ constraints = ", constraints)
-                print("is_not_close = ", is_not_close)
-                print("constr = ", constr)
-                print("vminStar = ", vminStar)
-                print("logetaStar = ", logetaStar)
-                print("vminStar_index = ", vminStar_index)
-                print("~~~~~")
+#                print("~~~ constraints = ", constraints)
+#                print("is_not_close = ", is_not_close)
+#                print("constr = ", constr)
+#                print("vminStar = ", vminStar)
+#                print("logetaStar = ", logetaStar)
+#                print("vminStar_index = ", vminStar_index)
+#                print("~~~~~")
                 if np.any(np.isnan(constr)):
                     raise ValueError
                 return constr
