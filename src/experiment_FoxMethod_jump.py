@@ -8,8 +8,8 @@ Created on Wed Mar  4 00:47:37 2015
 #TODO! This only works for CDMSSi! 
 
 from experiment_HaloIndep import *
-#import interp_uniform as unif
-import interp as unif
+import interp_uniform as unif
+#import interp as unif
 from interp import interp1d
 #from scipy.interpolate import interp1d
 from scipy.optimize import brentq, minimize
@@ -193,7 +193,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         if USE_BASINHOPPING:
             minimizer_kwargs = {"constraints": constr, "args": (constr_func,)}
             optimum_log_likelihood = basinhopping(self._MinusLogLikelihood, vars_guess, \
-                minimizer_kwargs = minimizer_kwargs, niter = 10, stepsize = 1)
+                minimizer_kwargs = minimizer_kwargs, niter = 10, stepsize = 0.1)
         else:
             optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, args = (constr_func,), constraints = constr)
 
@@ -214,6 +214,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.optimal_logL = optimal_result[0]
         self.optimal_vmin = optimal_result[1 : optimal_result.size/2 + 1]
         self.optimal_logeta = optimal_result[optimal_result.size/2 + 1 :]
+        print("optimal result = ", optimal_result)
         return
 
     def PlotStepFunction(self, vmin_list, logeta_list, xlim_percentage = (0., 1.1), ylim_percentage = (1.01, 0.99), \
@@ -563,6 +564,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.vmin_logeta_sampling_table = np.array(self.vmin_logeta_sampling_table)
         
         if plot:
+            print("sampling_size = ", self.vmin_logeta_sampling_table.shape)
             plt.close()
             for tab in self.vmin_logeta_sampling_table:
                 plt.plot(tab[:,0], tab[:,1], 'o')
@@ -585,18 +587,12 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             - vmin_logeta_sampling_table[i] is a list of [[vminStar_i, logetaStar_0], [vminStar_i, logetaStar_1], ...] corresponding to vminStar_i
         '''
         self.logL_list_table = []
-        temp_file = output_file_tail + "_LogetaStarLogLikelihoodList.dat"
-        f_handle = open(temp_file, 'w')   # clear the file first
-        f_handle.close()
         
-        for index in range(0, self.vmin_logeta_sampling_table.shape[0]):
+        for index in range(11, 40, 4):#self.vmin_logeta_sampling_table.shape[0]):
             print("index = ", index)
             vminStar = self.vmin_logeta_sampling_table[index, 0, 0]
             print("vminStar = ", vminStar)
             logetaStar_list = self.vmin_logeta_sampling_table[index, :, 1]
-#            print("logetaStar_list = ", logetaStar_list[12:13])
-#            table = np.array([[logetaStar, self.ConstrainedOptimalLikelihood(vminStar, logetaStar)] \
-#                for logetaStar in logetaStar_list[12:13]]):
             table = np.empty((0,2))
             for logetaStar in logetaStar_list:
                 print("logetaStar = ", logetaStar)
@@ -610,8 +606,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             print("table = ", table)
             self.logL_list_table += [table]
             if not DEBUG:
-                with open(temp_file,'ab') as f_handle:
-                    np.savetxt(f_handle, table)
+                temp_file = output_file_tail + "_" + str(index) + "_LogetaStarLogLikelihoodList.dat"
+                np.savetxt(temp_file, table)
 #            print("self.logL_list_table = ", self.logL_list_table)
         
         self.logL_list_table = np.concatenate(self.logL_list_table)
@@ -629,30 +625,22 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
 
 
     def FoxBand(self, output_file_tail, delta_logL, interpolation_order, multiplot = True, plot = True):
-        file = output_file_tail + "_LogetaStarLogLikelihoodList.dat"
-        with open(file, 'r') as f_handle:
-            self.logL_list_table = np.loadtxt(f_handle)
-        
-        n = self.vmin_sampling_list.size
-        print("self.logL_list_table = ", self.logL_list_table)        
-        print("n = ", n)
-        print("shape = ", self.logL_list_table.shape)
-        shape = self.logL_list_table.shape[0]
-        self.logL_list_table = self.logL_list_table.reshape(n, shape/n, self.logL_list_table.shape[1])
-        print("self.logL_list_table = ", self.logL_list_table)        
         print("self.vmin_sampling_list = ", self.vmin_sampling_list)
-        print("self.logL_list_table = ", self.logL_list_table)
         
         self.vmin_logeta_band_low = []
         self.vmin_logeta_band_up = []
         vmin_last_step = self.optimal_vmin[-1]
         if multiplot:
             plt.close()
-        for index in range(self.logL_list_table.shape[0]):
+#        for index in range(0, 7, 2):#self.vmin_sampling_list.size):
+        for index in np.sort(list(range(8)) + list(range(8,28,4)) + list(range(9,28,4)) + list(range(10,28,4))):
             print("vmin = ", self.vmin_sampling_list[index])
             logeta_optim = self.OptimumStepFunction(min(self.vmin_sampling_list[index], vmin_last_step))
-            x = self.logL_list_table[index, :, 0]   # this is logeta
-            y = self.logL_list_table[index, :, 1]   # this is logL
+            file = output_file_tail + "_" + str(index) + "_LogetaStarLogLikelihoodList.dat"
+            with open(file, 'r') as f_handle:
+                table = np.loadtxt(f_handle)
+            x = table[:, 0]   # this is logeta
+            y = table[:, 1]   # this is logL
             logL_interp = interp1d(x, y)
             
             def _logL_interp(vars_list, constraints):
@@ -663,10 +651,10 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 return logL_interp(vars_list)
                         
             print(self.optimal_logL - delta_logL)
-            print(np.array([self.logL_list_table[index, 0, 0]]), " ", self.logL_list_table[index, -1, 0])
+            print(np.array([table[0, 0]]), " ", table[-1, 0])
             print(logeta_optim)
-            constr_func = lambda logeta, logeta_min = np.array([self.logL_list_table[index, 0, 0]]), \
-                logeta_max = np.array([self.logL_list_table[index, -1, 0]]): \
+            constr_func = lambda logeta, logeta_min = np.array([table[0, 0]]), \
+                logeta_max = np.array([table[-1, 0]]): \
                 np.concatenate([logeta - logeta_min, logeta_max - logeta])
             constr = ({'type': 'ineq', 'fun': constr_func})
             try:
@@ -677,7 +665,6 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 pass
             print(logeta_minimLogL)
             
-            print("index = ", index)
             print("x = ", x)
             print("y = ", y)
             if multiplot:
@@ -693,14 +680,14 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 if y[0] > self.optimal_logL + delta_logL and logeta_minimLogL < self.optimal_logL + delta_logL:
                     self.vmin_logeta_band_low += [[self.vmin_sampling_list[index], \
                         brentq(lambda logeta: logL_interp(logeta) - self.optimal_logL - delta_logL, \
-                            self.logL_list_table[index, 0, 0], logeta_minimLogL)]]
+                            table[0, 0], logeta_minimLogL)]]
                 if y[-1] > self.optimal_logL + delta_logL and logeta_minimLogL < self.optimal_logL + delta_logL:
-                    print("a, b: ", logeta_optim, " ", self.logL_list_table[index, -1, 0])
+                    print("a, b: ", logeta_optim, " ", table[-1, 0])
                     print("f: ", logL_interp(logeta_optim) - self.optimal_logL - delta_logL, " ", \
-                        logL_interp(self.logL_list_table[index, -1, 0]) - self.optimal_logL - delta_logL)
+                        logL_interp(table[-1, 0]) - self.optimal_logL - delta_logL)
                     self.vmin_logeta_band_up += [[self.vmin_sampling_list[index], \
                         brentq(lambda logeta: logL_interp(logeta) - self.optimal_logL - delta_logL, \
-                            logeta_minimLogL, self.logL_list_table[index, -1, 0])]]
+                            logeta_minimLogL, table[-1, 0])]]
             except ValueError:
                 plt.close()
                 plt.plot(x, (self.optimal_logL + delta_logL) * np.ones_like(y))
