@@ -50,7 +50,7 @@ class BasinHoppingRunner(object):
     adapt_kwargs: callable
         This function displaces the local minimizer arguments, 
         ``self.minimizer.kwargs``. Signature should be
-        ``self.minimizer.kwargs = self.adapt_kwargs(**self.minimizer.kwargs)``.
+        ``self.minimizer.kwargs = self.adapt_kwargs()``.
     accept_tests : list of callables
         To each test is passed the kwargs `f_new`, `x_new`, `f_old` and
         `x_old`.  These tests will be used to judge whether or not to accept
@@ -109,7 +109,7 @@ class BasinHoppingRunner(object):
         x_after_step = self.step_taking(x_after_step)
         
         # Adjust the arguments to the minimizer
-        self.minimizer.kwargs = self.adapt_kwargs(**self.minimizer.kwargs)
+        self.minimizer.kwargs = self.adapt_kwargs()
 
         # do a local minimization
         minres = self.minimizer(x_after_step)
@@ -267,10 +267,10 @@ class AdaptiveKwargs(object):
     Useful for situations where a very small change in args could lead to convergence or a better global minimum.
     It is called immediately after the take_step function in the algorithm.
     """
-    def __init__(self):
-        pass
-    def __call__(self, **kwargs):
-        return kwargs
+    def __init__(self, kwargs):
+        self.kwargs = kwargs
+    def __call__(self):
+        return self.kwargs
 
 class RandomDisplacement(object):
     """
@@ -623,7 +623,7 @@ def basinhopping(func, x0, niter=100, T=1.0, stepsize=0.5,
             raise TypeError("adapt_kwargs must be callable")
         adapt_kwargs_wrapped = adapt_kwargs
     else:
-        adapt_kwargs_wrapped = AdaptiveKwargs()
+        adapt_kwargs_wrapped = AdaptiveKwargs(minimizer_kwargs)
 
     # set up accept tests
     if accept_test is not None:
@@ -673,6 +673,7 @@ def basinhopping(func, x0, niter=100, T=1.0, stepsize=0.5,
     res.fun = lowest[1]
     res.message = message
     res.nit = i + 1
+    res.minimizer = bh.minimizer
     return res
 
 

@@ -29,11 +29,11 @@ def main():
     HALO_INDEP = not HALO_DEP
 #    FOX_METHOD = [T, T, T, F, F, F, F, F]     # Multiple
 #    FOX_METHOD = [T, F, F, F, F, F, F, F]     # ResponseTables
-#    FOX_METHOD = [F, T, F, F, F, F, F, F]     # OptimalLikelihood
+    FOX_METHOD = [F, T, F, F, F, F, F, F]     # OptimalLikelihood
 #    FOX_METHOD = [F, F, T, F, F, F, F, F]     # ImportOptimalLikelihood
 #    FOX_METHOD = [F, F, F, T, F, F, F, F]     # ConstrainedOptimalLikelihood
 #    FOX_METHOD = [F, F, F, F, T, F, F, F]     # VminLogetaSamplingTable
-    FOX_METHOD = [F, F, F, F, F, T, F, F]     # LogLikelihoodList
+#    FOX_METHOD = [F, F, F, F, F, T, F, F]     # LogLikelihoodList
 #    FOX_METHOD = [F, F, F, F, F, F, T, F]     # FoxBand
 #    FOX_METHOD = [F, F, F, F, F, F, F, T]     # FoxBandPlot
     
@@ -49,8 +49,8 @@ def main():
 
     exper_list = [implemented_exper[i] for i in [14]]
 #    exper_list = implemented_exper
-    filename_tail_list = ["_jump"]
-    OUTPUT_MAIN_DIR = "Output1/"
+    filename_tail_list = [""]
+    OUTPUT_MAIN_DIR = "../Output1/"
 
     try:
         plt.show()

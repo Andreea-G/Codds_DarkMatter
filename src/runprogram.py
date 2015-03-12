@@ -163,6 +163,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
 #                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list, vminStar, logetaStar, 3))
                     exper.PlotOptimum()
                 if FOX_METHOD[3]:
+#                    Tests for delta = 0:
 #                    (vminStar, logetaStar) = (500, -25)
 #                    (vminStar, logetaStar) = (32.1343304717, -24.48487343)
 #                    (vminStar, logetaStar) = (218.271870856, -23.23683411)
@@ -170,7 +171,19 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
 #                    (vminStar, logetaStar) = (559.972321719, -26.99971248)
 #                    (vminStar, logetaStar) = (655.267138374, -20.48554508)
 #                    (vminStar, logetaStar) = (792.135332076, -21.60988328)
-                    (vminStar, logetaStar) = (32.2467823008, -23.1311911267)
+#                    (vminStar, logetaStar) = (32.2467823008, -23.1311911267)
+#                    Tests for delta = -50:
+                    (vminStar, logetaStar) = (185.572266287, -19.16840262)
+#                    (vminStar, logetaStar) = (256.487725489, -21.52245551)
+#                    (vminStar, logetaStar) = (256.487725489, -20.78967785)
+#                    (vminStar, logetaStar) = (284.992742719, -24.78780684)
+#                    (vminStar, logetaStar) = (340.097756524, -21.81262623)
+#                    (vminStar, logetaStar) = (347.83171478, -22.27497753)
+#                    (vminStar, logetaStar) = (347.83171478, -21.81262623)
+#                    (vminStar, logetaStar) = (629.153919207, -21.94019352)
+#                    (vminStar, logetaStar) = ()
+#                    (vminStar, logetaStar) = ()
+#                    (vminStar, logetaStar) = ()
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     exper.ConstrainedOptimalLikelihood(vminStar, logetaStar, plot = True)
 #                    vars_list = np.array([500., 512.94884721,  583.73085857, -22.86421235, -25., -25.])
