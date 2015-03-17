@@ -214,7 +214,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                 if FOX_METHOD[6]:
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     interpolation_order = 2
-                    for delta_logL in [1]:
+                    for delta_logL in [4]:
                         exper.FoxBand(output_file_no_extension, delta_logL, interpolation_order)
                 if FOX_METHOD[7]:
                     exper.ImportOptimalLikelihood(output_file_no_extension)

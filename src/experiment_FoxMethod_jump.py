@@ -16,6 +16,8 @@ from scipy.optimize import brentq, minimize
 from basinhopping import *
 import matplotlib.pyplot as plt
 import os   # for speaking
+#from multiprocessing import Pool
+import parallel_map as par
 
 DEBUG = F
 DEBUG_FULL = F
@@ -256,16 +258,16 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         return
         
     def _ConstrainedOptimalLikelihood(self, vminStar, logetaStar, vminStar_index, plot = False):
-        vmin_max = self.vmin_linspace[-1]
+#        vmin_max = self.vmin_linspace[-1]
         if DEBUG:
             print("vminStar_index =", vminStar_index)
         vmin_guess = np.concatenate([np.minimum(self.optimal_vmin[:vminStar_index], np.ones(vminStar_index) * vminStar), \
             np.maximum(self.optimal_vmin[vminStar_index:], np.ones(self.optimal_vmin.size - vminStar_index) * vminStar)])
         vmin_guess = np.append(np.array([self.optimal_vmin[ind] if self.optimal_vmin[ind] < vminStar \
-                                        else vminStar * (1 - 0.001*(vminStar_index - ind + 1)) \
+                                        else vminStar * (1 - 0.001*(vminStar_index - ind)) \
                                         for ind in range(vminStar_index)]), \
                                np.array([self.optimal_vmin[ind] if self.optimal_vmin[ind] > vminStar \
-                                       else vminStar * (1 + 0.001*(ind - vminStar_index)) \
+                                       else vminStar * (1 + 0.001*(ind - vminStar_index - 1)) \
                                        for ind in range(vminStar_index, self.optimal_vmin.size)]))
         logeta_guess = self.optimal_logeta
         logeta_guess = np.concatenate([np.maximum(logeta_guess[:vminStar_index], np.ones(vminStar_index)*logetaStar), \
@@ -307,7 +309,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         sol_not_found = True
         attempts = 3
         np.random.seed(1)
-        random_variation = 1e-6
+        random_variation = 1e-5
 
         if USE_BASINHOPPING:
             class TakeStep(object):
@@ -321,7 +323,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             take_step = TakeStep()
 
             class AdaptiveKwargs(object):
-                def __init__(self, kwargs, random_variation = 1e-6):
+                def __init__(self, kwargs, random_variation = random_variation):
                     self.kwargs = kwargs
                     self.random_variation = random_variation
                 def __call__(self):
@@ -396,8 +398,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         
         vminStar_index_original = vminStar_index
         index = vminStar_index
-        move_left = ALLOW_MOVE and vminStar_index > 0
-        while move_left:
+#        move_left = ALLOW_MOVE and vminStar_index > 0
+        while ALLOW_MOVE and index > 0:
             try:
                 index -= 1
                 new_optimum = self._ConstrainedOptimalLikelihood(vminStar, logetaStar, index, plot = plot)
@@ -408,13 +410,15 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                     vminStar_index = index
                     constr_optimum_log_likelihood = new_optimum
                     optim_logL = constr_optimum_log_likelihood.fun
-                else:
-                    move_left = False
+#                if vminStar_index <= 0:
+#                    move_left = False
             except ValueError:
-                move_left = False
+                pass
+#                if vminStar_index <= 0:
+#                    move_left = False
         index = vminStar_index_original
-        move_right = ALLOW_MOVE and vminStar_index < self.optimal_vmin.size
-        while move_right:
+#        move_right = ALLOW_MOVE and vminStar_index < self.optimal_vmin.size
+        while ALLOW_MOVE and index < self.optimal_vmin.size:
             try:
                 index += 1
                 new_optimum = self._ConstrainedOptimalLikelihood(vminStar, logetaStar, index, plot = plot)
@@ -425,11 +429,12 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                     vminStar_index = index
                     constr_optimum_log_likelihood = new_optimum
                     optim_logL = constr_optimum_log_likelihood.fun
-                else:
-                    move_right = False
+#                if vminStar_index >= self.optimal_vmin.size:
+#                    move_right = False
             except ValueError:
-                move_right = False
-                
+                pass
+#                if vminStar_index >= self.optimal_vmin.size:
+#                    move_right = False
         if optim_logL == 10**6:
 #            os.system("say No solution was found")
             raise ValueError
@@ -578,46 +583,57 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             self.vmin_logeta_sampling_table = np.loadtxt(f_handle)
         return
     
-    def _GetTable(self, index, output_file_tail):
+    def GetLikelihoodTable(self, kwargs):
+        ''' Prints to file lists of the form [logetaStar_ij, logL_ij] needed for 1D interpolation, 
+        where i is the index corresponding to vminStar_i and j is the index for each logetaStar. Each file corresponds to a different index i.
+            Here only one file is written for a specific vminStar.
+            Input:
+            - kwargs containing a dictionary of the form:
+            {'index': index, 'output_file_tail': output_file_tail}
+            where index is the index of vminStar and output_file_tail is part of the file name where the table will be printed.
+            Output:
+            - none
+        '''
+        index = kwargs['index']
+        output_file_tail = kwargs['output_file_tail']
         print("index = ", index)
+        print("output_file_tail = ", output_file_tail)
         vminStar = self.vmin_logeta_sampling_table[index, 0, 0]
+        logetaStar_list = self.vmin_logeta_sampling_table[index, :, 1][24:25]
         print("vminStar = ", vminStar)
-        logetaStar_list = self.vmin_logeta_sampling_table[index, :, 1]
         table = np.empty((0,2))
         for logetaStar in logetaStar_list:
-            print("logetaStar = ", logetaStar)
             try:
-                constr_opt = self.ConstrainedOptimalLikelihood(vminStar, logetaStar)
-                print("constr_opt = ", constr_opt)
+                constr_opt = self.ConstrainedOptimalLikelihood(vminStar, logetaStar, plot = True)
+                print("logetaStar = ", logetaStar, "; constr_opt = ", constr_opt)
                 table = np.append(table, [[logetaStar, constr_opt]], axis = 0)
+#                table = np.append(table, [logetaStar])
             except:
+                print("error")
                 os.system("say Error")
                 pass
-        print("table = ", table)
-        if not DEBUG:
-            temp_file = output_file_tail + "_" + str(index) + "_LogetaStarLogLikelihoodList.dat"
+        print("vminStar = ", vminStar, "; table = ", table)
+        if True:
+            temp_file = output_file_tail + '_' + str(index) + '_LogetaStarLogLikelihoodList_junk.dat'
+            print(temp_file)
             np.savetxt(temp_file, table)
-#       print("self.logL_list_table = ", self.logL_list_table)
-        return table
+        return
     
-    def LogLikelihoodList(self, output_file_tail):
-        ''' Gives a list of the form [[logetaStar_i0, logL_i0], [logetaStar_i1, logL_i1], ...] needed for 1D interpolation, 
-        where i is the index corresponding to vminStar_i.
-            Imports:
-            - vmin_logeta_sampling_table list of {vminStar, logetaStar} at which the constrained optimal likelihood will be computed. 
-            Produces a table of the form:
-            - vmin_logeta_sampling_table[i] is a list of [[vminStar_i, logetaStar_0], [vminStar_i, logetaStar_1], ...] corresponding to vminStar_i
+    def LogLikelihoodList(self, output_file_tail, processes = None):
+        ''' Loops thorugh the list of all vminStar and calls GetLikelihoodTable, which will print the likelihood tables to files.
+            Input:
+            - output_file_tail: part of the files name
+            - processes: number of processes for parallel programming
+            Output:
+            - none
         '''
-        self.logL_list_table = []
-        
-        for index in range(11, 40, 4):#self.vmin_logeta_sampling_table.shape[0]):
-            table = self._GetTable(index, output_file_tail)
-            self.logL_list_table += [table]
-        
-        self.logL_list_table = np.concatenate(self.logL_list_table)
-        file = output_file_tail + "_LogetaStarLogLikelihoodList.dat"
-        print(file)  
-        np.savetxt(file, self.logL_list_table)
+        index_list = range(24, 25)#, self.vmin_logeta_sampling_table.shape[0])
+        kwargs = ({'index': index, \
+            'output_file_tail': output_file_tail} for index in index_list)
+#        pool = Pool()
+#        pool.map(GetTable, kwargs)
+        par.parmap(self.GetLikelihoodTable, kwargs, processes)
+        return
     
     def _logL_interp(vars_list, constraints):
         constr_not_valid = constraints(vars_list)[:-1] < 0
@@ -626,22 +642,23 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             return -constr_list.sum() * 10**2
         return logL_interp(vars_list)
 
-
     def FoxBand(self, output_file_tail, delta_logL, interpolation_order, multiplot = True, plot = True):
         print("self.vmin_sampling_list = ", self.vmin_sampling_list)
-        
         self.vmin_logeta_band_low = []
         self.vmin_logeta_band_up = []
         vmin_last_step = self.optimal_vmin[-1]
         if multiplot:
             plt.close()
-#        for index in range(0, 7, 2):#self.vmin_sampling_list.size):
-        for index in np.sort(list(range(8)) + list(range(8,28,4)) + list(range(9,28,4)) + list(range(10,28,4))):
+        for index in range(self.vmin_sampling_list.size):
+            print("index = ", index)
             print("vmin = ", self.vmin_sampling_list[index])
             logeta_optim = self.OptimumStepFunction(min(self.vmin_sampling_list[index], vmin_last_step))
             file = output_file_tail + "_" + str(index) + "_LogetaStarLogLikelihoodList.dat"
-            with open(file, 'r') as f_handle:
-                table = np.loadtxt(f_handle)
+            try:
+                with open(file, 'r') as f_handle:
+                    table = np.loadtxt(f_handle)
+            except:
+                continue
             x = table[:, 0]   # this is logeta
             y = table[:, 1]   # this is logL
             logL_interp = interp1d(x, y)
@@ -673,8 +690,9 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             if multiplot:
                 plt.close()
                 plt.plot(x, y, 'o-')
-                plt.plot(x, (self.optimal_logL + delta_logL) * np.ones_like(y))
-                plt.title("v_min = " + str(self.vmin_sampling_list[index]) + "km/s")
+                plt.plot(x, (self.optimal_logL + 1) * np.ones_like(y))
+                plt.plot(x, (self.optimal_logL + 4) * np.ones_like(y))
+                plt.title("index = " + str(index) + ", v_min = " + str(self.vmin_sampling_list[index]) + "km/s")
                 plt.xlim(x[0], x[-1])
                 plt.ylim(-5, 20)
                 plt.show()
@@ -693,7 +711,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                             logeta_minimLogL, table[-1, 0])]]
             except ValueError:
                 plt.close()
-                plt.plot(x, (self.optimal_logL + delta_logL) * np.ones_like(y))
+                plt.plot(x, (self.optimal_logL + 1) * np.ones_like(y))
+                plt.plot(x, (self.optimal_logL + 4) * np.ones_like(y))
                 plt.title("v_min = " + str(self.vmin_sampling_list[index]) + "km/s")
                 plt.xlim(x[0], x[-1])
                 plt.ylim([-5,20])
@@ -741,4 +760,4 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         plt.plot(self.vmin_logeta_band_up[:,0], self.vmin_logeta_band_up[:, 1], 'o-')
         self.PlotOptimum(ylim_percentage = (1.2, 0.8), plot_close = F, plot_show = T)
         return
-        
+
