@@ -68,42 +68,72 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         else:
             branches = [1, -1]
         self.vmin_linspace = np.linspace(vmin_min, vmin_max, (vmin_max - vmin_min)/vmin_step + 1)
-        self.diff_response_tab = np.zeros((self.ERecoilList.size, 1))  
+        self.diff_response_tab = np.zeros((self.ERecoilList.size, 1))
         self.response_tab = np.zeros(1)
+        self.curly_H_tab = np.zeros((self.ERecoilList.size, 1))
+        self.xi_tab = np.zeros(1)
+        xi = 0
+        vmin_prev = 0
         for vmin in self.vmin_linspace:
             diff_resp_list = np.zeros((1,3))
             resp = 0
+            curly_H = np.zeros((1,3))
             for sign in branches:
-                (qER, const_factor) = self.ConstFactor(vmin, mx, fp, fn, delta, sign)
+                (ER, qER, const_factor) = self.ConstFactor(vmin, mx, fp, fn, delta, sign)
+                v_delta = 0 #TODO! generalize to endothermic
                 diff_resp_list += np.array([self.DifferentialResponse(Eee, qER, const_factor) for Eee in self.ERecoilList])
                 resp += integrate.quad(self.DifferentialResponse, self.Ethreshold, self.Emaximum, \
                     args=(qER, const_factor), epsrel = PRECISSION, epsabs = 0)[0]
+                curly_H += np.array([[integrate.quad(self.DifferentialResponse_Full, v_delta, vmin, \
+                    args=(Eee, mx, fp, fn, delta, sign), epsrel = PRECISSION, epsabs = 0)[0] for Eee in self.ERecoilList]])
+            xi += self.Exposure * self.IntegratedResponse_Other(vmin_prev, vmin, self.Ethreshold, self.Emaximum, mx, fp, fn, delta)
+            vmin_prev = vmin
             self.diff_response_tab = np.append(self.diff_response_tab, diff_resp_list.transpose(), axis = 1)
             self.response_tab = np.append(self.response_tab, [resp], axis = 0)
+            self.curly_H_tab = np.append(self.curly_H_tab, curly_H.transpose(), axis = 1)
+            self.xi_tab = np.append(self.xi_tab, [xi], axis = 0)
         self.vmin_linspace = np.insert(self.vmin_linspace, 0., 0)
         file = output_file_tail + "_VminLinspace.dat"
-        print(file)  
+        print(file)
         np.savetxt(file, self.vmin_linspace)
         file = output_file_tail + "_DiffRespTable.dat"
-        print(file)  
+        print(file)
         np.savetxt(file, self.diff_response_tab)
         file = output_file_tail + "_RespTable.dat"
-        print(file)  
+        print(file)
         np.savetxt(file, self.response_tab)
+        file = output_file_tail + "_CurlyHTable.dat"
+        print(file)
+        np.savetxt(file, self.curly_H_tab)
+        file = output_file_tail + "_XiTable.dat"
+        print(file)
+        np.savetxt(file, self.xi_tab)
         os.system("say Finished response tables.")
         return
-
-    def PlotDifferentialResponse(self):
-        plt.close()
-        for i in range(self.ERecoilList.size):
-            plt.plot(self.vmin_linspace, np.array([self.diff_response_interp[i](v) for v in self.vmin_linspace]))
-        plt.show()
-
-    def PlotResponse(self):
-        plt.close()
-        plt.plot(self.vmin_linspace, np.array([self.response_interp(v) for v in self.vmin_linspace]))
-        plt.show()
-        
+    
+    def PlotTable(self, interpolation, dimension = 0, xlim = None, ylim = None, 
+                  title = None, plot_close = True, plot_show = True, show_zero_axis = False):
+        if plot_close:
+            plt.close()
+        if dimension == 0:   # only one function
+            plt.plot(self.vmin_linspace, np.array([interpolation(v) for v in self.vmin_linspace]))
+        elif dimension == 1: # list of interpolated functions for each energy in self.ERecoilList
+            for i in range(self.ERecoilList.size):
+                plt.plot(self.vmin_linspace, np.array([interpolation[i](v) for v in self.vmin_linspace]))
+        else:
+            print("Wrong dimension")
+            raise TypeError
+        if show_zero_axis:
+            plt.plot(self.vmin_linspace, np.zeros(self.vmin_linspace.size))
+        if xlim != None:
+            plt.xlim(xlim)
+        if ylim != None:
+            plt.ylim(ylim)
+        if title != None:
+            plt.title(title)
+        if plot_show:
+            plt.show()
+    
     def ImportResponseTables(self, output_file_tail, plot = True):
         file =  output_file_tail + "_VminSortedList.dat"
         with open(file, 'r') as f_handle:
@@ -117,11 +147,20 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         file = output_file_tail + "_RespTable.dat"
         with open(file, 'r') as f_handle:
             self.response_tab = np.loadtxt(f_handle)
+        file = output_file_tail + "_CurlyHTable.dat"
+        with open(file, 'r') as f_handle:
+            self.curly_H_tab = np.loadtxt(f_handle)
+        file = output_file_tail + "_XiTable.dat"
+        with open(file, 'r') as f_handle:
+            self.xi_tab = np.loadtxt(f_handle)
         self.diff_response_interp = np.array([unif.interp1d(self.vmin_linspace, dr) for dr in self.diff_response_tab])
         self.response_interp = unif.interp1d(self.vmin_linspace, self.response_tab)
+        self.curly_H_interp = np.array([unif.interp1d(self.vmin_linspace, h) for h in self.curly_H_tab])
+        
         if plot:
-            self.PlotDifferentialResponse()
-            self.PlotResponse()
+            self.PlotTable(self.diff_response_interp, dimension = 1)
+            self.PlotTable(self.response_interp, dimension = 0)
+            self.PlotTable(self.curly_H_interp, dimension = 1, title = 'Curly H')
         return
 
     def VminIntegratedResponseTable(self, vmin_list):
@@ -144,6 +183,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         resp_integr = self.IntegratedResponseTable(vmin_list_w0)
         mu_i = self.Exposure * np.dot(vmin_resp_integr, 10**logeta_list)
         Nsignal = self.Exposure * np.dot(10**logeta_list, resp_integr)
+        if vminStar == None:
+            self.gamma_i = (self.mu_BKG_i + mu_i) / self.Exposure
         result = self.NBKG + Nsignal - np.log(self.mu_BKG_i + mu_i).sum()
         if np.any(self.mu_BKG_i + mu_i < 0):
             raise ValueError
@@ -208,7 +249,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         os.system("say 'Finished finding optimum'")
         return 
 
-    def ImportOptimalLikelihood(self, output_file_tail):
+    def ImportOptimalLikelihood(self, output_file_tail, plot = False):
         self.ImportResponseTables(output_file_tail, plot = False)
         file = output_file_tail + "_GloballyOptimalLikelihood.dat"
         with open(file, 'r') as f_handle:
@@ -217,6 +258,17 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.optimal_vmin = optimal_result[1 : optimal_result.size/2 + 1]
         self.optimal_logeta = optimal_result[optimal_result.size/2 + 1 :]
         print("optimal result = ", optimal_result)
+
+        if plot:
+            self.MinusLogLikelihood(optimal_result[1:]) # to get self.gamma_i
+            self.xi_interp = unif.interp1d(self.vmin_linspace, self.xi_tab)
+            self.h_sum_tab = np.sum([self.curly_H_tab[i] / self.gamma_i[i] for i in range(self.optimal_vmin.size)], axis = 0)
+            self.q_tab = 2 * (self.xi_tab - self.h_sum_tab)
+            self.h_sum_interp = unif.interp1d(self.vmin_linspace, self.h_sum_tab)
+            self.q_interp = unif.interp1d(self.vmin_linspace, self.q_tab)
+            self.PlotTable(self.xi_interp, dimension = 0, plot_show = False)
+            self.PlotTable(self.h_sum_interp, dimension = 0, xlim = [0, 1000], ylim = [-2e24, 2e24], title = 'Xi, H_sum', plot_close = False)
+            self.PlotTable(self.q_interp, dimension = 0, xlim = [0, 1000], ylim = [-2e24, 2e24], title = 'q', show_zero_axis = True)
         return
 
     def PlotStepFunction(self, vmin_list, logeta_list, xlim_percentage = (0., 1.1), ylim_percentage = (1.01, 0.99), \

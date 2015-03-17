@@ -148,7 +148,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, \
                         exper.OptimalLikelihood(output_file_no_extension, logeta_guess = logeta_guess)
                 if FOX_METHOD[2]:
                     exper.ImportResponseTables(output_file_no_extension, plot = True)
-                    exper.ImportOptimalLikelihood(output_file_no_extension)
+                    exper.ImportOptimalLikelihood(output_file_no_extension, plot = True)
 #                    vars_list = np.array([509.763, 517.667, 589.725, -25., -25., -25.])
 #                    vars_list = np.array([463.77679263,  473.22865581,  577.73929226,  -21.60988328, -21.60988328,  -21.60988328])
 #                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list))

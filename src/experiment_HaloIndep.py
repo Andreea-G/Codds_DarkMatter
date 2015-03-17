@@ -34,7 +34,11 @@ class Experiment_HaloIndep(Experiment):
         efficiencyER = self.Efficiency_ER(ER)
         const_factor = kilogram/SpeedOfLight**2 * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
             np.abs(dERecoildVmin(vmin, self.mT, mx, delta, sign)) * efficiencyER
-        return (qER, const_factor)
+        return (ER, qER, const_factor)
+    
+    def DifferentialResponse_Full(self, vmin, Eee, mx, fp, fn, delta, sign):
+        (ER, qER, const_factor) = self.ConstFactor(vmin, mx, fp, fn, delta, sign)
+        return self.DifferentialResponse(Eee, qER, const_factor)
 
     def Response_Other(self, vmin, Eee1, Eee2, mx, fp, fn, delta):
         ''' Response function integral d**2 R / (d Eee d ER) between measured energies Eee1 and Eee2, 
@@ -48,7 +52,7 @@ class Experiment_HaloIndep(Experiment):
             branches = [1, -1]
         result = 0
         for sign in branches:
-            (qER, const_factor) = self.ConstFactor(vmin, mx, fp, fn, delta, sign)
+            (ER, qER, const_factor) = self.ConstFactor(vmin, mx, fp, fn, delta, sign)
             result += integrate.quad(self.DifferentialResponse, Eee1, Eee2, \
                 args=(qER, const_factor), epsrel = PRECISSION, epsabs = 0)[0]
         return result
