@@ -5,7 +5,8 @@ Created on Sat Feb 28 21:41:09 2015
 @author: andreea
 """
 
-def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
+
+def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
     if exper_name == "superCDMS":
         num_steps = 60
         mx_range_options = {(0, 1000.): (5, 100, num_steps),
@@ -83,7 +84,7 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
                                 (100, 1000.): (42, 65, num_steps),
                                 (100, 0.): (50, 300, num_steps),
 #                                (100, 0.): (42, 65, num_steps),
-            }
+                                }
         else:
             mx_range_options = {(0, 1000.): (35, 90, num_steps),
 #            mx_range_options = {(0, 1000.): (55, 85, num_steps),
@@ -96,7 +97,7 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
                                 (100, 1000.): (50, 90, num_steps),
                                 (100, 0.): (100, 300, num_steps),
 #                                (100, 0.): (50, 90, num_steps),
-            }
+                                }
     elif exper_name == "DAMA2010NaSmRebinned_TotRateLimit":
         num_steps = 60
         mx_range_options = {(0, 1000.): (3, 20, num_steps),
@@ -104,7 +105,7 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
                             (-30, 1000.): (1, 10, num_steps),
                             (-30, 0.): (1, 10, num_steps),
                             (-50, 1000.): (1, 10, num_steps),
-        }
+                            }
     else:
         num_steps = 30
         mx_range_options = {(0, 1000.): (3, 100, num_steps),
@@ -114,9 +115,10 @@ def DM_mass_range(exper_name, delta, mPhi = 1000., quenching = None):
                             (-50, 1000.): (1, 50, num_steps),
                             (50, 1000.): (10, 100, num_steps),
                             (100, 1000.): (30, 100, num_steps),
-        }
+                            }
     return mx_range_options[(delta, mPhi)]
 
-input_list = [(-1/16.4, 0, 1000.), \
-        (0, 0, 1000.), (0, -30, 1000.),  (0, -50, 1000.), (0, 50, 1000.), (0, 0, 0.), \
-        (0, -30, 0.), (0, 100, 1000.), (0, 50, 0.), (0, 100, 0.)]
+
+input_list = [(-1/16.4, 0, 1000.),
+              (0, 0, 1000.), (0, -30, 1000.),  (0, -50, 1000.), (0, 50, 1000.), (0, 0, 0.),
+            (0, -30, 0.), (0, 100, 1000.), (0, 50, 0.), (0, 100, 0.)]
