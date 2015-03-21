@@ -9,6 +9,7 @@ from __future__ import division
 import numpy as np
 from math import trunc
 
+
 class interp1d:
     '''
     This is specific to the case of uniform spacing in x!
@@ -18,7 +19,7 @@ class interp1d:
     Input for initialization:
         two numpy.arrays x and y sorted in increasing order by x.
     '''
-    def __init__(self, x, y, kind = "linear", fill_value = np.nan):
+    def __init__(self, x, y, kind="linear", fill_value=np.nan):
         self.x = x
         self.y = y
         self.len = len(self.x)
@@ -61,4 +62,3 @@ class interp1d:
         slope = (self.y[hi] - self.y[lo]) / (self.x[hi] - self.x[lo])
         y_new = slope*(x_new - self.x[lo]) + self.y[lo]
         return y_new
-

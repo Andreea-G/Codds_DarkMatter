@@ -8,6 +8,7 @@ from __future__ import print_function
 from __future__ import division
 import numpy as np
 
+
 class interp1d:
     '''
     This is based off of scipy.interpolate.interp1d, but lacks most of the checks and robustness
@@ -16,7 +17,7 @@ class interp1d:
     Input for initialization:
         two numpy.arrays x and y sorted in increasing order by x.
     '''
-    def __init__(self, x, y, kind = "linear", fill_value = np.nan):
+    def __init__(self, x, y, kind="linear", fill_value=np.nan):
         self.x = x
         self.y = y
         self.len = len(self.x)
