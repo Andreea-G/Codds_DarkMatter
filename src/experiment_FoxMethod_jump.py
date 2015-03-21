@@ -23,6 +23,37 @@ DEBUG = F
 DEBUG_FULL = F
 USE_BASINHOPPING = T
 ALLOW_MOVE = T
+#METHOD = 'COBYLA'
+METHOD = 'SLSQP'
+
+class ConstraintsFunction(object):
+    def __init__(self, *args): #TODO don't know why I can't put vmin_max = vmin_max in the arguments
+        self.vminStar = args[0]
+        self.logetaStar = args[1]
+        self.vminStar_index = args[2]
+        self.vmin_max = 2000
+    def __call__(self, x):
+        '''  0 -  8: bounds: 3 * (x.size/2) constraints = 9 for x.size/2 = 3
+             9 - 12: sorted array: 2 * (x.size/2 - 1) constraints = 4 for x.size/2 = 3
+            13 - 15: vminStar_index: x.size/2 constraints = 3 for x.size/2 = 3
+            16 - 18: vminStar and logetaStar: x.size/2 constraints = 3 for x.size/2 = 3 '''
+        constraints = np.concatenate([x[:x.size/2], self.vmin_max - x[:x.size/2], -x[x.size/2:], \
+            np.diff(x[:x.size/2]), np.diff(-x[x.size/2:]), \
+            self.vminStar - x[:self.vminStar_index], x[self.vminStar_index : x.size/2] - self.vminStar, \
+            (x[:x.size/2] - self.vminStar) * (-x[x.size/2:] + self.logetaStar)])
+        is_not_close = np.logical_not(np.isclose(constraints, np.zeros_like(constraints), atol = 1e-5))
+        is_not_close[:3 * (x.size/2)] = True
+        constr = np.where(is_not_close, constraints, np.abs(constraints))
+#                print("~~~ constraints = ", constraints)
+#                print("is_not_close = ", is_not_close)
+#                print("constr = ", constr)
+#                print("vminStar = ", vminStar)
+#                print("logetaStar = ", logetaStar)
+#                print("vminStar_index = ", vminStar_index)
+#                print("~~~~~")
+        if np.any(np.isnan(constr)):
+            raise ValueError
+        return constr
 
 class Experiment_FoxMethod(Experiment_HaloIndep):
     def __init__(self, expername, scattering_type, mPhi = mPhiRef):
@@ -75,6 +106,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         xi = 0
         vmin_prev = 0
         for vmin in self.vmin_linspace:
+            print("vmin = ", vmin)
             diff_resp_list = np.zeros((1,3))
             resp = 0
             curly_H = np.zeros((1,3))
@@ -267,8 +299,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             self.h_sum_interp = unif.interp1d(self.vmin_linspace, self.h_sum_tab)
             self.q_interp = unif.interp1d(self.vmin_linspace, self.q_tab)
             self.PlotTable(self.xi_interp, dimension = 0, plot_show = False)
-            self.PlotTable(self.h_sum_interp, dimension = 0, xlim = [0, 1000], ylim = [-2e24, 2e24], title = 'Xi, H_sum', plot_close = False)
-            self.PlotTable(self.q_interp, dimension = 0, xlim = [0, 1000], ylim = [-2e24, 2e24], title = 'q', show_zero_axis = True)
+            self.PlotTable(self.h_sum_interp, dimension = 0, xlim = [0, 2000], ylim = [-2e24, 2e24], title = 'Xi, H_sum', plot_close = False)
+            self.PlotTable(self.q_interp, dimension = 0, xlim = [0, 2000], ylim = [-2e24, 2e24], title = 'q', show_zero_axis = True)
         return
 
     def PlotStepFunction(self, vmin_list, logeta_list, xlim_percentage = (0., 1.1), ylim_percentage = (1.01, 0.99), \
@@ -326,34 +358,6 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             np.minimum(logeta_guess[vminStar_index:], np.ones(logeta_guess.size - vminStar_index)*logetaStar)])
         vars_guess = np.append(vmin_guess, logeta_guess)
 
-        class ConstraintsFunction(object):
-            def __init__(self, *args): #TODO don't know why I can't put vmin_max = vmin_max in the arguments
-                self.vminStar = args[0]
-                self.logetaStar = args[1]
-                self.vminStar_index = args[2]
-                self.vmin_max = 2000    
-            def __call__(self, x):
-                '''  0 -  8: bounds: 3 * (x.size/2) constraints = 9 for x.size/2 = 3
-                     9 - 12: sorted array: 2 * (x.size/2 - 1) constraints = 4 for x.size/2 = 3
-                    13 - 15: vminStar_index: x.size/2 constraints = 3 for x.size/2 = 3
-                    16 - 18: vminStar and logetaStar: x.size/2 constraints = 3 for x.size/2 = 3 '''
-                constraints = np.concatenate([x[:x.size/2], self.vmin_max - x[:x.size/2], -x[x.size/2:], \
-                    np.diff(x[:x.size/2]), np.diff(-x[x.size/2:]), \
-                    self.vminStar - x[:self.vminStar_index], x[self.vminStar_index : x.size/2] - self.vminStar, \
-                    (x[:x.size/2] - self.vminStar) * (-x[x.size/2:] + self.logetaStar)])
-                is_not_close = np.logical_not(np.isclose(constraints, np.zeros_like(constraints), atol = 1e-5))
-                is_not_close[:3 * (x.size/2)] = True
-                constr = np.where(is_not_close, constraints, np.abs(constraints))
-#                print("~~~ constraints = ", constraints)
-#                print("is_not_close = ", is_not_close)
-#                print("constr = ", constr)
-#                print("vminStar = ", vminStar)
-#                print("logetaStar = ", logetaStar)
-#                print("vminStar_index = ", vminStar_index)
-#                print("~~~~~")
-                if np.any(np.isnan(constr)):
-                    raise ValueError
-                return constr
         constr_func = ConstraintsFunction(vminStar, logetaStar, vminStar_index)
         constr = ({'type': 'ineq', 'fun': constr_func})
         args = (constr_func, vminStar, logetaStar, vminStar_index)
@@ -386,9 +390,11 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                     constr_func = ConstraintsFunction(*constr_func_args)
                     new_kwargs['args'] = (constr_func,) + constr_func_args
                     new_kwargs['constraints'] = ({'type': 'ineq', 'fun': constr_func})
+                    if 'method' in self.kwargs:
+                        new_kwargs['method'] = self.kwargs['method']
                     return new_kwargs
     
-            minimizer_kwargs = {"constraints": constr, "args": args}
+            minimizer_kwargs = {"constraints": constr, "args": args, "method": METHOD}
             adapt_kwargs = AdaptiveKwargs(minimizer_kwargs, random_variation)
         
         while sol_not_found and attempts > 0:
@@ -398,7 +404,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                         minimizer_kwargs = minimizer_kwargs, niter = 3, take_step = take_step, adapt_kwargs = adapt_kwargs, stepsize = 0.2)
                 else:
                     constr_optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess, \
-                        args = args, constraints = constr)
+                        args = args, constraints = constr, method = METHOD)
                 constraints = constr_func(constr_optimum_log_likelihood.x)
                 is_not_close = np.logical_not(np.isclose(constraints, np.zeros_like(constraints)))
                 constr_not_valid = np.logical_and(constraints < 0, is_not_close)
@@ -442,11 +448,12 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         
         try:
             constr_optimum_log_likelihood = self._ConstrainedOptimalLikelihood(vminStar, logetaStar, vminStar_index, plot = plot)
-            optim_logL = constr_optimum_log_likelihood.fun
-            original_optimum = constr_optimum_log_likelihood
         except ValueError:
             optim_logL = 10**6
             pass
+        else:
+            optim_logL = constr_optimum_log_likelihood.fun
+            original_optimum = constr_optimum_log_likelihood
         
         vminStar_index_original = vminStar_index
         index = vminStar_index
@@ -455,6 +462,11 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             try:
                 index -= 1
                 new_optimum = self._ConstrainedOptimalLikelihood(vminStar, logetaStar, index, plot = plot)
+            except ValueError:
+                pass
+#                if vminStar_index <= 0:
+#                    move_left = False
+            else:
                 if new_optimum.fun < optim_logL:
                     os.system("say Moved left")
                     print("#################################################################################################################################################")
@@ -464,16 +476,17 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                     optim_logL = constr_optimum_log_likelihood.fun
 #                if vminStar_index <= 0:
 #                    move_left = False
-            except ValueError:
-                pass
-#                if vminStar_index <= 0:
-#                    move_left = False
         index = vminStar_index_original
 #        move_right = ALLOW_MOVE and vminStar_index < self.optimal_vmin.size
         while ALLOW_MOVE and index < self.optimal_vmin.size:
             try:
                 index += 1
                 new_optimum = self._ConstrainedOptimalLikelihood(vminStar, logetaStar, index, plot = plot)
+            except ValueError:
+                pass
+#                if vminStar_index >= self.optimal_vmin.size:
+#                    move_right = False
+            else:
                 if new_optimum.fun < optim_logL:
                     os.system("say Moved right")
                     print("#################################################################################################################################################")
@@ -481,10 +494,6 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                     vminStar_index = index
                     constr_optimum_log_likelihood = new_optimum
                     optim_logL = constr_optimum_log_likelihood.fun
-#                if vminStar_index >= self.optimal_vmin.size:
-#                    move_right = False
-            except ValueError:
-                pass
 #                if vminStar_index >= self.optimal_vmin.size:
 #                    move_right = False
         if optim_logL == 10**6:
@@ -502,13 +511,21 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         if plot:
             print("vminStar = ", vminStar)
             print("logetaStar = ", logetaStar)
+            print("vminStar_index = ", vminStar_index)
             try:
                 print("original: ", original_optimum)
-            except:
-                pass
-            try:
                 print("new: ", constr_optimum_log_likelihood)
+                constr_func = ConstraintsFunction(vminStar, logetaStar, vminStar_index)
+                constraints = constr_func(constr_optimum_log_likelihood.x)
+                is_not_close = np.logical_not(np.isclose(constraints, np.zeros_like(constraints)))
+                constr_not_valid = np.logical_and(constraints < 0, is_not_close)
+                sol_not_found = np.any(constr_not_valid)
+                print("constraints = ", constraints)
+                print("is_not_close = ", is_not_close)
+                print("constr_not_valid = ", constr_not_valid)
+                print("sol_not_found = ", sol_not_found)
             except:
+                print("Error")
                 pass
         if plot:
             os.system("say 'Finished plot'")
@@ -657,13 +674,14 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         for logetaStar in logetaStar_list:
             try:
                 constr_opt = self.ConstrainedOptimalLikelihood(vminStar, logetaStar, plot = True)
-                print("logetaStar = ", logetaStar, "; constr_opt = ", constr_opt)
-                table = np.append(table, [[logetaStar, constr_opt]], axis = 0)
-#                table = np.append(table, [logetaStar])
             except:
                 print("error")
                 os.system("say Error")
                 pass
+            else:
+                print("logetaStar = ", logetaStar, "; constr_opt = ", constr_opt)
+                table = np.append(table, [[logetaStar, constr_opt]], axis = 0)
+#                table = np.append(table, [logetaStar])
         print("vminStar = ", vminStar, "; table = ", table)
         if True:
             temp_file = output_file_tail + '_' + str(index) + '_LogetaStarLogLikelihoodList_junk.dat'

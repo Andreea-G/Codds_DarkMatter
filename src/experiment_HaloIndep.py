@@ -93,7 +93,7 @@ class Experiment_HaloIndep(Experiment):
         midpoints = []
         integr = integrate.quad(self.Response_Other, vmin1, vmin2, \
             args=(Eee1, Eee2, mx, fp, fn, delta), points = midpoints, epsrel = PRECISSION, epsabs = 0)
-        print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
+#        print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
         return integr[0]
 
     def IntegratedResponse_Dirac(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
