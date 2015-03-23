@@ -18,7 +18,9 @@ name = "CDMSSi2012"
 modulated = False
 
 energy_resolution_type = "Gaussian"
-EnergyResolution = lambda e: np.sqrt(0.085849 + 0.003136 * e)
+
+def EnergyResolution(e): return np.sqrt(0.085849 + 0.003136 * e)
+
 FFSD = 'GaussianFFSD'
 FFSI = 'HelmFF'
 FF = {'SI': FFSI,
@@ -32,7 +34,7 @@ target_nuclide_JSpSn_list = np.array([[0, 0, 0], [1./2, -0.0019 * np.sqrt(3./(2 
 target_nuclide_mass_list = np.array([26.0603, 26.9914, 27.9204])
 num_target_nuclides = target_nuclide_mass_list.size
 
-QuenchingFactor = lambda e: np.ones(e.size)
+def QuenchingFactor(e): return np.ones(e.size)
 
 Ethreshold = 7.
 Emaximum = 100.
@@ -54,9 +56,11 @@ y = np.array([4.17071000e-02, 8.43841000e-02, 1.10572000e-01, 1.29971000e-01, 1.
               4.23860000e-01, 4.31620000e-01, 4.41319000e-01, 4.52958000e-01, 5.19884000e-01])
 
 Efficiency_interp = interp1d(x, y)
-Efficiency = lambda e: Efficiency_interp(e) if e >= Ethreshold else 0.
 
-Efficiency_ER = lambda er: np.ones(er.size)
+def Efficiency(e):
+    return Efficiency_interp(e) if e >= Ethreshold else 0.
+
+def Efficiency_ER(er): return np.ones(er.size)
 
 Exposure = 140.2
 ERecoilList = np.array([8.2, 9.5, 12.3])
