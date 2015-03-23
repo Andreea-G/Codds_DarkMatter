@@ -1,7 +1,7 @@
 """
 This is a close replica of the scipy.optimize.basinhopping global optimization algorithm.
-Added feature: It can use take_step function to also change minimizer_kwargs, in addition to 
-randomly displacing the coordinates.
+Added feature: It can use take_step function to also change minimizer_kwargs,
+in addition to randomly displacing the coordinates.
 """
 
 from __future__ import division, print_function, absolute_import
@@ -264,7 +264,8 @@ class AdaptiveKwargs(object):
     Class to implement adaptive minimizer kwargs.
     Default class does nothing (kwargs are not modified).
     User-defined classes could allow the arguments to the minimizer function to be varied. 
-    Useful for situations where a very small change in args could lead to convergence or a better global minimum.
+    Useful for situations where a very small change in args could lead to convergence or
+    a better global minimum.
     It is called immediately after the take_step function in the algorithm.
     """
     def __init__(self, kwargs):

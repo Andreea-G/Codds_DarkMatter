@@ -73,26 +73,31 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                 filename_tail="", OUTPUT_MAIN_DIR="Output/", plot_dots=True, quenching=None):
     ''' Main run of the program.
         Input:
-            exper_name = name of experiment
+            exper_name: name of experiment
             scattering_type: 'SI' for spin-dependent, 'SDPS' for pseudo-scalar, 'SDAV' for avial-vector
-            mPhi = mass of mediator
-            fp and fn = couplings to proton and neutron
-            delta = DM mass split
-            RUN_PROGRAM = True or False, whether the data should be (re-)computed
-            MAKE_PLOT = True or False, whether the data should be plotted
-            HALO_DEP = True or False, whether the analysis is halo-dependent or halo-independent
-            FOX_METHOD = array of True or False, whether each step of the Fox Method is to be performed
-            mx = DM mass, only give for halo-independent analysis
-            mx_range = (mx_min, mx_max, num_steps) = DM mass range and number or steps, only for halo-dependent
-            vmin_range = (vmin_min, vmin_max, vmin_step) = vmin range and step size, only for halo-independent
-            filename_tail = optional tag to be added to the file name
-            OUTPUT_MAIN_DIR = name of main output directory, if different from "Output/"
-            plot_dots = True or False, whether the plot should show the data points or just the interpolation
-            quenching = quenching factor, needed for experiments that can have multiple options (such as KIMS or DAMA).
+            mPhi: mass of mediator
+            fp and fn: couplings to proton and neutron
+            delta: DM mass split
+            RUN_PROGRAM: True or False, whether the data should be (re-)computed
+            MAKE_PLOT: True or False, whether the data should be plotted
+            HALO_DEP: True or False, whether the analysis is halo-dependent or halo-independent
+            FOX_METHOD: array of True or False, whether each step of the Fox Method is to be performed
+            mx: DM mass, only give for halo-independent analysis
+            mx_range: (mx_min, mx_max, num_steps) = DM mass range and number or steps, only for halo-dependent
+            vmin_range: (vmin_min, vmin_max, vmin_step) = vmin range and step size, only for halo-independent
+            vmin_FoxBand_range: (vmin_Fox_min, vmin_Fox_max, vmin_Fox_numsteps) = vmin range and number of steps,
+                used for calculating the Fox band.
+            logeta_FoxBand_range: (logeta_Fox_min, logeta_Fox_max, logeta_Fox_numsteps) = logeta range and number of steps,
+                used for calculating the Fox band.
+            filename_tail: optional tag to be added to the file name
+            OUTPUT_MAIN_DIR: name of main output directory, if different from "Output/"
+            plot_dots: True or False, whether the plot should show the data points or just the interpolation
+            quenching: quenching factor, needed for experiments that can have multiple options (such as KIMS or DAMA).
     '''
 
     print('name = ', exper_name)
-    # Select which experiment class we must use, depending on what statistical analysis we need.
+    # Select which experiment class we must use, depending on what statistical analysis
+    # we need.
     if HALO_DEP:
         print('Halo Dependent')
         if exper_name in MaximumGapLimit_exper:
@@ -120,8 +125,9 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
             return
 
     # get the file name specific to the parameters used for this run
-    output_file_no_extension = Output_file_name(exper_name, scattering_type, mPhi, mx, fp, fn, delta,
-                                                HALO_DEP, filename_tail, OUTPUT_MAIN_DIR, quenching)
+    output_file_no_extension = \
+        Output_file_name(exper_name, scattering_type, mPhi, mx, fp, fn, delta,
+                         HALO_DEP, filename_tail, OUTPUT_MAIN_DIR, quenching)
 
     # (re-)compute the data
     if RUN_PROGRAM:
@@ -137,16 +143,19 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
         else:
             (vmin_min, vmin_max, vmin_step) = vmin_range
             if not np.any(FOX_METHOD):
-                upper_limit = exper.UpperLimit(mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
-                                               output_file)
+                upper_limit = \
+                    exper.UpperLimit(mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
+                                     output_file)
             else:
                 if FOX_METHOD[0]:
-                    exper.ResponseTables(vmin_min, vmin_max, vmin_step, mx, fp, fn, delta, output_file_no_extension)
+                    exper.ResponseTables(vmin_min, vmin_max, vmin_step, mx, fp, fn, delta,
+                                         output_file_no_extension)
                 if FOX_METHOD[1]:
                     if logeta_guess is None:
                         exper.OptimalLikelihood(output_file_no_extension)
                     else:
-                        exper.OptimalLikelihood(output_file_no_extension, logeta_guess=logeta_guess)
+                        exper.OptimalLikelihood(output_file_no_extension,
+                                                logeta_guess=logeta_guess)
                 if FOX_METHOD[2]:
                     exper.ImportResponseTables(output_file_no_extension, plot=True)
                     exper.ImportOptimalLikelihood(output_file_no_extension, plot=True)
@@ -164,8 +173,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
 #                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list, vminStar, logetaStar, 3))
                     exper.PlotOptimum()
                 if FOX_METHOD[3]:
-#                    Tests for delta = 0:
-#                    (vminStar, logetaStar) = (500, -25)
+                    # Tests for delta = 0:
+                    (vminStar, logetaStar) = (500, -25)
 #                    (vminStar, logetaStar) = (32.1343304717, -24.48487343)
 #                    (vminStar, logetaStar) = (218.271870856, -23.23683411)
 #                    (vminStar, logetaStar) = (497.685658861, -25.60815296)
@@ -173,8 +182,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
 #                    (vminStar, logetaStar) = (655.267138374, -20.48554508)
 #                    (vminStar, logetaStar) = (792.135332076, -21.60988328)
 #                    (vminStar, logetaStar) = (32.2467823008, -23.1311911267)
-#                    Tests for delta = -50:
-                    (vminStar, logetaStar) = (185.572266287, -19.16840262)
+                    # Tests for delta = -50:
+#                    (vminStar, logetaStar) = (185.572266287, -19.16840262)
 #                    (vminStar, logetaStar) = (256.487725489, -21.52245551)
 #                    (vminStar, logetaStar) = (256.487725489, -20.78967785)
 #                    (vminStar, logetaStar) = (284.992742719, -24.78780684)
@@ -192,10 +201,13 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
 #                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list))
                 if np.any(FOX_METHOD[4:7]):
                     (vmin_band_min, vmin_band_max, vmin_num_steps) = vmin_FoxBand_range
-                    (logeta_percent_minus, logeta_percent_plus, logeta_num_steps) = logeta_FoxBand_percent_range
+                    (logeta_percent_minus, logeta_percent_plus, logeta_num_steps) = \
+                        logeta_FoxBand_percent_range
                     if steepness is not None:
-                        (steepness_vmin, steepness_vmin_center, steepness_logeta) = steepness
-                        print("Steepness: ", steepness_vmin, ", ", steepness_vmin_center, ", ", steepness_logeta)
+                        (steepness_vmin, steepness_vmin_center, steepness_logeta) = \
+                            steepness
+                        print("Steepness: ", steepness_vmin, ", ",
+                              steepness_vmin_center, ", ", steepness_logeta)
                         exper.VminSamplingList(output_file_no_extension,
                                                vmin_band_min, vmin_band_max, vmin_num_steps,
                                                steepness_vmin, steepness_vmin_center,
@@ -213,14 +225,17 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                                                       logeta_percent_minus, logeta_percent_plus, logeta_num_steps,
                                                       plot=not np.any(FOX_METHOD[5:]))
                 if FOX_METHOD[5]:
-                    print("vmin_FoxBand_range = ", vmin_band_min, " ", vmin_band_max, " ", vmin_num_steps)
-                    print("logeta_FoxBand_percent_range = ", logeta_percent_minus, " ", logeta_percent_plus, " ", logeta_num_steps)
+                    print("vmin_FoxBand_range = ", vmin_band_min, " ",
+                          vmin_band_max, " ", vmin_num_steps)
+                    print("logeta_FoxBand_percent_range = ", logeta_percent_minus, " ",
+                          logeta_percent_plus, " ", logeta_num_steps)
                     exper.LogLikelihoodList(output_file_no_extension)
                 if FOX_METHOD[6]:
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     interpolation_order = 2
                     for delta_logL in [4]:
-                        exper.FoxBand(output_file_no_extension, delta_logL, interpolation_order)
+                        exper.FoxBand(output_file_no_extension, delta_logL,
+                                      interpolation_order)
                 if FOX_METHOD[7]:
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     exper.ImportFoxBand(output_file_no_extension)
