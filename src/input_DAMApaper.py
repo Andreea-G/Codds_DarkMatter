@@ -17,7 +17,7 @@ def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
                             (-50, 1000.): (1.8, 50, num_steps),
                             (50, 1000.): (20, 100, num_steps),
                             (100, 1000.): (30, 100, num_steps),
-        }
+                            }
     elif "LUX" in exper_name:
         num_steps = 30
         mx_range_options = {(0, 1000.): (5.85, 100, num_steps),
@@ -29,7 +29,7 @@ def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
                             (50, 1000.): (17.66, 100, num_steps),
                             (100, 1000.): (40, 100, num_steps),
                             (100, 0.): (40, 300, num_steps),
-        }
+                            }
     elif exper_name == "KIMS2012":
         num_steps = 40
         mx_range_options = {(0, 1000.): (10, 100, num_steps),
@@ -41,7 +41,7 @@ def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
                             (50, 0.): (17, 100, num_steps),
                             (100, 1000.): (41, 100, num_steps),
                             (100, 0.): (41.08, 300, num_steps),
-        }
+                            }
     elif exper_name == "SIMPLEModeStage2":
         num_steps = 200
         mx_range_options = {(0, 1000.): (4, 100, num_steps),
@@ -51,7 +51,7 @@ def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
                             (-50, 1000.): (1.5, 50, num_steps),
                             (50, 1000.): (18, 100, num_steps),
                             (100, 1000.): (30, 100, num_steps),
-        }
+                            }
     elif exper_name == "DAMA2010NaSmRebinned":
         num_steps = 60
         if quenching == 0.4:
@@ -61,7 +61,7 @@ def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
                                 (-30, 1000.): (2, 4, num_steps),
                                 (-30, 0.): (2, 3, num_steps),
                                 (-50, 1000.): (1.5, 2.5, num_steps),
-            }
+                                }
         else:
             mx_range_options = {(0, 1000.): (6, 20, num_steps),
 #            mx_range_options = {(0, 1000.): (10, 20, num_steps),
@@ -69,13 +69,13 @@ def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
                                 (-30, 1000.): (3, 5, num_steps),
                                 (-30, 0.): (2.5, 4, num_steps),
                                 (-50, 1000.): (2, 3.5, num_steps),
-            }
+                                }
     elif exper_name == "DAMA2010ISmRebinned":
         num_steps = 60
         if quenching == 0.09:
             mx_range_options = {(0, 1000.): (25, 65, num_steps),
 #            mx_range_options = {(0, 1000.): (40, 65, num_steps),
-                                 (0, 0.): (35, 90, num_steps),
+                                (0, 0.): (35, 90, num_steps),
                                 (-30, 1000.): (20, 50, num_steps),
                                 (-30, 0.): (30, 50, num_steps),
                                 (-50, 1000.): (20, 40, num_steps),
@@ -121,4 +121,4 @@ def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
 
 input_list = [(-1/16.4, 0, 1000.),
               (0, 0, 1000.), (0, -30, 1000.),  (0, -50, 1000.), (0, 50, 1000.), (0, 0, 0.),
-            (0, -30, 0.), (0, 100, 1000.), (0, 50, 0.), (0, 100, 0.)]
+              (0, -30, 0.), (0, 100, 1000.), (0, 50, 0.), (0, 100, 0.)]

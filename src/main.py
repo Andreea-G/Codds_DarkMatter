@@ -29,12 +29,12 @@ def main():
     HALO_INDEP = not HALO_DEP
 #    FOX_METHOD = [T, T, T, F, F, F, F, F]     # Multiple
 #    FOX_METHOD = [T, F, F, F, F, F, F, F]     # ResponseTables
-    FOX_METHOD = [F, T, F, F, F, F, F, F]     # OptimalLikelihood
+#    FOX_METHOD = [F, T, F, F, F, F, F, F]     # OptimalLikelihood
 #    FOX_METHOD = [F, F, T, F, F, F, F, F]     # ImportOptimalLikelihood
 #    FOX_METHOD = [F, F, F, T, F, F, F, F]     # ConstrainedOptimalLikelihood
 #    FOX_METHOD = [F, F, F, F, T, F, F, F]     # VminLogetaSamplingTable
 #    FOX_METHOD = [F, F, F, F, F, T, F, F]     # LogLikelihoodList
-#    FOX_METHOD = [F, F, F, F, F, F, T, F]     # FoxBand
+    FOX_METHOD = [F, F, F, F, F, F, T, F]     # FoxBand
 #    FOX_METHOD = [F, F, F, F, F, F, F, T]     # FoxBandPlot
 
     qKIMS_list = [0.05, 0.1]
@@ -50,7 +50,7 @@ def main():
     exper_list = [implemented_exper[i] for i in [14]]
 #    exper_list = implemented_exper
     filename_tail_list = ["_jump_smooth"]
-    OUTPUT_MAIN_DIR = "../Output1/"
+    OUTPUT_MAIN_DIR = "../OutputH/"
 
     try:
         plt.show()
@@ -60,7 +60,8 @@ def main():
                 for filename_tail in filename_tail_list:
                     for (mx, fn, delta, mPhi) in input_list[0:1]:
                         for quenching in quenching_list.get(exper_name, [None]):
-                            (vmin_start, vmin_end, vmin_step) = Vmin_range(exper_name, mx, delta, mPhi, quenching)
+                            (vmin_start, vmin_end, vmin_step) = \
+                                Vmin_range(exper_name, mx, delta, mPhi, quenching)
                             print(vmin_start, " ", vmin_end, " ", vmin_step)
                             run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                                         RUN_PROGRAM, MAKE_PLOT, HALO_DEP, FOX_METHOD,
@@ -69,7 +70,8 @@ def main():
                                         logeta_FoxBand_percent_range=logeta_FoxBand_percent_range,
                                         steepness=Steepness(exper_name, mx, delta, mPhi),
                                         logeta_guess=Logeta_guess(exper_name, mx, delta, mPhi),
-                                        filename_tail=filename_tail, OUTPUT_MAIN_DIR=OUTPUT_MAIN_DIR,
+                                        filename_tail=filename_tail,
+                                        OUTPUT_MAIN_DIR=OUTPUT_MAIN_DIR,
                                         plot_dots=plot_dots, quenching=quenching)
 
         if HALO_DEP:
@@ -77,12 +79,14 @@ def main():
                 for filename_tail in filename_tail_list:
                     for (fn, delta, mPhi) in input_list[0:1]:
                         for quenching in quenching_list.get(exper_name, [None]):
-                            (mx_min, mx_max, num_steps) = DM_mass_range(exper_name, delta, mPhi, quenching)
+                            (mx_min, mx_max, num_steps) = \
+                            DM_mass_range(exper_name, delta, mPhi, quenching)
                             print(mx_min, " ", mx_max, " ", num_steps)
                             run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                                         RUN_PROGRAM, MAKE_PLOT, HALO_DEP, FOX_METHOD,
                                         mx_range=(mx_min, mx_max, num_steps),
-                                        filename_tail=filename_tail, OUTPUT_MAIN_DIR=OUTPUT_MAIN_DIR,
+                                        filename_tail=filename_tail,
+                                        OUTPUT_MAIN_DIR=OUTPUT_MAIN_DIR,
                                         plot_dots=plot_dots, quenching=quenching)
 
         plt.show()

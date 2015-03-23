@@ -4,9 +4,10 @@ Created on Thu Nov 20 22:52:11 2014
 
 @author: Andreea
 """
+
+from __future__ import division
 from __future__ import absolute_import
 from __future__ import print_function
-from __future__ import division
 from globalfnc import *
 from haxtonFF import *
 import numpy as np
@@ -19,7 +20,10 @@ INPUT_DIR = "Data/"
 
 
 def import_file(full_path_to_module):
-    import os, sys
+    """ Imports Python module from file.
+    """
+    import os
+    import sys
     directory, module_name = os.path.split(full_path_to_module)
     module_name = os.path.splitext(module_name)[0]
 
@@ -33,7 +37,21 @@ def import_file(full_path_to_module):
 
 
 class Experiment:
+    ''' This is the base class that implements the core of the algorithm,
+    common to all experiments and data analyses.
+    Parameters:
+        expername: string
+            The name of the experiment.
+        scattering_type: string
+            The type of scattering. Can be
+                - 'SI' (spin-independent)
+                - 'SDAV' (spin-independent, axial-vector)
+                - 'SDPS' (spin-independent, pseudo-scalar)
+        mPhi: float, optional
+            The mass of the mediator.
+    '''
     def __init__(self, expername, scattering_type, mPhi=mPhiRef):
+        # Import the data from Python module
         module = import_file(INPUT_DIR + expername + ".py")
         self.name = expername
         self.scattering_type = scattering_type
@@ -43,17 +61,23 @@ class Experiment:
             self.energy_resolution_type == "Gaussian" else GPoisson
 
         self.mPhi = mPhi
+        # angular momenta of target nuclides
         self.J = module.target_nuclide_JSpSn_list[:, 0]
         self.numT = module.num_target_nuclides
         if "SD" in self.scattering_type:
+            # masses of target nuclides
             self.mT = np.array([module.target_nuclide_mass_list[i]
                                 for i in range(self.numT) if self.J[i] != 0])
+            # atomic mass numbers of target nuclides
             self.A = np.array([module.target_nuclide_AZC_list[i, 0]
                                for i in range(self.numT) if self.J[i] != 0])
+            # atomic numbers of target nuclides
             self.Z = np.array([module.target_nuclide_AZC_list[i, 1]
                                for i in range(self.numT) if self.J[i] != 0])
             self.mass_fraction = np.array([module.target_nuclide_AZC_list[i, 2]
                                            for i in range(self.numT) if self.J[i] != 0])
+            # Sp * sqrt((2*J + 1) * (J + 1) / (4*pi*J)) where Sp is the z-projection
+            # of proton spin. Same for Sn.
             self.SpScaled = np.array([module.target_nuclide_JSpSn_list[i, 1]
                                       for i in range(self.numT) if self.J[i] != 0])
             self.SnScaled = np.array([module.target_nuclide_JSpSn_list[i, 2]
@@ -68,21 +92,27 @@ class Experiment:
             self.SpScaled = module.target_nuclide_JSpSn_list[:, 1]
             self.SnScaled = module.target_nuclide_JSpSn_list[:, 2]
 
+        # modulated or unmodulated velocity integrals
+        # for a Maxwellian velocity distribution
         if module.modulated is False:
             self.etaMaxwellian = eta0Maxwellian
         else:
             self.etaMaxwellian = eta1Maxwellian
 
+        # Form factors
         FF_default = np.array([[lambda y: 0]*2]*2)
         self._FFSigmaPPJ_function_list = \
-            np.array(list(map(lambda a, z: FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), FF_default),
+            np.array(list(map(lambda a, z:
+                              FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), FF_default),
                               self.A, self.Z)))
         self._FFSigmaPJ_function_list = \
-            np.array(list(map(lambda a, z: FFSigmaPJ.get((np.trunc(a), np.trunc(z)), FF_default),
+            np.array(list(map(lambda a, z:
+                              FFSigmaPJ.get((np.trunc(a), np.trunc(z)), FF_default),
                               self.A, self.Z)))
-
-        self.FF = FF_options[self.scattering_type][module.FF[scattering_type]]  # form factor
-        self.ffelemQ = FFElementQ(self.Z)   # tests if it's been implemented in Haxton paper
+        # form factor
+        self.FF = FF_options[self.scattering_type][module.FF[scattering_type]]
+        # tests if it's been implemented in Haxton paper
+        self.ffelemQ = FFElementQ(self.Z)
         if ((self.ffelemQ == 1).all()):
             print("Haxton")
             self.CrossSectionFactors_SDAV = self.CrossSectionFactors_SDAV_Haxton
@@ -121,6 +151,8 @@ class Experiment:
     def FormFactor(self, ER):
         ''' Form factor including spin-dependence for the spin-dependent interaction, when
         the Haxton FF is not used.
+            Input:
+                ER: Recoil energy
         '''
         result = (4./3. * (4. * pi)/(2 * self.J + 1.)) * self.FF(ER, self.A, self.mT)
         return result
@@ -130,19 +162,17 @@ class Experiment:
             Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
         '''
         mu_p = ProtonMass * mx / (ProtonMass + mx)
-#        print("FF = ", self.FF(ER, self.A, self.mT))
         return self.mass_fraction * 1./(2.*mu_p**2) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2. * self.mT))**2) * \
             ((self.Z + (self.A - self.Z) * fn/fp)**2) * self.FF(ER, self.A, self.mT)
 
-    def FF66normlalized(self, ER, N1, N2):
-        y = ER * self._y_over_ER
-        l = np.empty(self.numT)
-        for i in range(self.numT):
-            l[i] = self._FFSigmaPPJ_function_list[i, N1, N2](y[i])
-        return l * np.exp(-2. * y)
-
-    def FF44normlalized(self, ER, N1, N2):
+    def _FFAVnormlalized(self, ER, N1, N2):
+        ''' Form factors for the AV interaction.
+        See Eq. 2.18 of arXiv:1502.07682 and Appendix A.3. of arXiv:1203.3542.
+            Input:
+                ER: Recoil energy
+                N1, N2: 0 or 1 for proton or neutron respectively.
+        '''
         y = ER * self._y_over_ER
         l = np.empty(self.numT)
         for i in range(self.numT):
@@ -151,61 +181,75 @@ class Experiment:
         return l * np.exp(-2. * y)
 
     def CrossSectionFactors_SDPS_Haxton(self, ER, mx, fp, fn, delta):
-        ''' Factors specific to the cross-section for the spin-dependent pseudo-scalar interaction,
-        with Haxton form factors.
+        ''' Factors specific to the cross-section for the spin-dependent pseudo-scalar
+        interaction, with Haxton form factors.
             Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
         '''
         mu_p = ProtonMass * mx / (ProtonMass + mx)
         return 1.e-12 * ER**2 * 3./(8. * mu_p**6) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2 / 2 / self.mT)**2) * \
             self._cross_sec_factors_SDPS * \
-            (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) +
-                (fn/fp)**2 * self.FF66normlalized(ER, 1, 1))
+            (self._FFPSnormlalized(ER, 0, 0) + 2 * fn/fp * self._FFPSnormlalized(ER, 0, 1) +
+                (fn/fp)**2 * self._FFPSnormlalized(ER, 1, 1))
 
     def CrossSectionFactors_SDPS_Mixed(self, ER, mx, fp, fn, delta):
-        ''' Factors specific to the cross-section for the spin-dependent pseudo-scalar interaction,
-        with mixed form factors (some target elements from Haxton, and some not).
+        ''' Factors specific to the cross-section for the spin-dependent pseudo-scalar
+        interaction, with mixed form factors (some target elements from Haxton,
+        and some not).
             Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
         '''
         mu_p = ProtonMass * mx / (ProtonMass + mx)
         return 1.e-12 * ER**2 * 3./(8. * mu_p**6) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2 / 2 / self.mT)**2) * \
             self._cross_sec_factors_SDPS * \
-            (self.ffelemQ * (self.FF66normlalized(ER, 0, 0) + 2 * fn/fp * self.FF66normlalized(ER, 0, 1) +
-                             (fn/fp)**2 * self.FF66normlalized(ER, 1, 1)) +
-             (1 - self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
+            (self.ffelemQ * (self._FFPSnormlalized(ER, 0, 0) +
+                             2 * fn/fp * self._FFPSnormlalized(ER, 0, 1) +
+                             (fn/fp)**2 * self._FFPSnormlalized(ER, 1, 1)) +
+             (1 - self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 *
+             self.FormFactor(ER))
 
     def CrossSectionFactors_SDAV_Haxton(self, ER, mx, fp, fn, delta):
-        ''' Factors specific to the cross-section for the spin-dependent axial-vector interaction,
-        with Haxton form factors.
+        ''' Factors specific to the cross-section for the spin-dependent axial-vector
+        interaction, with Haxton form factors.
             Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
         '''
         mu_p = ProtonMass * mx / (ProtonMass + mx)
         return self.mass_fraction / (2 * mu_p**2) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
-            (self.FF44normlalized(ER, 0, 0) + 2 * fn/fp * self.FF44normlalized(ER, 0, 1) +
-                (fn/fp)**2 * self.FF44normlalized(ER, 1, 1))
-#            (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER)
+            (self._FFAVnormlalized(ER, 0, 0) +
+             2 * fn/fp * self._FFAVnormlalized(ER, 0, 1) +
+             (fn/fp)**2 * self._FFAVnormlalized(ER, 1, 1))
 
     def CrossSectionFactors_SDAV_Mixed(self, ER, mx, fp, fn, delta):
-        ''' Factors specific to the cross-section for the spin-dependent axial-vector interaction,
-        with mixed form factors (some target elements from Haxton, and some not).
+        ''' Factors specific to the cross-section for the spin-dependent axial-vector
+        interaction, with mixed form factors (some target elements from Haxton,
+        and some not).
             Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
         '''
         mu_p = ProtonMass * mx / (ProtonMass + mx)
         return self.mass_fraction / (2 * mu_p**2) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2 * self.mT))**2) * \
-            (self.ffelemQ * (self.FF44normlalized(ER, 0, 0) + 2 * fn/fp * self.FF44normlalized(ER, 0, 1) +
-                             (fn/fp)**2 * self.FF44normlalized(ER, 1, 1)) +
-             (1-self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 * self.FormFactor(ER))
+            (self.ffelemQ * (self._FFAVnormlalized(ER, 0, 0) +
+                             2 * fn/fp * self._FFAVnormlalized(ER, 0, 1) +
+                             (fn/fp)**2 * self._FFAVnormlalized(ER, 1, 1)) +
+             (1-self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 *
+             self.FormFactor(ER))
 
     def Resolution(self, Eee, qER):
-        ''' Energy resolution G(Eee, ER) for given measured energy Eee and recoil energy ER
+        ''' Energy resolution G(Eee, ER).
+            Input:
+                Eee: measured energy (electron equivalent)
+                qER: q * ER for quenching factor q and recoil energy ER
         '''
         return self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
 
     def DifferentialResponseSHM(self, Eee, qER, const_factor):
-        ''' Differential response function d**2 R / (d Eee d ER), as a function of measured energy Eee and recoil energy ER
+        ''' Differential response function d**2 R / (d Eee d ER)
+            Input:
+                Eee: measured energy (electron equivalent)
+                qER: q * ER for quenching factor q and recoil energy ER
+                const_factor: factors entering the differential response that do not
+                    depend on Eee
         '''
         self.count_diffresponse_calls += 1
         r_list = const_factor * self.Efficiency(Eee) * \
@@ -213,24 +257,24 @@ class Experiment:
         return r_list.sum()
 
     def ResponseSHM_Other(self, ER, Eee1, Eee2, mx, fp, fn, delta):
-        ''' Response function integral d**2 R / (d Eee d ER) between measured energies Eee1 and Eee2,
-        as a function of recoil energy ER.
+        ''' Response function: integral over d**2 R / (d Eee d ER) between
+        measured energies Eee1 and Eee2, as a function of recoil energy ER.
             For any finite resolution function (i.e. other than Dirac Delta).
         '''
         self.count_response_calls += 1
         q = self.QuenchingFactor(ER)
         qER = q * ER
         vmin = VMin(ER, self.mT, mx, delta)
-        const_factor = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
+        const_factor = 1.e-6 * \
+            kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
             self.Efficiency_ER(ER) * self.etaMaxwellian(vmin, vobs, v0bar, vesc)
         result = integrate.quad(self.DifferentialResponseSHM, Eee1, Eee2,
                                 args=(qER, const_factor), epsrel=PRECISSION, epsabs=0)[0]
-#        print(ER, " ", result)
         return result
 
     def ResponseSHM_Dirac(self, ER, Eee1, Eee2, mx, fp, fn, delta):
-        ''' Response function integral d**2 R / (d Eee d ER) between measured energies Eee1 and Eee2,
-        as a function of recoil energy ER.
+        ''' Response function: integral over d**2 R / (d Eee d ER) between
+        measured energies Eee1 and Eee2, as a function of recoil energy ER.
             For Dirac Delta resolution function.
         '''
         self.count_response_calls += 1
@@ -238,17 +282,16 @@ class Experiment:
         qER = q * ER
         vmin = VMin(ER, self.mT, mx, delta)
         integrated_delta = 1. if Eee1 <= qER < Eee2 else 0.
-        r_list = 1.e-6 * kilogram * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
+        r_list = 1.e-6 * kilogram * \
+            self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
             self.Efficiency(Eee1, qER) * self.Efficiency_ER(qER) * \
             integrated_delta * self.etaMaxwellian(vmin, vobs, v0bar, vesc)
         r_list_sum = r_list.sum()
-#        print(ER, " ", Eee1, " ", Eee2, " ", r_list_sum)
-#        print(vmin)
-#        print(self.etaMaxwellian(vmin, vobs, v0bar, vesc))
         return r_list_sum
 
     def IntegratedResponseSHM_Other(self, Eee1, Eee2, mx, fp, fn, delta):
-        ''' Integrated Response Function between measured energies Eee1 and Eee2, and all of recoil energies ER.
+        ''' Integrated Response Function between measured energies Eee1 and Eee2,
+        and all of recoil energies ER.
             For any finite resolution function (i.e. other than Dirac Delta).
         '''
         vmax = vesc + vobs
@@ -261,8 +304,6 @@ class Experiment:
                                  if j < vmax else 1.e6, self.mT, vdelta))
         ER_plus = min(np.max(ER_plus_list), self.ERmaximum)
         ER_minus = np.min(ER_minus_list)
-#        print("ER+- = ", ER_minus, " ", ER_plus)
-#        print("Eee = ", Eee1, " ", Eee2)
         midpoints = []
         if ER_minus < Eee1 < ER_plus:
             midpoints += [Eee1]
@@ -270,20 +311,18 @@ class Experiment:
             midpoints += [Eee2]
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Other, ER_minus, ER_plus,
-                                    args=(Eee1, Eee2, mx, fp, fn, delta), points=midpoints, epsrel=PRECISSION, epsabs=0)
-            '''
-            integr = integrate.dblquad(self.DifferentialResponseSHM, ER_minus, ER_plus, \
-                lambda Eee: Eee1, lambda Eee: Eee2, \
-                args=(mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
-            '''
-#            print("midpoints = ", midpoints)
-#            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
+                                    args=(Eee1, Eee2, mx, fp, fn, delta),
+                                    points=midpoints, epsrel=PRECISSION, epsabs=0)
+#            integr = integrate.dblquad(self.DifferentialResponseSHM, ER_minus, ER_plus, \
+#                lambda Eee: Eee1, lambda Eee: Eee2, \
+#                args=(mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
             return integr[0]
         else:
             return 0.
 
     def IntegratedResponseSHM_Dirac(self, Eee1, Eee2, mx, fp, fn, delta):
-        ''' Integrated Response Function between measured energies Eee1 and Eee2, and all of recoil energies ER.
+        ''' Integrated Response Function between measured energies Eee1 and Eee2,
+        and all recoil energies ER.
             For Dirac Delta resolution function.
         '''
         vmax = vesc + vobs
@@ -294,29 +333,39 @@ class Experiment:
                                 if j < vmax else 0., self.mT, vdelta))
         ER_minus_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1)
                                  if j < vmax else 1.e6, self.mT, vdelta))
-#        print("ER_plus_list = ", ER_plus_list)
-#        print(min(np.max(ER_plus_list), self.ERmaximum))
-#        print(Eee2)
         # TODO! This is only valid for quenching factor 1!!! Extend to arbitrary q!
         ER_plus = min(min(np.max(ER_plus_list), self.ERmaximum), Eee2)
         ER_minus = max(np.min(ER_minus_list), Eee1)
-#        print("ER+- = ", ER_minus, " ", ER_plus)
         if ER_minus < ER_plus:
             integr = integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus,
-                                    args=(Eee1, Eee2, mx, fp, fn, delta))  # , vec_func=False
-#            print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
+                                    args=(Eee1, Eee2, mx, fp, fn, delta))
             return integr[0]
         else:
             return 0.
 
 
 class PoissonExperiment(Experiment):
+    ''' This is the class for experiments with Poisson analysis
+    Parameters:
+        expername: string
+            The name of the experiment.
+        scattering_type: string
+            The type of scattering. Can be
+                - 'SI' (spin-independent)
+                - 'SDAV' (spin-independent, axial-vector)
+                - 'SDPS' (spin-independent, pseudo-scalar)
+        mPhi: float, optional
+            The mass of the mediator.
+        quenching_factor: float, optional
+            Quenching factor. If not given, the default is used specified in the data
+            modules.
+    '''
     def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
         Experiment.__init__(self, expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.Expected_limit = module.Expected_limit
 
-    def PoissonUpperBoundSHM(self, mx, fp, fn, delta):
+    def _PoissonUpperBoundSHM(self, mx, fp, fn, delta):
         vmax = vobs + vesc
         muT = self.mT * mx / (self.mT + mx)
         vdelta = SpeedOfLight / 500. * np.sqrt(delta / 2. / muT) if delta > 0 \
@@ -327,10 +376,7 @@ class PoissonExperiment(Experiment):
                                 if j < vmax else 1.e6, self.mT, vdelta))
         Eee_max = np.max(Eee_max_list)
         Eee_min = max(self.Ethreshold, np.min(Eee_min_list))
-#        print("mT = ", self.mT)
-#        print("Eee_min & max = ", Eee_min, " ", Eee_max)
         int_response = self.IntegratedResponseSHM(Eee_min, Eee_max, mx, fp, fn, delta)
-#        print("int_response = ", int_response)
         if int_response > 0:
             result = self.Expected_limit / self.Exposure / int_response
         else:
@@ -340,9 +386,21 @@ class PoissonExperiment(Experiment):
         return result
 
     def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
+        ''' Computes the upper limit in cross-section as a function of DM mass mx.
+            Input:
+                fp, fn: couplings to proton and neutron
+                delta: DM mass split
+                mx_min, mx_max, num_steps: range and number of steps in the DM mass
+                output_file: string, name of output file where the result will be
+                    printed
+            Returns:
+                upperlimit: a table with the first row giving the base-10 log of the
+                    DM mass, and the second row giving the base-10 log of the upper
+                    limit in cross-section.
+        '''
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
         upper_limit = np.array(list(map(lambda mx:
-                               self.PoissonUpperBoundSHM(mx, fp, fn, delta), mx_list)))
+                               self._PoissonUpperBoundSHM(mx, fp, fn, delta), mx_list)))
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
         upper_limit = 1/conversion_factor * mx_list * upper_limit
@@ -354,6 +412,8 @@ class PoissonExperiment(Experiment):
 
 
 class GaussianExperiment(Experiment):
+    ''' This is the class for experiments with Gaussian analysis.
+    '''
     def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
         Experiment.__init__(self, expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
@@ -367,7 +427,7 @@ class GaussianExperiment(Experiment):
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor
 
-    def GaussianUpperBoundSHM(self, mx, fp, fn, delta, output_file):
+    def _GaussianUpperBoundSHM(self, mx, fp, fn, delta, output_file):
         predicted = conversion_factor / mx * \
             np.array(list(map(lambda i, j:
                               self.IntegratedResponseSHM(i, j, mx, fp, fn, delta),
@@ -386,9 +446,12 @@ class GaussianExperiment(Experiment):
         return result
 
     def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
+        ''' Computes the upper limit in cross-section as a function of DM mass mx.
+        '''
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
         upper_limit = np.array(list(map(lambda mx:
-                               self.GaussianUpperBoundSHM(mx, fp, fn, delta, output_file), mx_list))).flatten()
+                               self._GaussianUpperBoundSHM(mx, fp, fn, delta, output_file),
+                               mx_list))).flatten()
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
         result = np.log10(np.transpose([mx_list, upper_limit]))
@@ -396,12 +459,15 @@ class GaussianExperiment(Experiment):
 
 
 class MaxGapExperiment(Experiment):
+    ''' This is the class for experiments using the Maximum Gap Method.
+    '''
     def __init__(self, expername, scattering_type, mPhi=mPhiRef):
         Experiment.__init__(self, expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.ERecoilList = module.ERecoilList
         self.ElistMaxGap = \
-            np.append(np.insert(np.array(list(filter(lambda x: self.Ethreshold < x < self.Emaximum,
+            np.append(np.insert(np.array(list(filter(lambda x:
+                                                     self.Ethreshold < x < self.Emaximum,
                                 self.ERecoilList))), 0, self.Ethreshold), self.Emaximum)
 
     def MaximumGapUpperBoundSHM(self, mx, fp, fn, delta, output_file):
@@ -417,9 +483,8 @@ class MaxGapExperiment(Experiment):
         else:
             mu_over_x = mu_scaled / x_scaled
             y_guess = np.real(-lambertw(-0.1 / mu_over_x, -1))
-#            print("y_guess = ", y_guess)
-            y = fsolve(lambda x: MaximumGapC0scaled(x, mu_over_x) - ConfidenceLevel, y_guess)
-#            print("y = ", y)
+            y = fsolve(lambda x:
+                       MaximumGapC0scaled(x, mu_over_x) - ConfidenceLevel, y_guess)
             result = y / x_scaled / self.Exposure
         print("mx = ", mx, "   mu_over_x = ", mu_over_x)
         print("xtable = ", xtable)
@@ -430,10 +495,13 @@ class MaxGapExperiment(Experiment):
         return result
 
     def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
+        ''' Computes the upper limit in cross-section as a function of DM mass mx.
+        '''
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
         upper_limit = \
             np.array(list(map(lambda mx:
-                     self.MaximumGapUpperBoundSHM(mx, fp, fn, delta, output_file), mx_list))).flatten()
+                     self.MaximumGapUpperBoundSHM(mx, fp, fn, delta, output_file),
+                     mx_list))).flatten()
         upper_limit = 1./conversion_factor * mx_list * upper_limit
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
@@ -442,6 +510,8 @@ class MaxGapExperiment(Experiment):
 
 
 class DAMAExperiment(Experiment):
+    ''' This is the class for finding the best-fit regions for the DAMA experiment.
+    '''
     def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
         Experiment.__init__(self, expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
@@ -465,7 +535,8 @@ class DAMAExperiment(Experiment):
         print("mx = ", mx)
         print("sigma_fit = ", sigma_fit)
         print("max log likelihood = ", log_likelihood_max)
-        to_print = np.hstack((mx, sigma_fit, log_likelihood_max, predicted, self.BinData, self.BinError))
+        to_print = np.hstack((mx, sigma_fit, log_likelihood_max, predicted,
+                              self.BinData, self.BinError))
         with open(output_file, 'ab') as f_handle:
             np.savetxt(f_handle, to_print)
         return to_print
@@ -480,6 +551,8 @@ class DAMAExperiment(Experiment):
 
 
 class DAMATotalRateExperiment(Experiment):
+    ''' This is the class for finding the upper limit due to DAMA total rate.
+    '''
     def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
         Experiment.__init__(self, expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
@@ -491,7 +564,8 @@ class DAMATotalRateExperiment(Experiment):
 
     def RegionSHM(self, mx, fp, fn, delta, output_file):
         predicted = self.Exposure * conversion_factor / mx * \
-            np.array(self.IntegratedResponseSHM(self.BinEdges[0], self.BinEdges[1], mx, fp, fn, delta))
+            np.array(self.IntegratedResponseSHM(self.BinEdges[0], self.BinEdges[1],
+                                                mx, fp, fn, delta))
         sigma_fit = self.BinData[0] / predicted
         print("mx = ", mx)
         print("sigma_fit = ", sigma_fit)

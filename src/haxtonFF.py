@@ -63,7 +63,8 @@ FFSigmaPJ = {(19, 9): np.array([[lambda y: 1.80556 + y * (-4.8508 + y * (4.87922
 
 
 def FFElementQ(Z):
-    ''' Checks if the Haxton Form Factors above have been implemented for the element with atomic number Z.
+    ''' Checks if the Haxton Form Factors above have been implemented for the element
+    with atomic number Z.
         Returns 1 if yes and 0 if not.
     '''
     check = [math.trunc(z) in np.array([9, 11, 32, 53, 54]) for z in Z]

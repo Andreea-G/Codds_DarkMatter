@@ -11,8 +11,8 @@ import numpy as np
 
 class interp1d:
     '''
-    This is based off of scipy.interpolate.interp1d, but lacks most of the checks and robustness
-    of the scipy version.
+    This is based off of scipy.interpolate.interp1d, but lacks most of the checks and
+    robustness of the scipy version.
     It is a bit faster, but must be run correctly (undefined behavior otherwise).
     Input for initialization:
         two numpy.arrays x and y sorted in increasing order by x.

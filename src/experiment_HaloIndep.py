@@ -5,45 +5,75 @@ Created on Sun Mar  1 19:51:42 2015
 @author: Andreea
 """
 
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import print_function
 from experiment import *
 
 
 class Experiment_HaloIndep(Experiment):
+    ''' This is the base class that implements the halo-independent analysis
+    common to all experiments.
+    Parameters:
+        expername: string
+            The name of the experiment.
+        scattering_type: string
+            The type of scattering. Can be
+                - 'SI' (spin-independent)
+                - 'SDAV' (spin-independent, axial-vector)
+                - 'SDPS' (spin-independent, pseudo-scalar)
+        mPhi: float, optional
+            The mass of the mediator.
+    '''
     def __init__(self, expername, scattering_type, mPhi=mPhiRef):
         Experiment.__init__(self, expername, scattering_type, mPhi)
-#        module = import_file(INPUT_DIR + expername + ".py")
         if self.energy_resolution_type == "Dirac":
             self.IntegratedResponse = self.IntegratedResponse_Dirac
         else:
             self.IntegratedResponse = self.IntegratedResponse_Other
 
     def DifferentialResponse(self, Eee, qER, const_factor):
-        ''' Differential response function d**2 R / (d Eee d ER), as a function of measured energy Eee and recoil energy ER,
-         NOT including eta0
+        ''' Differential response function d**2 R / (d Eee d ER)
+            NOT including the velocity integral eta0
+            Input:
+                Eee: measured energy (electron equivalent)
+                qER: q * ER for quenching factor q and recoil energy ER
+                const_factor: factors entering the differential response that do not
+                    depend on Eee
         '''
         self.count_diffresponse_calls += 1
-        r_list = const_factor * self.Efficiency(Eee) * self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
+        r_list = const_factor * self.Efficiency(Eee) * \
+            self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
         return r_list.sum()
 
     def ConstFactor(self, vmin, mx, fp, fn, delta, sign):
-        ''' Collects the factors that don't depend on Eee, so they only need to be computed once in Response fnc
-            Returns a touple of qER and const_factor
+        ''' Collects the factors that don't depend on the measured energy Eee,
+        so they only need to be computed once in Response function.
+            Returns:
+                a touple of ER, qER and const_factor
         '''
         ER = ERecoilBranch(vmin, self.mT, mx, delta, sign)
         q = self.QuenchingFactor(ER)
         qER = q * ER
         efficiencyER = self.Efficiency_ER(ER)
-        const_factor = kilogram/SpeedOfLight**2 * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
+        const_factor = kilogram/SpeedOfLight**2 * \
+            self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
             np.abs(dERecoildVmin(vmin, self.mT, mx, delta, sign)) * efficiencyER
         return (ER, qER, const_factor)
 
     def DifferentialResponse_Full(self, vmin, Eee, mx, fp, fn, delta, sign):
+        ''' Differential response function d**2 R / (d Eee d ER)
+            NOT including the velocity integral eta0
+            Same as DifferentialResponse, but computed given full input parameters,
+        instead of the pre-computed const_factor.
+        '''
         (ER, qER, const_factor) = self.ConstFactor(vmin, mx, fp, fn, delta, sign)
         return self.DifferentialResponse(Eee, qER, const_factor)
 
     def Response_Other(self, vmin, Eee1, Eee2, mx, fp, fn, delta):
-        ''' Response function integral d**2 R / (d Eee d ER) between measured energies Eee1 and Eee2,
-        as a function of recoil energy ER, NOT including eta0.
+        ''' Response function integral d**2 R / (d Eee d ER) between measured energies
+        Eee1 and Eee2.
+        NOT including eta0.
             For any finite resolution function (i.e. other than Dirac Delta).
         '''
         self.count_response_calls += 1
@@ -55,12 +85,14 @@ class Experiment_HaloIndep(Experiment):
         for sign in branches:
             (ER, qER, const_factor) = self.ConstFactor(vmin, mx, fp, fn, delta, sign)
             result += integrate.quad(self.DifferentialResponse, Eee1, Eee2,
-                                     args=(qER, const_factor), epsrel=PRECISSION, epsabs=0)[0]
+                                     args=(qER, const_factor),
+                                     epsrel=PRECISSION, epsabs=0)[0]
         return result
 
     def Response_Dirac(self, vmin, Eee1, Eee2, mx, fp, fn, delta):
-        ''' Response function integral d**2 R / (d Eee d ER) between measured energies Eee1 and Eee2,
-        as a function of recoil energy ER, NOT including eta0.
+        ''' Response function integral d**2 R / (d Eee d ER) between measured energies
+        Eee1 and Eee2,
+        NOT including eta0.
             For Dirac Delta resolution function.
         '''
         self.count_response_calls += 1
@@ -77,9 +109,6 @@ class Experiment_HaloIndep(Experiment):
             efficiencyEee = self.Efficiency(Eee1, qER)
 #            efficiencyER = self.Efficiency_ER(qER)
             efficiencyER = np.array(list(map(self.Efficiency_ER, qER)))
-#            print("ER, q, qER, intdelta, effEee, effER = ", ER, "; ", q, "; ", qER, "; ", integrated_delta, "; ", efficiencyEee, "; ", efficiencyER)
-#            print("CSfactors = ", self.CrossSectionFactors(ER, mx, fp, fn, delta))
-#            print("deriv = ", dERecoildVmin(vmin, self.mT, mx, delta, sign))
             r_list = kilogram/SpeedOfLight**2 * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
                 dERecoildVmin(vmin, self.mT, mx, delta, sign) * \
                 efficiencyEee * efficiencyER * integrated_delta
@@ -87,18 +116,20 @@ class Experiment_HaloIndep(Experiment):
         return r_list_sum
 
     def IntegratedResponse_Other(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
-        ''' Integrated Response Function between measured energies Eee1 and Eee2, and all of recoil energies ER,
+        ''' Integrated Response Function between measured energies Eee1 and Eee2,
+        and all recoil energies ER.
         NOT including eta0.
             For any finite resolution function (i.e. other than Dirac Delta).
         '''
         midpoints = []
         integr = integrate.quad(self.Response_Other, vmin1, vmin2,
-                                args=(Eee1, Eee2, mx, fp, fn, delta), points=midpoints, epsrel=PRECISSION, epsabs=0)
-#        print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
+                                args=(Eee1, Eee2, mx, fp, fn, delta), points=midpoints,
+                                epsrel=PRECISSION, epsabs=0)
         return integr[0]
 
     def IntegratedResponse_Dirac(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
-        ''' Integrated Response Function between measured energies Eee1 and Eee2, and all of recoil energies ER,
+        ''' Integrated Response Function between measured energies Eee1 and Eee2,
+        and all recoil energies ER.
         NOT including eta0.
             For Dirac Delta resolution function.
         '''
@@ -128,12 +159,14 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
         module = import_file(INPUT_DIR + expername + ".py")
         self.ERecoilList = module.ERecoilList
         self.ElistMaxGap = np.append(np.insert(
-            np.array(list(filter(lambda x: self.Ethreshold < x < self.Emaximum, self.ERecoilList))),
+            np.array(list(filter(lambda x: self.Ethreshold < x < self.Emaximum,
+                          self.ERecoilList))),
             0, self.Ethreshold), self.Emaximum)
         print("Emin, Emax = ", self.Ethreshold, " ", self.Emaximum)
         print("elist = ", self.ElistMaxGap)
 
-    def TabulateMaximumGapLimit(self, vmin_min, vmin_max, vmin_step, mx, fp, fn, delta, output_file):
+    def TabulateMaximumGapLimit(self, vmin_min, vmin_max, vmin_step, mx, fp, fn, delta,
+                                output_file):
         vmin_list = np.linspace(vmin_min, vmin_max, (vmin_max - vmin_min)/vmin_step + 1)
         vmin_list0 = np.insert(vmin_list, 0, 0.)
         xtable = np.zeros(self.ElistMaxGap.size - 1)
@@ -141,7 +174,9 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
         for v_index in range(vmin_list.size):
             print("vmin = ", vmin_list[v_index])
             xtable += np.array(list(map(lambda i, j:
-                               self.IntegratedResponse(vmin_list0[v_index], vmin_list[v_index], i, j, mx, fp, fn, delta),
+                               self.IntegratedResponse(vmin_list0[v_index],
+                                                       vmin_list[v_index], i, j, mx,
+                                                       fp, fn, delta),
                                self.ElistMaxGap[:-1], self.ElistMaxGap[1:])))
             mu_scaled = xtable.sum()
             x_scaled = np.max(xtable)
@@ -151,7 +186,8 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
             else:
                 mu_over_x = mu_scaled / x_scaled
                 y_guess = np.real(-lambertw(-0.1 / mu_over_x, -1))
-                y = fsolve(lambda x: MaximumGapC0scaled(x, mu_over_x) - ConfidenceLevel, y_guess)
+                y = fsolve(lambda x: MaximumGapC0scaled(x, mu_over_x) - ConfidenceLevel,
+                           y_guess)
                 result = y / x_scaled / self.Exposure
                 result = result[0]
                 print("vmin = ", vmin_list[v_index], "   mu_over_x = ", mu_over_x)
@@ -164,12 +200,15 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
         return upperlimit_table
 
     def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step, output_file):
-        upper_limit = self.TabulateMaximumGapLimit(vmin_min, vmin_max, vmin_step, mx, fp, fn, delta, output_file)
+        upper_limit = self.TabulateMaximumGapLimit(vmin_min, vmin_max, vmin_step, mx,
+                                                   fp, fn, delta, output_file)
         vmin_list = np.linspace(vmin_min, vmin_max, (vmin_max - vmin_min)/vmin_step + 1)
         print("vmin_list = ", vmin_list)
         print("upper_limit = ", upper_limit)
         result = np.transpose([vmin_list, np.log10(upper_limit)])
         print("res = ", result)
         return result[result[:, 1] != np.inf]
-        upper_limit = np.array([self.TabulateMaximumGapLimit(vmin_list0[i], vmin_list[i], mx, fp, fn, delta, output_file)
+        upper_limit = np.array([self.TabulateMaximumGapLimit(vmin_list0[i], vmin_list[i],
+                                                             mx, fp, fn, delta,
+                                                             output_file)
                                 for i in range(vmin_list.size)]).flatten()

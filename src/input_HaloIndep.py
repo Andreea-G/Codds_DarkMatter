@@ -27,7 +27,8 @@ def Vmin_range(exper_name, mx, delta, mPhi=1000., quenching=None):
 
 
 def Steepness(exper_name, mx, delta, mPhi=1000.):
-    # defaults are (steepness_vmin, steepness_vmin_center, steepness_logeta) = (1.5, 2.5, 1)
+    # defaults are
+    # (steepness_vmin, steepness_vmin_center, steepness_logeta) = (1.5, 2.5, 1)
     if exper_name != "CDMSSi2012":
         return None
     steepness_options = {(9., 0, 1000.): (1., 2.5, 1),
@@ -38,7 +39,8 @@ def Steepness(exper_name, mx, delta, mPhi=1000.):
 
 
 def Logeta_guess(exper_name, mx, delta, mPhi=1000.):
-    # defaults are (steepness_vmin, steepness_vmin_center, steepness_logeta) = (1.5, 2.5, 1)
+    # defaults are
+    # (steepness_vmin, steepness_vmin_center, steepness_logeta) = (1.5, 2.5, 1)
     if exper_name != "CDMSSi2012":
         return None
     logeta_options = {(9., 0, 1000.): -21,
@@ -52,6 +54,7 @@ def Logeta_guess(exper_name, mx, delta, mPhi=1000.):
 input_list = [(9., -0.8, 0., 1000.), (3.5, -0.8, -50, 1000.), (1.3, -0.8, -200, 1000),
               (9., 1, 0, 1000.), (3.5, 1, -50, 1000.)]
 vmin_FoxBand_range = (0, 1000, 60)
-logeta_FoxBand_percent_range = (0.2, 0.2, 30)
+#logeta_FoxBand_percent_range = (0.2, 0.2, 30)
+logeta_FoxBand_percent_range = (0.2, 0.2, 25)
 #vmin_FoxBand_range = (300, 800, 20)
 #logeta_FoxBand_percent_range = (0.2, 0.2, 10)
