@@ -143,15 +143,21 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             for sign in branches:
                 (ER, qER, const_factor) = self.ConstFactor(vmin, mx, fp, fn, delta, sign)
                 v_delta = 0  # TODO! generalize to endothermic
-                diff_resp_list += np.array([self.DifferentialResponse(Eee, qER, const_factor) for Eee in self.ERecoilList])
+                diff_resp_list += np.array([self.DifferentialResponse(Eee, qER, const_factor)
+                                            for Eee in self.ERecoilList])
                 resp += integrate.quad(self.DifferentialResponse, self.Ethreshold, self.Emaximum,
                                        args=(qER, const_factor), epsrel=PRECISSION, epsabs=0)[0]
                 curly_H += np.array([[integrate.quad(self.DifferentialResponse_Full, v_delta, vmin,
                                                      args=(Eee, mx, fp, fn, delta, sign),
-                                                     epsrel=PRECISSION, epsabs=0)[0] for Eee in self.ERecoilList]])
-            xi += self.Exposure * self.IntegratedResponse_Other(vmin_prev, vmin, self.Ethreshold, self.Emaximum, mx, fp, fn, delta)
+                                                     epsrel=PRECISSION, epsabs=0)[0]
+                                      for Eee in self.ERecoilList]])
+            xi += self.Exposure * \
+                self.IntegratedResponse_Other(vmin_prev, vmin,
+                                              self.Ethreshold, self.Emaximum,
+                                              mx, fp, fn, delta)
             vmin_prev = vmin
-            self.diff_response_tab = np.append(self.diff_response_tab, diff_resp_list.transpose(), axis=1)
+            self.diff_response_tab = \
+                np.append(self.diff_response_tab, diff_resp_list.transpose(), axis=1)
             self.response_tab = np.append(self.response_tab, [resp], axis=0)
             self.curly_H_tab = np.append(self.curly_H_tab, curly_H.transpose(), axis=1)
             self.xi_tab = np.append(self.xi_tab, [xi], axis=0)
@@ -286,11 +292,11 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             if np.any(constr_not_valid):
                 constr_list = constraints[constr_not_valid]
                 if DEBUG_FULL:
-                    print("Constraints not valid!!********************************************************************************")
+                    print("Constraints not valid!!")
                     print("constr sum = ", -constr_list.sum())
                 return min(max(-constr_list.sum(), 0.001) * 1e6, 1e6)
             else:
-                print("What just happened???????????????????????????????????????????????????????????????????????????????")
+                print("Unknown error!!!")
                 return self.MinusLogLikelihood(vars_list, vminStar=vminStar,
                                                logetaStar=logetaStar,
                                                vminStar_index=vminStar_index)
@@ -512,7 +518,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 minimizer_kwargs = {"constraints": constr, "args": args}
 
             if DEBUG and sol_not_found:
-                print(attempts, " attempts left! ####################################################################################################")
+                print(attempts, " attempts left! ####################################" +
+                      "################################################################")
 #                os.system("say Error");
 #                os.system("say " + str(attempts) + " attempts left")
                 print("sol_not_found = ", sol_not_found)
@@ -565,7 +572,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 if new_optimum.fun < optim_logL:
                     os.system("say Moved left")
                     print("Moved left, index is now ", index)
-                    print("#################################################################################################################################################")
+                    print("############################################################" +
+                          "############################################################")
                     vminStar_index = index
                     constr_optimum_log_likelihood = new_optimum
                     optim_logL = constr_optimum_log_likelihood.fun
@@ -581,7 +589,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 if new_optimum.fun < optim_logL:
                     os.system("say Moved right")
                     print("Moved right, index is now ", index)
-                    print("#################################################################################################################################################")
+                    print("############################################################" +
+                          "############################################################")
                     vminStar_index = index
                     constr_optimum_log_likelihood = new_optimum
                     optim_logL = constr_optimum_log_likelihood.fun
