@@ -69,8 +69,11 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, plot_dots=True, plot_clo
 def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                 RUN_PROGRAM, MAKE_PLOT, HALO_DEP, FOX_METHOD,
                 mx=None, mx_range=None, vmin_range=None,
-                vmin_FoxBand_range=None, logeta_FoxBand_percent_range=None, steepness=None, logeta_guess=None,
-                filename_tail="", OUTPUT_MAIN_DIR="Output/", plot_dots=True, quenching=None):
+                vmin_FoxBand_range=None, logeta_FoxBand_percent_range=None,
+                steepness=None, logeta_guess=None,
+                vmin_index_list=None, logeta_index_range=None,
+                filename_tail="", OUTPUT_MAIN_DIR="Output/", extra_tail="",
+                plot_dots=True, quenching=None):
     ''' Main run of the program.
         Input:
             exper_name: name of experiment
@@ -87,10 +90,15 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
             vmin_range: (vmin_min, vmin_max, vmin_step) = vmin range and step size, only for halo-independent
             vmin_FoxBand_range: (vmin_Fox_min, vmin_Fox_max, vmin_Fox_numsteps) = vmin range and number of steps,
                 used for calculating the Fox band.
-            logeta_FoxBand_range: (logeta_Fox_min, logeta_Fox_max, logeta_Fox_numsteps) = logeta range and number of steps,
-                used for calculating the Fox band.
+            logeta_FoxBand_percent_range: (logeta_Fox_percent_min, logeta_Fox_percent_max, logeta_Fox_numsteps)
+                = logeta percentage range and number of steps, used for calculating the Fox band.
+                The min and max logeta are calculated as a given percentage above and below the optimum value.
+            steepness: (steepness_vmin, steepness_vmin_center, steepness_logeta), parameters used for nonlinear
+                sampling in vminStar and logetaStar. The higher the steepnesses the more points are taken close
+                to the optimum values in vminStar and logetaStar.
             filename_tail: optional tag to be added to the file name
             OUTPUT_MAIN_DIR: name of main output directory, if different from "Output/"
+            extra_tail: additional tail to be added to filenames for the Fox band.
             plot_dots: True or False, whether the plot should show the data points or just the interpolation
             quenching: quenching factor, needed for experiments that can have multiple options (such as KIMS or DAMA).
     '''
@@ -229,7 +237,9 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                           vmin_band_max, " ", vmin_num_steps)
                     print("logeta_FoxBand_percent_range = ", logeta_percent_minus, " ",
                           logeta_percent_plus, " ", logeta_num_steps)
-                    exper.LogLikelihoodList(output_file_no_extension)
+                    exper.LogLikelihoodList(output_file_no_extension, extra_tail=extra_tail,
+                                            vmin_index_list=vmin_index_list,
+                                            logeta_index_range=logeta_index_range)
                 if FOX_METHOD[6]:
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     interpolation_order = 2
@@ -238,7 +248,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                                       interpolation_order)
                 if FOX_METHOD[7]:
                     exper.ImportOptimalLikelihood(output_file_no_extension)
-                    exper.ImportFoxBand(output_file_no_extension)
+                    exper.ImportFoxBand(output_file_no_extension, extra_tail)
 
         if HALO_DEP or not np.any(FOX_METHOD):
             print("upper_limit = ", upper_limit)

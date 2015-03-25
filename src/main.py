@@ -52,8 +52,16 @@ def main():
     filename_tail_list = ["_jump_smooth"]
     OUTPUT_MAIN_DIR = "../OutputH/"
 
+    extra_tail = "_junk"
+    vmin_index_list = np.array([1])
+    logeta_index_range = np.array([3, 4])
+
+#    extra_tail = "-lin"
+#    vmin_index_list = None
+#    logeta_index_range = None
+
     try:
-        plt.show()
+        plt.close()
 
         if HALO_INDEP:
             for exper_name in exper_list:
@@ -70,7 +78,9 @@ def main():
                                         logeta_FoxBand_percent_range=logeta_FoxBand_percent_range,
                                         steepness=Steepness(exper_name, mx, delta, mPhi),
                                         logeta_guess=Logeta_guess(exper_name, mx, delta, mPhi),
-                                        filename_tail=filename_tail,
+                                        vmin_index_list=vmin_index_list,
+                                        logeta_index_range=logeta_index_range,
+                                        filename_tail=filename_tail, extra_tail=extra_tail,
                                         OUTPUT_MAIN_DIR=OUTPUT_MAIN_DIR,
                                         plot_dots=plot_dots, quenching=quenching)
 

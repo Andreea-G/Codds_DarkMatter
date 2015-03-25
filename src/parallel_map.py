@@ -11,7 +11,7 @@ def fun(f, q_in, q_out):
         i, x = q_in.get()
         if i is None:
             break
-        print(i)
+        print("process #", i)
         q_out.put((i, f(x)))
 
 

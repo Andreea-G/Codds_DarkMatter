@@ -82,7 +82,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             Type of minimization solver to be passed as a parameter to the minimization
                 routine. Can be 'SLSQP' or 'COBYLA'
     '''
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef, mehod='SLSQP'):
+    def __init__(self, expername, scattering_type, mPhi=mPhiRef, method='SLSQP'):
         Experiment_HaloIndep.__init__(self, expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.ERecoilList = module.ERecoilList
@@ -296,10 +296,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                     print("constr sum = ", -constr_list.sum())
                 return min(max(-constr_list.sum(), 0.001) * 1e6, 1e6)
             else:
-                print("Unknown error!!!")
-                return self.MinusLogLikelihood(vars_list, vminStar=vminStar,
-                                               logetaStar=logetaStar,
-                                               vminStar_index=vminStar_index)
+                print("Error!!")
+                raise
 
     def OptimalLikelihood(self, output_file_tail, logeta_guess=-24):
         self.ImportResponseTables(output_file_tail, plot=False)
@@ -863,19 +861,22 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         index = kwargs['index']
         output_file_tail = kwargs['output_file_tail']
         logeta_index_range = kwargs['logeta_index_range']
+        extra_tail = kwargs['extra_tail']
         print("index = ", index)
         print("output_file_tail = ", output_file_tail)
         vminStar = self.vmin_logeta_sampling_table[index, 0, 0]
         logetaStar_list = self.vmin_logeta_sampling_table[index, :, 1]
+        plot = False
         if logeta_index_range is not None:
             logetaStar_list = \
                 logetaStar_list[logeta_index_range[0]: logeta_index_range[1]]
+            plot = True
         print("vminStar = ", vminStar)
         table = np.empty((0, 2))
         for logetaStar in logetaStar_list:
             try:
                 constr_opt = self.ConstrainedOptimalLikelihood(vminStar, logetaStar,
-                                                               plot=False)
+                                                               plot=plot)
             except:
                 print("error")
                 os.system("say Error")
@@ -887,13 +888,13 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
 #                table = np.append(table, [logetaStar])
         print("vminStar = ", vminStar, "; table = ", table)
         if True:
-            temp_file = output_file_tail + '_' + str(index) + \
-                '_LogetaStarLogLikelihoodList_lin.dat'
+            temp_file = output_file_tail + "_" + str(index) + \
+                "_LogetaStarLogLikelihoodList" + extra_tail + ".dat"
             print(temp_file)
             np.savetxt(temp_file, table)
         return
 
-    def LogLikelihoodList(self, output_file_tail, processes=None,
+    def LogLikelihoodList(self, output_file_tail, extra_tail="", processes=None,
                           vmin_index_list=None, logeta_index_range=None):
         ''' Loops thorugh the list of all vminStar and calls GetLikelihoodTable,
         which will print the likelihood tables to files.
@@ -909,9 +910,12 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         '''
         if vmin_index_list is None:
             vmin_index_list = range(0, self.vmin_logeta_sampling_table.shape[0])
+        print("vmin_index_list = ", vmin_index_list)
+        print("logeta_index_range = ", logeta_index_range)
         kwargs = ({'index': index,
                    'output_file_tail': output_file_tail,
-                   'logeta_index_range': logeta_index_range}
+                   'logeta_index_range': logeta_index_range,
+                   'extra_tail': extra_tail}
                   for index in vmin_index_list)
         par.parmap(self.GetLikelihoodTable, kwargs, processes)
         return
@@ -923,7 +927,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             return -constr_list.sum() * 10**2
         return logL_interp(vars_list)
 
-    def FoxBand(self, output_file_tail, delta_logL, interpolation_order,
+    def FoxBand(self, output_file_tail, delta_logL, interpolation_order, extra_tail="",
                 multiplot=True, plot=True):
         print("self.vmin_sampling_list = ", self.vmin_sampling_list)
         self.vmin_logeta_band_low = []
@@ -937,7 +941,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             logeta_optim = self.OptimumStepFunction(min(self.vmin_sampling_list[index],
                                                         vmin_last_step))
             file = output_file_tail + "_" + str(index) + \
-                "_LogetaStarLogLikelihoodList_lin.dat"
+                "_LogetaStarLogLikelihoodList" + extra_tail + "_lin.dat"
             try:
                 with open(file, 'r') as f_handle:
                     table = np.loadtxt(f_handle)
