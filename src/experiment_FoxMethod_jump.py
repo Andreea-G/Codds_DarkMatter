@@ -12,7 +12,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 from experiment_HaloIndep import *
 import interp_uniform as unif
-from interp import interp1d
+#from interp import interp1d
+from scipy import interpolate
 from scipy.optimize import brentq, minimize
 from basinhopping import *
 import matplotlib.pyplot as plt
@@ -919,7 +920,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 continue
             x = table[:, 0]   # this is logeta
             y = table[:, 1]   # this is logL
-            logL_interp = interp1d(x, y)
+            logL_interp = interpolate.interp1d(x, y, kind='cubic')
 
             def _logL_interp(vars_list, constraints):
                 constr_not_valid = constraints(vars_list)[:-1] < 0
@@ -939,12 +940,12 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             constr = ({'type': 'ineq', 'fun': constr_func})
             try:
                 logeta_minimLogL = minimize(_logL_interp, np.array([logeta_optim]),
-                                            args=(constr_func,), constraints=constr).x
+                                            args=(constr_func,), constraints=constr).x[0]
             except ValueError:
                 print("ValueError at logeta_minimLogL")
-                logeta_minimLogL = self.optimal_logL
+                logeta_minimLogL = logeta_optim
                 pass
-            print(logeta_minimLogL)
+            print("logeta_minimLogL = ", logeta_minimLogL)
 
             print("x = ", x)
             print("y = ", y)
@@ -959,29 +960,36 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 plt.ylim(-5, 20)
                 plt.show()
 
+            error = F
             try:
                 if y[0] > self.optimal_logL + delta_logL and \
                         logeta_minimLogL < self.optimal_logL + delta_logL:
-                    self.vmin_logeta_band_low += \
-                        [[self.vmin_sampling_list[index],
-                          brentq(lambda logeta: logL_interp(logeta) - self.optimal_logL -
+                    sol = brentq(lambda logeta: logL_interp(logeta) - self.optimal_logL -
                                  delta_logL,
-                                 table[0, 0], logeta_minimLogL)]]
+                                 table[0, 0], logeta_minimLogL)
+                    self.vmin_logeta_band_low += \
+                        [[self.vmin_sampling_list[index], sol]]
+            except ValueError:
+                print("ValueError: Error in calculating vmin_logeta_band_low")
+                error = T
+            try:
                 if y[-1] > self.optimal_logL + delta_logL and \
                         logeta_minimLogL < self.optimal_logL + delta_logL:
-                    print("a, b: ", logeta_optim, " ", table[-1, 0])
-                    print("f: ", logL_interp(logeta_optim) - self.optimal_logL - delta_logL,
-                          " ", logL_interp(table[-1, 0]) - self.optimal_logL - delta_logL)
-                    self.vmin_logeta_band_up += \
-                        [[self.vmin_sampling_list[index],
-                          brentq(lambda logeta: logL_interp(logeta) - self.optimal_logL -
+                    sol = brentq(lambda logeta: logL_interp(logeta) - self.optimal_logL -
                                  delta_logL,
-                                 logeta_minimLogL, table[-1, 0])]]
+                                 logeta_minimLogL, table[-1, 0])
+                    self.vmin_logeta_band_up += \
+                        [[self.vmin_sampling_list[index], sol]]
             except ValueError:
+                print("ValueError: Error in calculating vmin_logeta_band_hi")
+                error = T
+
+            if error:
                 plt.close()
                 plt.plot(x, (self.optimal_logL + 1) * np.ones_like(y))
                 plt.plot(x, (self.optimal_logL + 4) * np.ones_like(y))
-                plt.title("v_min = " + str(self.vmin_sampling_list[index]) + "km/s")
+                plt.title("index = " + str(index) + "; v_min = " +
+                          str(self.vmin_sampling_list[index]) + "km/s")
                 plt.xlim(x[0], x[-1])
                 plt.ylim([-5, 20])
                 plt.plot(x, y, 'o-', color="r")
@@ -991,8 +999,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 plt.show()
 #                raise
                 pass
-            finally:
-                None
+
         if multiplot:
             plt.show()
 
@@ -1024,7 +1031,6 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         except IndexError:
             pass
         self.PlotOptimum(ylim_percentage=(1.2, 0.8), plot_close=F, plot_show=T)
-
 
     def ImportFoxBand(self, output_file_tail):
         file = output_file_tail + "_FoxBand_low.dat"
