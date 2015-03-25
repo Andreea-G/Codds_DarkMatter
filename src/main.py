@@ -90,7 +90,7 @@ def main():
                     for (fn, delta, mPhi) in input_list[0:1]:
                         for quenching in quenching_list.get(exper_name, [None]):
                             (mx_min, mx_max, num_steps) = \
-                            DM_mass_range(exper_name, delta, mPhi, quenching)
+                                DM_mass_range(exper_name, delta, mPhi, quenching)
                             print(mx_min, " ", mx_max, " ", num_steps)
                             run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                                         RUN_PROGRAM, MAKE_PLOT, HALO_DEP, FOX_METHOD,
