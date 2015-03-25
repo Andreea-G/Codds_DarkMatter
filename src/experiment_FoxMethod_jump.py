@@ -1039,5 +1039,4 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         file = output_file_tail + "_FoxBand_up.dat"
         with open(file, 'r') as f_handle:
             self.vmin_logeta_band_up = np.loadtxt(f_handle)
-        self.PlotBand()
         return

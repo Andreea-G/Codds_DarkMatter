@@ -13,7 +13,8 @@ from experiment_FoxMethod_jump import *
 import matplotlib.pyplot as plt
 
 
-def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, plot_dots=True, plot_close=True, plot_show=True):
+def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, kind=None,
+                     plot_dots=True, plot_close=True, plot_show=True):
     ''' Make plots for the upper limits.
         Input:
             exper_name = name of experiment
@@ -41,9 +42,9 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, plot_dots=True, plot_clo
         x = upper_limit[:, 0]
         y = upper_limit[:, 1]
         num_points = x.size
-        if num_points == 2:
+        if num_points == 2 or kind == "linear":
             interp_kind = "linear"
-        elif num_points == 3:
+        elif num_points == 3 or kind == "quadratic":
             interp_kind = "quadratic"
         else:
             interp_kind = "cubic"
@@ -54,7 +55,7 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, plot_dots=True, plot_clo
         plt.plot(x1, interp(x1))
 
     # set axis labels, depending on whether it is for halo-dependent or not
-    if HALO_DEP:
+    if HALO_DEP is True:
         plt.xlabel('Log10(m [GeV])')
         plt.ylabel('Log10(sigma)')
     else:
@@ -246,9 +247,6 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                     for delta_logL in [4]:
                         exper.FoxBand(output_file_no_extension, delta_logL,
                                       interpolation_order, extra_tail=extra_tail)
-                if FOX_METHOD[7]:
-                    exper.ImportOptimalLikelihood(output_file_no_extension)
-                    exper.ImportFoxBand(output_file_no_extension)
 
         if HALO_DEP or not np.any(FOX_METHOD):
             print("upper_limit = ", upper_limit)
@@ -265,3 +263,17 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
         print("upper_limit = ", upper_limit)
         Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, plot_dots, plot_close=False,
                          plot_show=False)
+
+    # make band plot
+    if FOX_METHOD[7]:
+        output_file = output_file_no_extension + ".dat"
+        exper.ImportOptimalLikelihood(output_file_no_extension)
+        exper.ImportFoxBand(output_file_no_extension)
+        interp_kind = None
+        Plot_Upper_Limit(exper_name, exper.vmin_logeta_band_low, HALO_DEP,
+                         kind=interp_kind,
+                         plot_dots=plot_dots, plot_close=False, plot_show=False)
+        Plot_Upper_Limit(exper_name, exper.vmin_logeta_band_up, HALO_DEP,
+                         kind=interp_kind,
+                         plot_dots=plot_dots, plot_close=False, plot_show=False)
+        exper.PlotOptimum(ylim_percentage=(1.2, 0.8), plot_close=False, plot_show=False)
