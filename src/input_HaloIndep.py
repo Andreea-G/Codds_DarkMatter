@@ -55,6 +55,7 @@ input_list = [(9., -0.8, 0., 1000.), (3.5, -0.8, -50, 1000.), (1.3, -0.8, -200, 
               (9., 1, 0, 1000.), (3.5, 1, -50, 1000.)]
 vmin_FoxBand_range = (0, 1000, 60)
 #logeta_FoxBand_percent_range = (0.2, 0.2, 30)
-logeta_FoxBand_percent_range = (0.2, 0.2, 25)
+#logeta_FoxBand_percent_range = (0.2, 0.2, 25)
+logeta_FoxBand_percent_range = (0.2, 0.2, 40)
 #vmin_FoxBand_range = (300, 800, 20)
 #logeta_FoxBand_percent_range = (0.2, 0.2, 10)

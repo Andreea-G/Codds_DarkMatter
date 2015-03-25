@@ -245,10 +245,10 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                     interpolation_order = 2
                     for delta_logL in [4]:
                         exper.FoxBand(output_file_no_extension, delta_logL,
-                                      interpolation_order)
+                                      interpolation_order, extra_tail=extra_tail)
                 if FOX_METHOD[7]:
                     exper.ImportOptimalLikelihood(output_file_no_extension)
-                    exper.ImportFoxBand(output_file_no_extension, extra_tail)
+                    exper.ImportFoxBand(output_file_no_extension)
 
         if HALO_DEP or not np.any(FOX_METHOD):
             print("upper_limit = ", upper_limit)

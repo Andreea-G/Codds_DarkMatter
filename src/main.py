@@ -52,13 +52,13 @@ def main():
     filename_tail_list = ["_jump_smooth"]
     OUTPUT_MAIN_DIR = "../OutputH/"
 
-    extra_tail = "_junk"
-    vmin_index_list = np.array([1])
-    logeta_index_range = np.array([3, 4])
+#    extra_tail = "_junk"
+#    vmin_index_list = np.array([1])
+#    logeta_index_range = np.array([3, 4])
 
-#    extra_tail = "-lin"
-#    vmin_index_list = None
-#    logeta_index_range = None
+    extra_tail = "_lin1"
+    vmin_index_list = None
+    logeta_index_range = None
 
     try:
         plt.close()

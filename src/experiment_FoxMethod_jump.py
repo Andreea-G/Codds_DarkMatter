@@ -22,6 +22,7 @@ import parallel_map as par
 DEBUG = F
 DEBUG_FULL = F
 USE_BASINHOPPING = T
+ADAPT_KWARGS = F
 ALLOW_MOVE = T
 
 
@@ -52,6 +53,7 @@ class ConstraintsFunction(object):
         '''
         constraints = np.concatenate([x[:x.size/2], self.vmin_max - x[:x.size/2], -x[x.size/2:],
                                       np.diff(x[:x.size/2]), np.diff(-x[x.size/2:]),
+                                      (x[:x.size/2] - self.vminStar) * (-x[x.size/2:] + self.logetaStar),
                                       self.vminStar - x[:self.vminStar_index],
                                       x[self.vminStar_index: x.size/2] - self.vminStar,
                                       x[x.size/2: x.size/2 + self.vminStar_index] - self.logetaStar,
@@ -404,10 +406,9 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                                plot_close=True, plot_show=True):
         self.PlotStepFunction(self.optimal_vmin, self.optimal_logeta,
                               plot_close=plot_close, plot_show=False)
-        self.PlotStepFunction(np.insert(self.constr_optimal_vmin,
-                                        vminStar_index, vminStar),
-                              np.insert(self.constr_optimal_logeta,
-                                        vminStar_index, logetaStar),
+        x = np.insert(self.constr_optimal_vmin, vminStar_index, vminStar)
+        y = np.insert(self.constr_optimal_logeta, vminStar_index, logetaStar)
+        self.PlotStepFunction(x, y,
                               xlim_percentage=xlim_percentage,
                               ylim_percentage=ylim_percentage,
                               plot_close=False, plot_show=False, mark='x', color='k')
@@ -484,7 +485,10 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                     return new_kwargs
 
             minimizer_kwargs = {"constraints": constr, "args": args, "method": self.method}
-            adapt_kwargs = AdaptiveKwargs(minimizer_kwargs, random_variation)
+            if ADAPT_KWARGS:
+                adapt_kwargs = AdaptiveKwargs(minimizer_kwargs, random_variation)
+            else:
+                adapt_kwargs = None
 
         while sol_not_found and attempts > 0:
             try:
@@ -630,45 +634,11 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 sol_not_found = np.any(constr_not_valid)
                 print("random vminStar = ", vminStar_rand)
                 print("random logetaStar = ", logetaStar_rand)
+                print("x = ", constr_optimum_log_likelihood.x)
                 print("constraints = ", constraints)
                 print("is_not_close = ", is_not_close)
                 print("constr_not_valid = ", constr_not_valid)
                 print("sol_not_found = ", sol_not_found)
-
-                x = constr_optimum_log_likelihood.x
-                print("original star vars:")
-                print("for index = 1: ",
-                      self.MinusLogLikelihood(x, vminStar=vminStar,
-                                              logetaStar=logetaStar, vminStar_index=1))
-                constr_func = ConstraintsFunction(vminStar, logetaStar, 1)
-                print("constraints are ", constr_func(x, close=F) >= 0)
-                print("for index = 2: ",
-                      self.MinusLogLikelihood(x, vminStar=vminStar,
-                                              logetaStar=logetaStar, vminStar_index=2))
-                constr_func = ConstraintsFunction(vminStar, logetaStar, 2)
-                print("constraints are ", constr_func(x, close=F) >= 0)
-                x[1] = vminStar * (1 - 1e-6)
-                print("for index = 2*: ",
-                      self.MinusLogLikelihood(x, vminStar=vminStar,
-                                              logetaStar=logetaStar, vminStar_index=2))
-                constr_func = ConstraintsFunction(vminStar, logetaStar, 2)
-                print("constraints are ", constr_func(x, close=F) >= 0)
-                print("vmin[1] = ", x[1])
-
-                x = constr_optimum_log_likelihood.x
-                print("random star vars:")
-                print("for index = 1: ",
-                      self.MinusLogLikelihood(x, vminStar=vminStar_rand,
-                                              logetaStar=logetaStar_rand,
-                                              vminStar_index=1))
-                constr_func = ConstraintsFunction(vminStar_rand, logetaStar_rand, 1)
-                print("constraints are ", constr_func(x, close=F) >= 0)
-                print("for index = 2: ",
-                      self.MinusLogLikelihood(x, vminStar=vminStar_rand,
-                                              logetaStar=logetaStar_rand,
-                                              vminStar_index=2))
-                constr_func = ConstraintsFunction(vminStar_rand, logetaStar_rand, 2)
-                print("constraints are ", constr_func(x, close=F) >= 0)
             except:
                 print("Error")
                 pass
@@ -941,18 +911,12 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             logeta_optim = self.OptimumStepFunction(min(self.vmin_sampling_list[index],
                                                         vmin_last_step))
             file = output_file_tail + "_" + str(index) + \
-                "_LogetaStarLogLikelihoodList" + extra_tail + "_lin.dat"
+                "_LogetaStarLogLikelihoodList" + extra_tail + ".dat"
             try:
                 with open(file, 'r') as f_handle:
                     table = np.loadtxt(f_handle)
             except:
-                file = output_file_tail + "_" + str(index) + \
-                    "_LogetaStarLogLikelihoodList.dat"
-                try:
-                    with open(file, 'r') as f_handle:
-                        table = np.loadtxt(f_handle)
-                except:
-                    continue
+                continue
             x = table[:, 0]   # this is logeta
             y = table[:, 1]   # this is logL
             logL_interp = interp1d(x, y)
@@ -1038,10 +1002,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         print("lower band: ", self.vmin_logeta_band_low)
         print("upper band: ", self.vmin_logeta_band_up)
 
-        plt.close()
-        plt.plot(self.vmin_logeta_band_low[:, 0], self.vmin_logeta_band_low[:, 1], 'o-')
-        plt.plot(self.vmin_logeta_band_up[:, 0], self.vmin_logeta_band_up[:, 1], 'o-')
-        self.PlotOptimum(ylim_percentage=(1.2, 0.8), plot_close=F, plot_show=T)
+        self.PlotBand()
 
         file = output_file_tail + "_FoxBand_low.dat"
         print(file)
@@ -1052,6 +1013,19 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
 
         return
 
+    def PlotBand(self):
+        plt.close()
+        try:
+            plt.plot(self.vmin_logeta_band_low[:, 0], self.vmin_logeta_band_low[:, 1], 'o-')
+        except IndexError:
+            pass
+        try:
+            plt.plot(self.vmin_logeta_band_up[:, 0], self.vmin_logeta_band_up[:, 1], 'o-')
+        except IndexError:
+            pass
+        self.PlotOptimum(ylim_percentage=(1.2, 0.8), plot_close=F, plot_show=T)
+
+
     def ImportFoxBand(self, output_file_tail):
         file = output_file_tail + "_FoxBand_low.dat"
         with open(file, 'r') as f_handle:
@@ -1059,8 +1033,5 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         file = output_file_tail + "_FoxBand_up.dat"
         with open(file, 'r') as f_handle:
             self.vmin_logeta_band_up = np.loadtxt(f_handle)
-        plt.close()
-        plt.plot(self.vmin_logeta_band_low[:, 0], self.vmin_logeta_band_low[:, 1], 'o-')
-        plt.plot(self.vmin_logeta_band_up[:, 0], self.vmin_logeta_band_up[:, 1], 'o-')
-        self.PlotOptimum(ylim_percentage=(1.2, 0.8), plot_close=F, plot_show=T)
+        self.PlotBand()
         return
