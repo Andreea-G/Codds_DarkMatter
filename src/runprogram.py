@@ -275,6 +275,9 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
     if FOX_METHOD[7]:
         output_file = output_file_no_extension + ".dat"
         exper.ImportOptimalLikelihood(output_file_no_extension)
+        if FOX_METHOD[4]:
+            exper.PlotSamplingTable(output_file_no_extension,
+                                    plot_close=False, plot_show=False, plot_optimum=False)
         interp_kind = 'linear'
         try:
             len(delta_logL)

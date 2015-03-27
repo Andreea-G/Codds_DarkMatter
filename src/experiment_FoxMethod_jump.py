@@ -797,19 +797,21 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.vmin_logeta_sampling_table = np.array(self.vmin_logeta_sampling_table)
 
         if plot:
-            print("sampling_size = ", self.vmin_logeta_sampling_table.shape)
-            plt.close()
-            for tab in self.vmin_logeta_sampling_table:
-                plt.plot(tab[:, 0], tab[:, 1], 'o')
-            self.PlotOptimum(xlim_percentage=(0.9, 1.1), ylim_percentage=(1.2, 0.8),
-                             plot_close=False, plot_show=True)
+            self.PlotSamplingTable(output_file_tail, plot_close=True)
         return
 
-    def ImportSamplingTable(self, output_file_tail):
-        self.ImportOptimalLikelihood(output_file_tail)
-        file = output_file_tail + "_vminLogetaSamplingTable.dat"
-        with open(file, 'r') as f_handle:
-            self.vmin_logeta_sampling_table = np.loadtxt(f_handle)
+    def PlotSamplingTable(self, output_file_tail, plot_close=False, plot_show=True,
+                          plot_optimum=True):
+        if plot_close:
+            plt.close()
+        print("sampling_size = ", self.vmin_logeta_sampling_table.shape)
+        for tab in self.vmin_logeta_sampling_table:
+            plt.plot(tab[:, 0], tab[:, 1], 'o')
+        if plot_optimum:
+            self.PlotOptimum(xlim_percentage=(0.9, 1.1), ylim_percentage=(1.2, 0.8),
+                             plot_close=False, plot_show=plot_show)
+        elif plot_show:
+            plt.show()
         return
 
     def GetLikelihoodTable(self, kwargs):

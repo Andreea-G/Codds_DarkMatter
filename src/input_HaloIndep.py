@@ -49,13 +49,19 @@ def Logeta_guess(exper_name, mx, delta, mPhi=1000.):
                       }
     return logeta_options[(mx, delta, mPhi)]
 
+def Vmin_FoxBand_range(exper_name, mx, delta, mPhi=1000.):
+    # defaults are
+    # (steepness_vmin, steepness_vmin_center, steepness_logeta) = (1.5, 2.5, 1)
+    if exper_name != "CDMSSi2012":
+        return None
+    options = {(9., 0, 1000.):(0, 1000, 100),
+               (3.5, -50, 1000.): (0, 1000, 80),
+               (1.3, -200, 1000.): (0, 1000, 80),
+                      }
+    return options[(mx, delta, mPhi)]
+
 
 # input of the form (mx, fn, delta, mPhi)
 input_list = [(9., -0.8, 0., 1000.), (3.5, -0.8, -50, 1000.), (1.3, -0.8, -200, 1000),
               (9., 1, 0, 1000.), (3.5, 1, -50, 1000.)]
-vmin_FoxBand_range = (0, 1000, 60)
-#logeta_FoxBand_percent_range = (0.2, 0.2, 30)
-#logeta_FoxBand_percent_range = (0.2, 0.2, 25)
-logeta_FoxBand_percent_range = (0.2, 0.2, 40)
-#vmin_FoxBand_range = (300, 800, 20)
-#logeta_FoxBand_percent_range = (0.2, 0.2, 10)
+logeta_FoxBand_percent_range = (0.2, 0.2, 50)

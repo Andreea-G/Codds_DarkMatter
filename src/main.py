@@ -72,6 +72,8 @@ def main():
                         for quenching in quenching_list.get(exper_name, [None]):
                             (vmin_start, vmin_end, vmin_step) = \
                                 Vmin_range(exper_name, mx, delta, mPhi, quenching)
+                            vmin_FoxBand_range = \
+                                Vmin_FoxBand_range(exper_name, mx, delta, mPhi)
                             print(vmin_start, " ", vmin_end, " ", vmin_step)
                             run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                                         RUN_PROGRAM, MAKE_PLOT, HALO_DEP, FOX_METHOD,
