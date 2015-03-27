@@ -275,7 +275,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
     if FOX_METHOD[7]:
         output_file = output_file_no_extension + ".dat"
         exper.ImportOptimalLikelihood(output_file_no_extension)
-        interp_kind = 'linear'
+        interp_kind = 'cubic'
 
         exper.PlotSamplingTable(output_file_no_extension,
                                 plot_close=False, plot_show=False, plot_optimum=False)
@@ -284,12 +284,11 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
         except TypeError:
             delta_logL = [delta_logL]
         for d_logL in delta_logL:
-            exper.ImportFoxBand(output_file_no_extension, d_logL, extra_tail=extra_tail)
+            exper.ImportFoxBand(output_file_no_extension, d_logL)
             Plot_Upper_Limit(exper_name, exper.vmin_logeta_band_low, HALO_DEP,
                              kind=interp_kind,
                              plot_dots=plot_dots, plot_close=False, plot_show=False)
             Plot_Upper_Limit(exper_name, exper.vmin_logeta_band_up, HALO_DEP,
                              kind=interp_kind,
                              plot_dots=plot_dots, plot_close=False, plot_show=False)
-        exper.PlotOptimum(ylim_percentage=(1.2, 0.8), plot_close=False, plot_show=False,
-                          linewidth=3)
+        exper.PlotOptimum(ylim_percentage=(1.2, 0.8), plot_close=False, plot_show=False)
