@@ -22,7 +22,7 @@ def main():
     scattering_type = 'SI'
     fp = 1.
 
-    plot_dots = T
+    plot_dots = F
     RUN_PROGRAM = T
     MAKE_PLOT = F
     HALO_DEP = F
@@ -35,7 +35,7 @@ def main():
 #    FOX_METHOD = [F, F, F, F, T, F, F, F]     # VminLogetaSamplingTable
 #    FOX_METHOD = [F, F, F, F, F, T, F, F]     # LogLikelihoodList
     FOX_METHOD = [F, F, F, F, F, F, T, F]     # FoxBand
-#    FOX_METHOD = [F, F, F, F, F, F, F, T]     # FoxBandPlot
+#    FOX_METHOD = [F, F, F, F, T, F, F, T]     # FoxBandPlot
 
     qKIMS_list = [0.05, 0.1]
     qDAMANa_list = [0.4, 0.3]
@@ -50,15 +50,17 @@ def main():
     exper_list = [implemented_exper[i] for i in [14]]
 #    exper_list = implemented_exper
     filename_tail_list = ["_jump_smooth"]
-    OUTPUT_MAIN_DIR = "../OutputH/"
+    OUTPUT_MAIN_DIR = "../Output1/"
 
 #    extra_tail = "_junk"
 #    vmin_index_list = np.array([1])
 #    logeta_index_range = np.array([3, 4])
 
-    extra_tail = "_lin1"
+    extra_tail = "_lin"
     vmin_index_list = None
+#    vmin_index_list = 13
     logeta_index_range = None
+    delta_logL = [1, 4]
 
     try:
         plt.close()
@@ -80,6 +82,7 @@ def main():
                                         logeta_guess=Logeta_guess(exper_name, mx, delta, mPhi),
                                         vmin_index_list=vmin_index_list,
                                         logeta_index_range=logeta_index_range,
+                                        delta_logL=delta_logL,
                                         filename_tail=filename_tail, extra_tail=extra_tail,
                                         OUTPUT_MAIN_DIR=OUTPUT_MAIN_DIR,
                                         plot_dots=plot_dots, quenching=quenching)

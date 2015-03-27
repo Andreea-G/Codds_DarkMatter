@@ -853,8 +853,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 os.system("say Error")
                 pass
             else:
-                print("vminStar = ", vminStar, "; logetaStar = ", logetaStar,
-                      "; constr_opt = ", constr_opt)
+                print("index = ", index, "; ", "vminStar = ", vminStar,
+                      "; logetaStar = ", logetaStar, "; constr_opt = ", constr_opt)
                 table = np.append(table, [[logetaStar, constr_opt]], axis=0)
 #                table = np.append(table, [logetaStar])
         print("vminStar = ", vminStar, "; table = ", table)
@@ -881,6 +881,12 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         '''
         if vmin_index_list is None:
             vmin_index_list = range(0, self.vmin_logeta_sampling_table.shape[0])
+        else:
+            try:
+                len(vmin_index_list)
+            except TypeError:
+                vmin_index_list = range(vmin_index_list,
+                                        self.vmin_logeta_sampling_table.shape[0])
         print("vmin_index_list = ", vmin_index_list)
         print("logeta_index_range = ", logeta_index_range)
         kwargs = ({'index': index,
@@ -1011,10 +1017,10 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
 
         self.PlotBand()
 
-        file = output_file_tail + "_FoxBand_low.dat"
+        file = output_file_tail + "_FoxBand_low_deltalogL_" + str(delta_logL) + ".dat"
         print(file)
         np.savetxt(file, self.vmin_logeta_band_low)
-        file = output_file_tail + "_FoxBand_up.dat"
+        file = output_file_tail + "_FoxBand_up_deltalogL_" + str(delta_logL) + ".dat"
         print(file)
         np.savetxt(file, self.vmin_logeta_band_up)
 
@@ -1032,11 +1038,11 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             pass
         self.PlotOptimum(ylim_percentage=(1.2, 0.8), plot_close=F, plot_show=T)
 
-    def ImportFoxBand(self, output_file_tail):
-        file = output_file_tail + "_FoxBand_low.dat"
+    def ImportFoxBand(self, output_file_tail, delta_logL):
+        file = output_file_tail + "_FoxBand_low_deltalogL_" + str(delta_logL) + ".dat"
         with open(file, 'r') as f_handle:
             self.vmin_logeta_band_low = np.loadtxt(f_handle)
-        file = output_file_tail + "_FoxBand_up.dat"
+        file = output_file_tail + "_FoxBand_up_deltalogL_" + str(delta_logL) + ".dat"
         with open(file, 'r') as f_handle:
             self.vmin_logeta_band_up = np.loadtxt(f_handle)
         return
