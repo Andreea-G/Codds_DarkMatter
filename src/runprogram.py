@@ -13,7 +13,7 @@ from experiment_FoxMethod_jump import *
 import matplotlib.pyplot as plt
 
 
-def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, kind=None,
+def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, kind=None, linewidth=3,
                      plot_dots=True, plot_close=True, plot_show=True):
     ''' Make plots for the upper limits.
         Input:
@@ -52,7 +52,7 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, kind=None,
         x1 = np.linspace(x[0], x[-1], 50)
         if plot_dots:
             plt.plot(x, y, "o")
-        plt.plot(x1, interp(x1))
+        plt.plot(x1, interp(x1), linewidth=linewidth)
 
     # set axis labels, depending on whether it is for halo-dependent or not
     if HALO_DEP is True:
@@ -209,7 +209,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
 #                    vars_list = np.array([500., 512.94884721,  583.73085857, -22.86421235, -25., -25.])
 #                    vars_list = np.array([509.763, 517.667, 589.725, -25., -25., -25.])
 #                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list))
-                if np.any(FOX_METHOD[4:7]):
+                if np.any(FOX_METHOD[4:]):
                     (vmin_band_min, vmin_band_max, vmin_num_steps) = vmin_FoxBand_range
                     (logeta_percent_minus, logeta_percent_plus, logeta_num_steps) = \
                         logeta_FoxBand_percent_range
@@ -250,7 +250,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                     except TypeError:
                         delta_logL = [delta_logL]
                     for d_logL in delta_logL:
-                        multiplot = (d_logL == delta_logL[0])
+                        multiplot = (d_logL == delta_logL[0]) and MAKE_PLOT
                         exper.FoxBand(output_file_no_extension, d_logL,
                                       interpolation_order, extra_tail=extra_tail,
                                       multiplot=multiplot)
@@ -275,20 +275,21 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
     if FOX_METHOD[7]:
         output_file = output_file_no_extension + ".dat"
         exper.ImportOptimalLikelihood(output_file_no_extension)
-        if FOX_METHOD[4]:
-            exper.PlotSamplingTable(output_file_no_extension,
-                                    plot_close=False, plot_show=False, plot_optimum=False)
         interp_kind = 'linear'
+
+        exper.PlotSamplingTable(output_file_no_extension,
+                                plot_close=False, plot_show=False, plot_optimum=False)
         try:
             len(delta_logL)
         except TypeError:
             delta_logL = [delta_logL]
         for d_logL in delta_logL:
-            exper.ImportFoxBand(output_file_no_extension, d_logL)
+            exper.ImportFoxBand(output_file_no_extension, d_logL, extra_tail=extra_tail)
             Plot_Upper_Limit(exper_name, exper.vmin_logeta_band_low, HALO_DEP,
                              kind=interp_kind,
                              plot_dots=plot_dots, plot_close=False, plot_show=False)
             Plot_Upper_Limit(exper_name, exper.vmin_logeta_band_up, HALO_DEP,
                              kind=interp_kind,
                              plot_dots=plot_dots, plot_close=False, plot_show=False)
-        exper.PlotOptimum(ylim_percentage=(1.2, 0.8), plot_close=False, plot_show=False)
+        exper.PlotOptimum(ylim_percentage=(1.2, 0.8), plot_close=False, plot_show=False,
+                          linewidth=3)
