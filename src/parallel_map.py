@@ -3,6 +3,7 @@
 # Code written by klaus se
 # see http://stackoverflow.com/questions/3288595/multiprocessing-using-pool-map-on-a-function-defined-in-a-class
 
+from __future__ import print_function
 import multiprocessing
 
 
@@ -12,7 +13,11 @@ def fun(f, q_in, q_out):
         if i is None:
             break
         print("process #", i)
-        q_out.put((i, f(x)))
+        try:
+            len(x)
+        except TypeError:
+            x = (x,)
+        q_out.put((i, f(*x)))
 
 
 def parmap(f, X, processes=multiprocessing.cpu_count()):
@@ -25,6 +30,7 @@ def parmap(f, X, processes=multiprocessing.cpu_count()):
     '''
     if processes is None:
         processes = multiprocessing.cpu_count()
+    print("Number of processes = ", processes)
     q_in = multiprocessing.Queue(1)
     q_out = multiprocessing.Queue()
 
@@ -42,5 +48,22 @@ def parmap(f, X, processes=multiprocessing.cpu_count()):
 
     return [x for i, x in sorted(res)]
 
+
 if __name__ == '__main__':
-    print(parmap(lambda i: 2 * i, [1, 2, 3, 4, 6, 7, 8]))
+    import time
+
+    args = [(i, i + 1) for i in range(8)]
+
+    def func(i, j):
+        time.sleep(1)
+        return 2 * i + j
+
+    def wrapfunc(args):
+        print(args)
+        return func(*args)
+
+    print(parmap(func, args))
+
+    args1 = list(range(10))
+
+    print(parmap(lambda x: x**2, args1))
