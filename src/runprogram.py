@@ -264,7 +264,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
             np.savetxt(output_file, upper_limit)
 
     # produce plot
-    if MAKE_PLOT and not np.any(FOX_METHOD):
+    if MAKE_PLOT and not np.any(FOX_METHOD[:7]):
         output_file = output_file_no_extension + ".dat"
         upper_limit = np.loadtxt(output_file)
         print("upper_limit = ", upper_limit)
@@ -272,7 +272,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                          plot_show=False)
 
     # make band plot
-    if FOX_METHOD[7]:
+    if FOX_METHOD[7] and exper_name == "CDMSSi2012":
         output_file = output_file_no_extension + ".dat"
         exper.ImportOptimalLikelihood(output_file_no_extension)
         interp_kind = 'cubic'

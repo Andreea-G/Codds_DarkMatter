@@ -149,7 +149,7 @@ class Experiment_HaloIndep(Experiment):
 
         integr = integrate.quad(self.Response_Dirac, vmin1, vmin2,
                                 args=(Eee1, Eee2, mx, fp, fn, delta))  # , vec_func=False
-        print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
+#        print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
         return integr[0]
 
 
@@ -208,7 +208,3 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
         result = np.transpose([vmin_list, np.log10(upper_limit)])
         print("res = ", result)
         return result[result[:, 1] != np.inf]
-        upper_limit = np.array([self.TabulateMaximumGapLimit(vmin_list0[i], vmin_list[i],
-                                                             mx, fp, fn, delta,
-                                                             output_file)
-                                for i in range(vmin_list.size)]).flatten()

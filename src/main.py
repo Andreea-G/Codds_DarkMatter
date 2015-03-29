@@ -27,6 +27,7 @@ def main():
     MAKE_PLOT = F
     HALO_DEP = F
     HALO_INDEP = not HALO_DEP
+#    FOX_METHOD = [F] * 8
 #    FOX_METHOD = [T, T, T, F, F, F, F, F]     # Multiple
 #    FOX_METHOD = [T, F, F, F, F, F, F, F]     # ResponseTables
 #    FOX_METHOD = [F, T, F, F, F, F, F, F]     # OptimalLikelihood
@@ -56,7 +57,7 @@ def main():
 #    vmin_index_list = np.array([1])
 #    logeta_index_range = np.array([3, 4])
 
-    extra_tail = "_lin"
+    extra_tail = "_mix"
     vmin_index_list = None
 #    vmin_index_list = 13
     logeta_index_range = None

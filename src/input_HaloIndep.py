@@ -7,12 +7,13 @@ Created on Sun Mar  1 21:28:44 2015
 
 
 def Vmin_range(exper_name, mx, delta, mPhi=1000., quenching=None):
-    if exper_name == "superCDMS":
-        vmin_step = 10
-        vmin_range_options = {(9., 0, 1000.): (200, 1000, vmin_step),
+    if exper_name == "superCDMS" or "CDMSSi2012":
+        vmin_step = 5
+        vmin_range_options = {(9., 0, 1000.): (vmin_step, 1000, vmin_step),
                               (3.5, -50, 1000.): (vmin_step, 1000, vmin_step),
+                              (1.3, -200, 1000.): (vmin_step, 1000, vmin_step),
                               }
-    if "LUX" in exper_name:
+    elif "LUX" in exper_name:
         vmin_step = 50
         vmin_range_options = {(9., 0, 1000.): (200, 1000, vmin_step),
                               (3.5, -50, 1000.): (600, 1000, vmin_step),
@@ -49,15 +50,16 @@ def Logeta_guess(exper_name, mx, delta, mPhi=1000.):
                       }
     return logeta_options[(mx, delta, mPhi)]
 
+
 def Vmin_FoxBand_range(exper_name, mx, delta, mPhi=1000.):
     # defaults are
     # (steepness_vmin, steepness_vmin_center, steepness_logeta) = (1.5, 2.5, 1)
     if exper_name != "CDMSSi2012":
         return None
-    options = {(9., 0, 1000.):(0, 1000, 100),
+    options = {(9., 0, 1000.): (0, 1000, 100),
                (3.5, -50, 1000.): (0, 1000, 80),
                (1.3, -200, 1000.): (0, 1000, 80),
-                      }
+               }
     return options[(mx, delta, mPhi)]
 
 
