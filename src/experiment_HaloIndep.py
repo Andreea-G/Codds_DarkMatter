@@ -43,7 +43,8 @@ class Experiment_HaloIndep(Experiment):
         '''
         self.count_diffresponse_calls += 1
         r_list = const_factor * self.Efficiency(Eee) * \
-            self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
+            np.array([self.ResolutionFunction(Eee, qer, self.EnergyResolution(qer))
+                      for qer in qER])
         return r_list.sum()
 
     def ConstFactor(self, vmin, mx, fp, fn, delta, sign):
@@ -110,7 +111,7 @@ class Experiment_HaloIndep(Experiment):
 #            efficiencyER = self.Efficiency_ER(qER)
             efficiencyER = np.array(list(map(self.Efficiency_ER, qER)))
             r_list = kilogram/SpeedOfLight**2 * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
-                dERecoildVmin(vmin, self.mT, mx, delta, sign) * \
+                np.abs(dERecoildVmin(vmin, self.mT, mx, delta, sign)) * \
                 efficiencyEee * efficiencyER * integrated_delta
             r_list_sum += r_list.sum()
         return r_list_sum
