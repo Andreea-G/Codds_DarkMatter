@@ -17,11 +17,10 @@ class interp1d:
     Input for initialization:
         two numpy.arrays x and y sorted in increasing order by x.
     '''
-    def __init__(self, x, y, kind="linear", fill_value=np.nan):
+    def __init__(self, x, y, kind="linear"):
         self.x = x
         self.y = y
         self.len = len(self.x)
-        self.fill_value = fill_value
         if kind == "linear":
             self._call = self._call_linear
         else:
@@ -33,19 +32,16 @@ class interp1d:
     def _check_bounds(self, x_new):
         below_bounds = x_new < self.x[0]
         above_bounds = x_new > self.x[-1]
-        if below_bounds:
+
+        if below_bounds.any():
             raise ValueError("A value in x_new is below the interpolation range.")
-        if above_bounds:
+        if above_bounds.any():
             raise ValueError("A value in x_new is above the interpolation range.")
-        out_of_bounds = np.logical_or(below_bounds, above_bounds)
-        return out_of_bounds
+        return
 
     def _evaluate(self, x_new):
-        out_of_bounds = self._check_bounds(x_new)
-        if out_of_bounds:
-            y_new = self.fill_value
-        else:
-            y_new = self._call(x_new)
+        self._check_bounds(x_new)
+        y_new = self._call(x_new)
         return y_new
 
     def _call_linear(self, x_new):
