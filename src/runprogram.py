@@ -49,7 +49,7 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, kind=None, linewidth=3,
         else:
             interp_kind = "cubic"
         interp = interp1d(x, y, kind=interp_kind)
-        x1 = np.linspace(x[0], x[-1], 50)
+        x1 = np.linspace(x[0], x[-1], 1000)
         if plot_dots:
             plt.plot(x, y, "o")
         plt.plot(x1, interp(x1), linewidth=linewidth)
@@ -268,7 +268,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
         output_file = output_file_no_extension + ".dat"
         upper_limit = np.loadtxt(output_file)
         print("upper_limit = ", upper_limit)
-        Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, plot_dots, plot_close=False,
+        Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, plot_dots=plot_dots, plot_close=False,
                          plot_show=False)
 
     # make band plot
