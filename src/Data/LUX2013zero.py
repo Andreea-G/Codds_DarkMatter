@@ -15,7 +15,14 @@ modulated = False
 
 energy_resolution_type = "Poisson"
 
-def EnergyResolution(e): return 0.37
+
+def EnergyResolution(e):
+    try:
+        res = 0.37 * np.ones(len(e))
+    except TypeError:
+        res = 0.37
+    return res
+
 
 FFSD = 'GaussianFFSD'
 FFSI = 'HelmFF'
@@ -45,7 +52,12 @@ Ethreshold = 2.
 Emaximum = 30.
 ERmaximum = 36.
 
-def Efficiency_ER(er): return np.array(1.) if er >= 3. else np.array(0.)
+def Efficiency_ER(er):
+    try:
+        len(er)
+    except TypeError:
+        er = [er]
+    return np.array([1. if e >= 3. else 0. for e in er])
 
 Efficiency_interp = \
     interp1d(np.array([0.700414, 0.768683, 0.830262, 0.884938, 0.960924, 1.01607,
@@ -58,6 +70,7 @@ Efficiency_interp = \
                        0.434286, 0.47619, 0.527619, 0.573333, 0.628571, 0.668571,
                        0.727619, 0.767619, 0.817143, 0.860952, 0.910476, 0.933333,
                        0.948571, 0.967619, 0.980952, 0.994286, 1.]))
+
 def Efficiency(e):
     return Efficiency_interp(e) if 0.700414 <= e < 2.68015 \
             else np.array(0.) if e < 0.700414 else np.array(1.)
