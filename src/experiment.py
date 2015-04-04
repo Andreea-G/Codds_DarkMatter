@@ -15,6 +15,7 @@ from numpy import pi
 from scipy import integrate
 from scipy.optimize import fsolve
 from scipy.special import lambertw
+import parallel_map as par
 
 INPUT_DIR = "Data/"
 
@@ -385,7 +386,8 @@ class PoissonExperiment(Experiment):
         print("result = ", result)
         return result
 
-    def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
+    def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file,
+                   processes=None):
         ''' Computes the upper limit in cross-section as a function of DM mass mx.
             Input:
                 fp, fn: couplings to proton and neutron
@@ -399,8 +401,12 @@ class PoissonExperiment(Experiment):
                     limit in cross-section.
         '''
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
-        upper_limit = np.array(list(map(lambda mx:
-                               self._PoissonUpperBoundSHM(mx, fp, fn, delta), mx_list)))
+        kwargs = ({'mx': mx,
+                   'fp': fp,
+                   'fn': fn,
+                   'delta': delta}
+                  for mx in mx_list)
+        upper_limit = np.array(par.parmap(self._PoissonUpperBoundSHM, kwargs, processes))
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
         upper_limit = 1/conversion_factor * mx_list * upper_limit
@@ -445,13 +451,19 @@ class GaussianExperiment(Experiment):
             np.savetxt(f_handle, to_print)
         return result
 
-    def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
+    def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file,
+                   processes=None):
         ''' Computes the upper limit in cross-section as a function of DM mass mx.
         '''
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
-        upper_limit = np.array(list(map(lambda mx:
-                               self._GaussianUpperBoundSHM(mx, fp, fn, delta, output_file),
-                               mx_list))).flatten()
+        kwargs = ({'mx': mx,
+                   'fp': fp,
+                   'fn': fn,
+                   'delta': delta,
+                   'output_file': output_file}
+                  for mx in mx_list)
+        upper_limit = np.array(par.parmap(self._GaussianUpperBoundSHM, kwargs, processes)
+                               ).flatten()
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
         result = np.log10(np.transpose([mx_list, upper_limit]))
@@ -494,14 +506,19 @@ class MaxGapExperiment(Experiment):
             np.savetxt(f_handle, to_print)
         return result
 
-    def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
+    def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file,
+                   processes=None):
         ''' Computes the upper limit in cross-section as a function of DM mass mx.
         '''
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
-        upper_limit = \
-            np.array(list(map(lambda mx:
-                     self.MaximumGapUpperBoundSHM(mx, fp, fn, delta, output_file),
-                     mx_list))).flatten()
+        kwargs = ({'mx': mx,
+                   'fp': fp,
+                   'fn': fn,
+                   'delta': delta,
+                   'output_file': output_file}
+                  for mx in mx_list)
+        upper_limit = np.array(par.parmap(self.MaximumGapUpperBoundSHM, kwargs, processes)
+                               ).flatten()
         upper_limit = 1./conversion_factor * mx_list * upper_limit
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
@@ -541,10 +558,16 @@ class DAMAExperiment(Experiment):
             np.savetxt(f_handle, to_print)
         return to_print
 
-    def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
+    def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file,
+                   processes=None):
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
-        upper_limit = np.array(list(map(lambda mx:
-                               self.RegionSHM(mx, fp, fn, delta, output_file), mx_list)))
+        kwargs = ({'mx': mx,
+                   'fp': fp,
+                   'fn': fn,
+                   'delta': delta,
+                   'output_file': output_file}
+                  for mx in mx_list)
+        upper_limit = np.array(par.parmap(self.RegionSHM, kwargs, processes))
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
         return upper_limit
@@ -574,11 +597,16 @@ class DAMATotalRateExperiment(Experiment):
             np.savetxt(f_handle, to_print)
         return to_print.flatten()
 
-    def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file):
+    def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file,
+                   processes=None):
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
-        upper_limit = \
-            np.array(list(map(lambda mx:
-                     self.RegionSHM(mx, fp, fn, delta, output_file), mx_list)))
+        kwargs = ({'mx': mx,
+                   'fp': fp,
+                   'fn': fn,
+                   'delta': delta,
+                   'output_file': output_file}
+                  for mx in mx_list)
+        upper_limit = np.array(par.parmap(self.RegionSHM, kwargs, processes))
         print("mx_list = ", mx_list)
         print("upper_limit = ", upper_limit)
         return upper_limit
