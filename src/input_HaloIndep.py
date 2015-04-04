@@ -6,12 +6,12 @@ Created on Sun Mar  1 21:28:44 2015
 """
 
 
-def Vmin_range(exper_name, mx, delta, mPhi=1000., quenching=None):
-    if exper_name == "superCDMS" or exper_name == "CDMSSi2012":
-        vmin_step = 5
-        vmin_range_options = {(9., 0, 1000.): (vmin_step, 1000, vmin_step),
-                              (3.5, -50, 1000.): (vmin_step, 1000, vmin_step),
-                              (1.3, -200, 1000.): (vmin_step, 1000, vmin_step),
+def Vmin_range(exper_name, mx, delta, mPhi=1000., quenching=None, FOX_METHOD=False):
+    if exper_name == "CDMSSi2012" and FOX_METHOD:
+        vmin_step = 0.5
+        vmin_range_options = {(9., 0, 1000.): (vmin_step, 2000, vmin_step),
+                              (3.5, -50, 1000.): (vmin_step, 2000, vmin_step),
+                              (1.3, -200, 1000.): (vmin_step, 2000, vmin_step),
                               }
     elif "LUX" in exper_name:
         vmin_step = 5
@@ -20,10 +20,10 @@ def Vmin_range(exper_name, mx, delta, mPhi=1000., quenching=None):
                               (1.3, -200, 1000.): (750, 1000, vmin_step),
                               }
     else:
-        vmin_step = 0.5
-        vmin_range_options = {(9., 0, 1000.): (vmin_step, 2000, vmin_step),
-                              (3.5, -50, 1000.): (vmin_step, 2000, vmin_step),
-                              (1.3, -200, 1000.): (vmin_step, 2000, vmin_step),
+        vmin_step = 5
+        vmin_range_options = {(9., 0, 1000.): (vmin_step, 1000, vmin_step),
+                              (3.5, -50, 1000.): (vmin_step, 1000, vmin_step),
+                              (1.3, -200, 1000.): (vmin_step, 1000, vmin_step),
                               }
     return vmin_range_options[(mx, delta, mPhi)]
 

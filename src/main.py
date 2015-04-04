@@ -72,7 +72,9 @@ def main():
                     for (mx, fn, delta, mPhi) in input_list[0:1]:
                         for quenching in quenching_list.get(exper_name, [None]):
                             (vmin_start, vmin_end, vmin_step) = \
-                                Vmin_range(exper_name, mx, delta, mPhi, quenching)
+                                Vmin_range(exper_name, mx, delta, mPhi=mPhi,
+                                           quenching=quenching,
+                                           FOX_METHOD=np.any(FOX_METHOD))
                             vmin_FoxBand_range = \
                                 Vmin_FoxBand_range(exper_name, mx, delta, mPhi)
                             print(vmin_start, " ", vmin_end, " ", vmin_step)
