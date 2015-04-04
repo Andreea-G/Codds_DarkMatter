@@ -814,7 +814,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             plt.show()
         return
 
-    def GetLikelihoodTable(self, kwargs):
+    def GetLikelihoodTable(self, index, output_file_tail, logeta_index_range, extra_tail):
         ''' Prints to file lists of the form [logetaStar_ij, logL_ij] needed for
         1D interpolation, where i is the index corresponding to vminStar_i and j is
         the index for each logetaStar. Each file corresponds to a different index i.
@@ -831,10 +831,6 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                         logetaStar will be considered. If ths is None, then the whole
                         list of logetaStar is used.
         '''
-        index = kwargs['index']
-        output_file_tail = kwargs['output_file_tail']
-        logeta_index_range = kwargs['logeta_index_range']
-        extra_tail = kwargs['extra_tail']
         print("index = ", index)
         print("output_file_tail = ", output_file_tail)
         vminStar = self.vmin_logeta_sampling_table[index, 0, 0]

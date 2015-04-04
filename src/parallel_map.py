@@ -13,11 +13,12 @@ def fun(f, q_in, q_out):
         if i is None:
             break
         print("process #", i)
-        try:
-            len(x)
-        except TypeError:
-            x = (x,)
-        q_out.put((i, f(*x)))
+        if isinstance(x, tuple):
+            q_out.put((i, f(*x)))
+        elif isinstance(x, dict):
+            q_out.put((i, f(**x)))
+        else:
+            q_out.put((i, f(x)))
 
 
 def parmap(f, X, processes=multiprocessing.cpu_count()):
@@ -53,6 +54,7 @@ if __name__ == '__main__':
     import time
 
     args = [(i, i + 1) for i in range(8)]
+    print(isinstance(args[0], tuple))
 
     def func(i, j):
         time.sleep(1)
@@ -63,7 +65,15 @@ if __name__ == '__main__':
         return func(*args)
 
     print(parmap(func, args))
+    print("done")
 
     args1 = list(range(10))
-
     print(parmap(lambda x: x**2, args1))
+    print("done")
+
+    kwargs = [{'c': 1, 'b': 2, 'a': 3}] * 8
+
+    def func2(a, b, e=0, c=0):
+        return a + 10 * b + 100 * c + 1000 * e
+
+    print(parmap(func2, kwargs))

@@ -9,6 +9,7 @@ from __future__ import division
 from __future__ import absolute_import
 from __future__ import print_function
 from experiment import *
+import parallel_map as par
 
 
 class Experiment_HaloIndep(Experiment):
@@ -166,19 +167,28 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
         print("Emin, Emax = ", self.Ethreshold, " ", self.Emaximum)
         print("elist = ", self.ElistMaxGap)
 
-    def TabulateMaximumGapLimit(self, vmin_min, vmin_max, vmin_step, mx, fp, fn, delta,
-                                output_file):
+    def TabulateMaximumGapLimit(self, vmin1, vmin2, mx, fp, fn, delta):
+        print("vmin = ", vmin2)
+        return np.array(list(map(lambda i, j:
+                        self.IntegratedResponse(vmin1, vmin2, i, j, mx, fp, fn, delta),
+                        self.ElistMaxGap[:-1], self.ElistMaxGap[1:])))
+
+    def MaximumGapUpperBound(self, vmin_min, vmin_max, vmin_step, mx, fp, fn, delta,
+                             output_file, processes=None):
         vmin_list = np.linspace(vmin_min, vmin_max, (vmin_max - vmin_min)/vmin_step + 1)
         vmin_list0 = np.insert(vmin_list, 0, 0.)
         xtable = np.zeros(self.ElistMaxGap.size - 1)
         upperlimit_table = np.array([])
+        kwargs = ({'vmin1': vmin_list0[v_index],
+                   'vmin2': vmin_list[v_index],
+                   'mx': mx,
+                   'fp': fp,
+                   'fn': fn,
+                   'delta': delta}
+                  for v_index in range(vmin_list.size))
+        xtable_list = par.parmap(self.TabulateMaximumGapLimit, kwargs, processes)
         for v_index in range(vmin_list.size):
-            print("vmin = ", vmin_list[v_index])
-            xtable += np.array(list(map(lambda i, j:
-                               self.IntegratedResponse(vmin_list0[v_index],
-                                                       vmin_list[v_index], i, j, mx,
-                                                       fp, fn, delta),
-                               self.ElistMaxGap[:-1], self.ElistMaxGap[1:])))
+            xtable += xtable_list[v_index]
             mu_scaled = xtable.sum()
             x_scaled = np.max(xtable)
             if x_scaled == 0:
@@ -201,8 +211,8 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
         return upperlimit_table
 
     def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step, output_file):
-        upper_limit = self.TabulateMaximumGapLimit(vmin_min, vmin_max, vmin_step, mx,
-                                                   fp, fn, delta, output_file)
+        upper_limit = self.MaximumGapUpperBound(vmin_min, vmin_max, vmin_step, mx,
+                                                fp, fn, delta, output_file)
         vmin_list = np.linspace(vmin_min, vmin_max, (vmin_max - vmin_min)/vmin_step + 1)
         print("vmin_list = ", vmin_list)
         print("upper_limit = ", upper_limit)
