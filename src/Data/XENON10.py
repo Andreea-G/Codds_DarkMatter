@@ -15,7 +15,14 @@ modulated = False
 
 energy_resolution_type = "Poisson"
 
-def EnergyResolution(e): return 0.5 * np.ones(e)
+
+def EnergyResolution(e):
+    try:
+        res = 0.5 * np.ones(len(e))
+    except TypeError:
+        res = 0.5
+    return res
+
 
 FFSD = 'GaussianFFSD'
 FFSI = 'HelmFF'
@@ -55,12 +62,17 @@ Ethreshold = 1.4 * QuenchingFactor(1.4)
 Emaximum = 10. * QuenchingFactor(10.)
 ERmaximum = 10.
 
-def Efficiency_ER(er): return np.array(1.) if er >= 1.4 else np.array(0.)
+def Efficiency_ER(er):
+    try:
+        len(er)
+    except TypeError:
+        er = [er]
+    return np.array([1. if e >= 1.4 else 0. for e in er])
 
 def Efficiency(e): return 0.94 if e >= Ethreshold else 0.
 
 Exposure = 15.
-ERecoilList = np.array(map(lambda e: e * QuenchingFactor(e),
+ERecoilList = np.array(list(map(lambda e: e * QuenchingFactor(e),
                            [1.86, 1.90, 2.29, 2.38, 2.44, 3.20, 3.77, 4.15, 5.31,
                             5.32, 6.27, 6.57, 6.58, 7.08, 7.28, 7.46, 7.75, 7.84,
-                            7.94, 8.37, 9.19, 9.46, 9.98]))
+                            7.94, 8.37, 9.19, 9.46, 9.98])))
