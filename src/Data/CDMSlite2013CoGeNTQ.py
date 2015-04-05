@@ -50,8 +50,8 @@ def QuenchingFactor(e):
     return q
 
 Ethreshold = 0.17
-Emaximum = 7.
-ERmaximum = 11.7375
+Emaximum = 12
+ERmaximum = 12
 
 def Efficiency(e): return np.array(0.985) if Ethreshold <= e < Emaximum else np.array(0.)
 
