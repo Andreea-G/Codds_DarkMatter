@@ -167,6 +167,19 @@ class Experiment:
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2/(2. * self.mT))**2) * \
             ((self.Z + (self.A - self.Z) * fn/fp)**2) * self.FF(ER, self.A, self.mT)
 
+    def _FFPSnormlalized(self, ER, N1, N2):
+        ''' Form factors for the PS interaction.
+        See Eq. 2.19 of arXiv:1502.07682 and Appendix A.3. of arXiv:1203.3542.
+            Input:
+                ER: Recoil energy
+                N1, N2: 0 or 1 for proton or neutron respectively.
+        '''
+        y = ER * self._y_over_ER
+        l = np.empty(self.numT)
+        for i in range(self.numT):
+            l[i] = self._FFSigmaPPJ_function_list[i, N1, N2](y[i])
+        return l * np.exp(-2. * y)
+
     def _FFAVnormlalized(self, ER, N1, N2):
         ''' Form factors for the AV interaction.
         See Eq. 2.18 of arXiv:1502.07682 and Appendix A.3. of arXiv:1203.3542.
