@@ -219,3 +219,40 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
         result = np.transpose([vmin_list, np.log10(upper_limit)])
         print("res = ", result)
         return result[result[:, 1] != np.inf]
+
+
+class PoissonExperiment_HaloIndep(Experiment_HaloIndep):
+    def __init__(self, expername, scattering_type, mPhi=mPhiRef):
+        Experiment_HaloIndep.__init__(self, expername, scattering_type, mPhi)
+        module = import_file(INPUT_DIR + expername + ".py")
+        self.Expected_limit = module.Expected_limit
+
+    def _PoissonUpperBound(self, vmin, mx, fp, fn, delta):
+        muT = self.mT * mx / (self.mT + mx)
+        Eee_max = max(2e6 * muT**2 * (vmin/SpeedOfLight)**2 / self.mT)
+        print("self.Ethreshold =", self.Ethreshold)
+        print("Eee_max =", Eee_max)
+        int_response = self.IntegratedResponseSHM(self.Ethreshold, Eee_max,
+                                                  mx, fp, fn, delta)
+        print("int_response =", int_response)
+        if int_response > 0:
+            result = np.log10(self.Expected_limit / self.Exposure / int_response)
+        else:
+            result = np.inf
+        return [vmin, result]
+
+    def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step, output_file,
+                   processes=None):
+        vmin_list = np.linspace(vmin_min, vmin_max, (vmin_max - vmin_min)/vmin_step + 1)
+        kwargs = ({'vmin': vmin,
+                   'mx': mx,
+                   'fp': fp,
+                   'fn': fn,
+                   'delta': delta}
+                  for vmin in vmin_list)
+        upper_limit = np.array(par.parmap(self._PoissonUpperBound, kwargs, processes))
+        upper_limit = upper_limit[upper_limit[:, 1] != np.inf]
+        print("upper_limit = ", upper_limit)
+        with open(output_file, 'ab') as f_handle:
+            np.savetxt(f_handle, upper_limit)
+        return upper_limit

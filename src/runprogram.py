@@ -130,6 +130,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
             exper = Experiment_FoxMethod(exper_name, scattering_type, mPhi)
         elif exper_name in MaximumGapLimit_exper:
             exper = MaxGapExperiment_HaloIndep(exper_name, scattering_type, mPhi)
+        elif exper_name in Poisson_exper:
+            exper = PoissonExperiment_HaloIndep(exper_name, scattering_type, mPhi)
         else:
             print("Error! This experiment was not implemented!")
             return
