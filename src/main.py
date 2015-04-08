@@ -18,7 +18,7 @@ def main():
                          "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many",
                          "SIMPLEModeStage2", "PICASSO", "KIMS2012", "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned",
                          "DAMA2010NaSmRebinned_TotRateLimit",
-                         "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
+                         "XENON10", "XENON100", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
     scattering_type = 'SI'
     fp = 1.
 
@@ -27,7 +27,7 @@ def main():
     MAKE_PLOT = F
     HALO_DEP = F
     HALO_INDEP = not HALO_DEP
-#    FOX_METHOD = [F] * 8
+    FOX_METHOD = [F] * 8
 #    FOX_METHOD = [T, T, T, F, F, F, F, F]     # Multiple
 #    FOX_METHOD = [T, F, F, F, F, F, F, F]     # ResponseTables
 #    FOX_METHOD = [F, T, F, F, F, F, F, F]     # OptimalLikelihood
@@ -35,7 +35,7 @@ def main():
 #    FOX_METHOD = [F, F, F, T, F, F, F, F]     # ConstrainedOptimalLikelihood
 #    FOX_METHOD = [F, F, F, F, T, F, F, F]     # VminLogetaSamplingTable
 #    FOX_METHOD = [F, F, F, F, F, T, F, F]     # LogLikelihoodList
-    FOX_METHOD = [F, F, F, F, F, F, T, F]     # FoxBand
+#    FOX_METHOD = [F, F, F, F, F, F, T, F]     # FoxBand
 #    FOX_METHOD = [F, F, F, F, T, F, F, T]     # FoxBandPlot
 
     qKIMS_list = [0.05, 0.1]
@@ -48,9 +48,9 @@ def main():
                       "DAMA2010NaSmRebinned_TotRateLimit": qDAMANa_Rate_list,
                       }
 
-    exper_list = [implemented_exper[i] for i in [14]]
+    exper_list = [implemented_exper[i] for i in [0]]
 #    exper_list = implemented_exper
-    filename_tail_list = ["_jump_smooth"]
+    filename_tail_list = [""]
     OUTPUT_MAIN_DIR = "../Output1/"
 
 #    extra_tail = "_junk"

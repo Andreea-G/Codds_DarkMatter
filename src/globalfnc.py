@@ -39,7 +39,7 @@ if False:   # alternative velocities; kept for reference
 '''
 MaximumGapLimit_exper = ["superCDMS",
                          "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many",
-                         "XENON10", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
+                         "XENON10", "XENON100", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
 GaussianLimit_exper = ["KIMS2012", "PICASSO"]
 DAMARegion_exper = ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]
 DAMALimit_exper = ["DAMA2010NaSmRebinned_TotRateLimit"]
@@ -291,3 +291,29 @@ def MaximumGapC0scaled(x, mu_over_x):
                      (x * (mu_over_x - k) + k)
                      for k in range(1, math.trunc(np.floor(mu_over_x)))])
         return 1. - l.sum()
+
+
+if __name__ == "__main__":
+    vmin = np.linspace(1, 1000, 1000)
+    mx = 1.3
+    delta = -200
+    mT = np.array([65.134, 66.995, 67.9278, 68.8571, 70.7203])
+    ER_plus = np.array([ERecoilBranch(vmin, mT_i, mx, delta, 1) for mT_i in mT])
+    ER_minus = np.array([ERecoilBranch(vmin, mT_i, mx, delta, -1) for mT_i in mT])
+#    print("vmin =", vmin)
+#    print("ER_plus =", ER_plus)
+#    print("ER_minus =", ER_minus)
+    import matplotlib.pyplot as plt
+    plt.close()
+    for ER in ER_plus:
+        plt.plot(vmin, ER)
+    for ER in ER_minus:
+        plt.plot(vmin, ER)
+    plt.plot(vmin, 2.7 * np.ones_like(vmin))
+    plt.plot(vmin, 3 * np.ones_like(vmin))
+    ER = np.linspace(2, 6, 100)
+    plt.plot(490 * np.ones_like(ER), ER)
+    plt.plot(495 * np.ones_like(ER), ER)
+#    plt.xlim([450, 550])
+#    plt.ylim([2, 5])
+    plt.show()
