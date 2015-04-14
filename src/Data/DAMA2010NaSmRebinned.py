@@ -29,7 +29,11 @@ target_nuclide_JSpSn_list = \
 target_nuclide_mass_list = np.array([21.4148])
 num_target_nuclides = target_nuclide_mass_list.size
 
-def QuenchingFactor(e): return 0.4
+def QuenchingFactor(e):
+    try:
+        return 0.4 * np.ones(len(e))
+    except TypeError:
+        return np.array(0.4)
 
 Ethreshold = 2.
 Emaximum = 1000.
