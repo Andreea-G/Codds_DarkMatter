@@ -6,6 +6,8 @@ Created on Fri Nov 21 02:49:53 2014
 """
 
 from __future__ import division
+from __future__ import absolute_import
+from __future__ import print_function
 import numpy as np
 from math import erf
 import math
@@ -45,6 +47,23 @@ DAMARegion_exper = ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]
 DAMALimit_exper = ["DAMA2010NaSmRebinned_TotRateLimit"]
 Poisson_exper = ["SIMPLEModeStage2"]
 FoxMethod_exper = ["CDMSSi2012"]
+
+
+def import_file(full_path_to_module):
+    """ Imports Python module from file.
+    """
+    import os
+    import sys
+    directory, module_name = os.path.split(full_path_to_module)
+    module_name = os.path.splitext(module_name)[0]
+
+    path = list(sys.path)
+    sys.path.insert(0, directory)
+    try:
+        module = __import__(module_name)
+        return module
+    finally:
+        sys.path[:] = path  # restore
 
 
 def FileNameTail(fp, fn, mPhi):

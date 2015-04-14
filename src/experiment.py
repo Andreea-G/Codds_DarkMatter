@@ -5,9 +5,6 @@ Created on Thu Nov 20 22:52:11 2014
 @author: Andreea
 """
 
-from __future__ import division
-from __future__ import absolute_import
-from __future__ import print_function
 from globalfnc import *
 from haxtonFF import *
 import numpy as np
@@ -18,23 +15,6 @@ from scipy.special import lambertw
 import parallel_map as par
 
 INPUT_DIR = "Data/"
-
-
-def import_file(full_path_to_module):
-    """ Imports Python module from file.
-    """
-    import os
-    import sys
-    directory, module_name = os.path.split(full_path_to_module)
-    module_name = os.path.splitext(module_name)[0]
-
-    path = list(sys.path)
-    sys.path.insert(0, directory)
-    try:
-        module = __import__(module_name)
-        return module
-    finally:
-        sys.path[:] = path  # restore
 
 
 class Experiment:
