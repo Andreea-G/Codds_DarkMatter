@@ -5,10 +5,6 @@ Created on Sat Dec  6 15:32:34 2014
 @author: Andreea
 """
 
-from __future__ import print_function
-from __future__ import division
-from experiment import *
-from experiment_HaloIndep import *
 from experiment_FoxMethod_jump import *
 import matplotlib.pyplot as plt
 
