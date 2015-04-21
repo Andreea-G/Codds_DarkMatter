@@ -35,6 +35,9 @@ def QuenchingFactor(e):
     except TypeError:
         return np.array(0.4)
 
+def QuenchingFactorOfEee(e):
+    return QuenchingFactor(e)  # since it's a constant function
+
 Ethreshold = 2.
 Emaximum = 1000.
 ERmaximum = 2500.
