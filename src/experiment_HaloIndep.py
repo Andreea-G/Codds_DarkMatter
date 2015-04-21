@@ -232,8 +232,8 @@ class PoissonExperiment_HaloIndep(Experiment_HaloIndep):
         Eee_max = max(2e6 * muT**2 * (vmin/SpeedOfLight)**2 / self.mT)
         print("self.Ethreshold =", self.Ethreshold)
         print("Eee_max =", Eee_max)
-        int_response = self.IntegratedResponseSHM(self.Ethreshold, Eee_max,
-                                                  mx, fp, fn, delta)
+        int_response = self.IntegratedResponse(0, vmin, self.Ethreshold, Eee_max,
+                                               mx, fp, fn, delta)
         print("int_response =", int_response)
         if int_response > 0:
             result = np.log10(self.Expected_limit / self.Exposure / int_response)
