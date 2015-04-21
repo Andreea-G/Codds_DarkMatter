@@ -421,8 +421,7 @@ class GaussianExperiment(Experiment):
         self.BinData = module.BinData
         self.BinError = module.BinError
         self.BinSize = module.BinSize
-        self.chiSquared = module.chiSquared
-
+        self.chiSquared = module.chiSquared[self.BinData.size]
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor
 
@@ -430,7 +429,7 @@ class GaussianExperiment(Experiment):
         predicted = conversion_factor / mx * \
             np.array(list(map(lambda i, j:
                               self.IntegratedResponseSHM(i, j, mx, fp, fn, delta),
-                     self.BinEdges_left, self.BinEdges_right)))
+                              self.BinEdges_left, self.BinEdges_right)))
         sum_pred_squared = 1./self.BinSize**2 * sum((predicted/self.BinError)**2)
         sum_pred_bindata = 2./self.BinSize * \
             sum(predicted * self.BinData / self.BinError**2)
