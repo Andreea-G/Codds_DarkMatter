@@ -52,15 +52,10 @@ class Input:
         self.HALO_DEP = HALO_DEP
         self.FOX_METHOD = FOX_METHOD if FOX_METHOD is not None else [False] * 8
 
-        qKIMS_list = [0.05, 0.1]
-        qDAMANa_list = [0.4, 0.3]
-        qDAMAI_list = [0.09, 0.06]
-        qDAMANa_Rate_list = [0.4]
-        self.quenching_list = {"KIMS2012": qKIMS_list,
-                               "DAMA2010NaSmRebinned": qDAMANa_list,
-                               "DAMA2010ISmRebinned": qDAMAI_list,
-                               "DAMA2010NaSmRebinned_TotRateLimit": qDAMANa_Rate_list,
-                               }
+        self.qKIMS_list = [0.05, 0.1]
+        self.qDAMANa_list = [0.4, 0.3]
+        self.qDAMAI_list = [0.09, 0.06]
+        self.qDAMANa_Rate_list = [0.4]
 
         self.fp = 1
 
@@ -81,6 +76,14 @@ class Input:
         module = import_file(input_filename_list[self.HALO_DEP] + ".py")
         self.input_list = np.array(module.input_list)[input_slice]
 
+    def QuenchingList(self):
+        quenching_list = {"KIMS2012": self.qKIMS_list,
+                          "DAMA2010NaSmRebinned": self.qDAMANa_list,
+                          "DAMA2010ISmRebinned": self.qDAMAI_list,
+                          "DAMA2010NaSmRebinned_TotRateLimit": self.qDAMANa_Rate_list,
+                          }
+        return quenching_list.get(self.exper_name, [None])
+
     def _GetKwargs(self):
         attributes = inspect.getmembers(self, lambda a: not(inspect.isroutine(a)))
         kwargs = dict([a for a in attributes
@@ -94,7 +97,7 @@ class Input:
                 (self.mx, self.fn, self.delta, self.mPhi) \
                 in product(self.exper_list, self.scattering_type_list,
                            self.filename_tail_list, self.input_list):
-            for self.quenching in self.quenching_list.get(self.exper_name, [None]):
+            for self.quenching in self.QuenchingList():
                 self.vmin_range = \
                     module.Vmin_range(self.exper_name, self.mx, self.delta, mPhi=self.mPhi,
                                       quenching=self.quenching,
@@ -112,7 +115,7 @@ class Input:
                 (self.fn, self.delta, self.mPhi) \
                 in product(self.exper_list, self.scattering_type_list,
                            self.filename_tail_list, self.input_list):
-            for self.quenching in self.quenching_list.get(self.exper_name, [None]):
+            for self.quenching in self.QuenchingList():
                 self.mx_range = \
                     module.DM_mass_range(self.exper_name, self.delta, self.mPhi,
                                          self.quenching)
