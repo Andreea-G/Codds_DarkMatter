@@ -256,3 +256,49 @@ class PoissonExperiment_HaloIndep(Experiment_HaloIndep):
         with open(output_file, 'ab') as f_handle:
             np.savetxt(f_handle, upper_limit)
         return upper_limit
+
+
+class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
+    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        Experiment_HaloIndep.__init__(self, expername, scattering_type, mPhi)
+        module = import_file(INPUT_DIR + expername + ".py")
+        self.BinEdges_left = module.BinEdges_left
+        self.BinEdges_right = module.BinEdges_right
+        self.BinData = module.BinData
+        self.BinError = module.BinError
+        self.BinSize = module.BinSize
+        self.chiSquared = module.chiSquared[1]
+        self.Expected_limit = (np.sqrt(self.chiSquared) * self.BinError + self.BinData) * \
+            self.BinSize
+        if quenching_factor is not None:
+            self.QuenchingFactor = lambda e: quenching_factor
+
+    def _GaussianUpperBound(self, vmin, mx, fp, fn, delta):
+        int_response = \
+            np.array(list(map(lambda i, j:
+                              self.IntegratedResponse(0, vmin, i, j, mx, fp, fn, delta),
+                              self.BinEdges_left, self.BinEdges_right)))
+        print("int_response =", int_response)
+        result = np.min(self.Expected_limit / self.Exposure / int_response)
+        if result > 0:
+            result = np.log10(result)
+        else:
+            result = np.inf
+        print("(vmin, result) =", (vmin, result))
+        return [vmin, result]
+
+    def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step, output_file,
+                   processes=None):
+        vmin_list = np.linspace(vmin_min, vmin_max, (vmin_max - vmin_min)/vmin_step + 1)
+        kwargs = ({'vmin': vmin,
+                   'mx': mx,
+                   'fp': fp,
+                   'fn': fn,
+                   'delta': delta}
+                  for vmin in vmin_list)
+        upper_limit = np.array(par.parmap(self._GaussianUpperBound, kwargs, processes))
+        upper_limit = upper_limit[upper_limit[:, 1] != np.inf]
+        print("upper_limit = ", upper_limit)
+        with open(output_file, 'ab') as f_handle:
+            np.savetxt(f_handle, upper_limit)
+        return upper_limit
