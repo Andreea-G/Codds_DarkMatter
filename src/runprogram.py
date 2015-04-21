@@ -129,7 +129,10 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
         elif exper_name in Poisson_exper:
             exper = PoissonExperiment_HaloIndep(exper_name, scattering_type, mPhi)
         elif exper_name in GaussianLimit_exper:
-            exper = GaussianExperiment_HaloIndep(exper_name, scattering_type, mPhi)
+            exper = GaussianExperiment_HaloIndep(exper_name, scattering_type, mPhi,
+                                                 quenching)
+        elif exper_name in DAMARegion_exper:
+            exper = Crosses_HaloIndep(exper_name, scattering_type, mPhi, quenching)
         else:
             print("Error! This experiment was not implemented!")
             return

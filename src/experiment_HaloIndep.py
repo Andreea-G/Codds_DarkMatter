@@ -139,7 +139,7 @@ class Experiment_HaloIndep(Experiment):
         E_delta = - delta * mx / (self.mT + mx)  # = muT * delta / self.mT for delta <= 0
         vmin_of_E1 = VMin(Eee1, self.mT, mx, delta)
         vmin_of_E2 = VMin(Eee2, self.mT, mx, delta)
-        if Eee1 <= max(E_delta) or Eee2 >= min(E_delta):
+        if Eee1 <= max(E_delta) and Eee2 >= min(E_delta):
             vmin_min = 0
         else:
             vmin_min = min(min(vmin_of_E1), min(vmin_of_E2))
@@ -179,12 +179,8 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
         vmin_list0 = np.insert(vmin_list, 0, 0.)
         xtable = np.zeros(self.ElistMaxGap.size - 1)
         upperlimit_table = np.array([])
-        kwargs = ({'vmin1': vmin_list0[v_index],
-                   'vmin2': vmin_list[v_index],
-                   'mx': mx,
-                   'fp': fp,
-                   'fn': fn,
-                   'delta': delta}
+        kwargs = ({'vmin1': vmin_list0[v_index], 'vmin2': vmin_list[v_index],
+                   'mx': mx, 'fp': fp, 'fn': fn, 'delta': delta}
                   for v_index in range(vmin_list.size))
         xtable_list = par.parmap(self.TabulateMaximumGapLimit, kwargs, processes)
         for v_index in range(vmin_list.size):
@@ -210,9 +206,11 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
             upperlimit_table = np.append(upperlimit_table, [result])
         return upperlimit_table
 
-    def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step, output_file):
+    def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
+                   output_file, processes=None, **unused_kwargs):
         upper_limit = self.MaximumGapUpperBound(vmin_min, vmin_max, vmin_step, mx,
-                                                fp, fn, delta, output_file)
+                                                fp, fn, delta, output_file,
+                                                processes=processes)
         vmin_list = np.linspace(vmin_min, vmin_max, (vmin_max - vmin_min)/vmin_step + 1)
         print("vmin_list = ", vmin_list)
         print("upper_limit = ", upper_limit)
@@ -241,14 +239,10 @@ class PoissonExperiment_HaloIndep(Experiment_HaloIndep):
             result = np.inf
         return [vmin, result]
 
-    def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step, output_file,
-                   processes=None):
+    def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
+                   output_file, processes=None, **unused_kwargs):
         vmin_list = np.linspace(vmin_min, vmin_max, (vmin_max - vmin_min)/vmin_step + 1)
-        kwargs = ({'vmin': vmin,
-                   'mx': mx,
-                   'fp': fp,
-                   'fn': fn,
-                   'delta': delta}
+        kwargs = ({'vmin': vmin, 'mx': mx, 'fp': fp, 'fn': fn, 'delta': delta}
                   for vmin in vmin_list)
         upper_limit = np.array(par.parmap(self._PoissonUpperBound, kwargs, processes))
         upper_limit = upper_limit[upper_limit[:, 1] != np.inf]
@@ -278,7 +272,6 @@ class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
             np.array(list(map(lambda i, j:
                               self.IntegratedResponse(0, vmin, i, j, mx, fp, fn, delta),
                               self.BinEdges_left, self.BinEdges_right)))
-        print("int_response =", int_response)
         result = np.min(self.Expected_limit / self.Exposure / int_response)
         if result > 0:
             result = np.log10(result)
@@ -287,14 +280,10 @@ class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
         print("(vmin, result) =", (vmin, result))
         return [vmin, result]
 
-    def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step, output_file,
-                   processes=None):
+    def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
+                   output_file, processes=None, **unused_kwargs):
         vmin_list = np.linspace(vmin_min, vmin_max, (vmin_max - vmin_min)/vmin_step + 1)
-        kwargs = ({'vmin': vmin,
-                   'mx': mx,
-                   'fp': fp,
-                   'fn': fn,
-                   'delta': delta}
+        kwargs = ({'vmin': vmin, 'mx': mx, 'fp': fp, 'fn': fn, 'delta': delta}
                   for vmin in vmin_list)
         upper_limit = np.array(par.parmap(self._GaussianUpperBound, kwargs, processes))
         upper_limit = upper_limit[upper_limit[:, 1] != np.inf]
@@ -302,3 +291,65 @@ class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
         with open(output_file, 'ab') as f_handle:
             np.savetxt(f_handle, upper_limit)
         return upper_limit
+
+
+class Crosses_HaloIndep(Experiment_HaloIndep):
+    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        Experiment_HaloIndep.__init__(self, expername, scattering_type, mPhi)
+        module = import_file(INPUT_DIR + expername + ".py")
+        self.BinEdges = module.BinEdges
+        self.BinData = module.BinData
+        self.BinError = module.BinError
+        self.QuenchingFactorOfEee = module.QuenchingFactorOfEee
+        if quenching_factor is not None:
+            self.QuenchingFactor = lambda e: quenching_factor
+
+    def _VminRange(self, E1, E2, mT, mx, delta):
+        E_delta = - delta * mx / (mT + mx)
+        vmin_of_E1 = VMin(E1, mT, mx, delta)
+        vmin_of_E2 = VMin(E2, mT, mx, delta)
+        print(vmin_of_E1, vmin_of_E2)
+        if E1 <= E_delta and E2 >= E_delta:
+            vmin_min = 0
+        else:
+            vmin_min = min(vmin_of_E1, vmin_of_E2)
+        vmin_max = max(vmin_of_E1, vmin_of_E2)
+        return (vmin_min, vmin_max)
+
+    def _AverageOverNuclides(self, quantity):
+        return np.sum(quantity * self.mass_fraction) / np.sum(self.mass_fraction)
+
+    def _Box(self, Eee1, Eee2, mT_avg, mx, fp, fn, delta, nsigma):
+        E1 = Eee1 - nsigma * self.EnergyResolution(Eee1)
+        E2 = Eee2 + nsigma * self.EnergyResolution(Eee2)
+        ER1 = self._AverageOverNuclides(E1 / self.QuenchingFactorOfEee(E1))
+        ER2 = self._AverageOverNuclides(E2 / self.QuenchingFactorOfEee(E2))
+        (vmin1, vmin2) = self._VminRange(ER1, ER2, mT_avg, mx, delta)
+        int_resp = self.IntegratedResponse(vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta)
+        vmin_center = (vmin1 + vmin2)/2
+        vmin_error = (vmin2 - vmin1)/2
+        return (int_resp, vmin_center, vmin_error)
+
+    def _Boxes(self, mx, fp, fn, delta, nsigma=1, processes=None):
+        mT_avg = np.sum(self.mT * self.mass_fraction) / np.sum(self.mass_fraction)
+        print("mT_avg =", mT_avg)
+        kwargs = ({'Eee1': Eee1, 'Eee2': Eee2, 'mT_avg': mT_avg,
+                   'mx': mx, 'fp': fp, 'fn': fn, 'delta': delta,
+                   'nsigma': nsigma}
+                  for Eee1, Eee2 in np.transpose([self.BinEdges[:-1], self.BinEdges[1:]]))
+        return np.array(par.parmap(self._Box, kwargs, processes))
+
+    def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
+                   output_file, nsigma=1, processes=None):
+        box_table = self._Boxes(mx, fp, fn, delta, nsigma=nsigma, processes=1)
+        int_resp_list = box_table[:, 0]
+        vmin_center_list = box_table[:, 1]
+        vmin_error_list = box_table[:, 2]
+        eta_list = self.BinData / int_resp_list
+        eta_error_list = self.BinError / int_resp_list
+        result = np.array([int_resp_list, vmin_center_list, vmin_error_list,
+                           eta_list, eta_error_list])
+        print(result)
+        with open(output_file, 'ab') as f_handle:
+            np.savetxt(f_handle, result)
+        return result
