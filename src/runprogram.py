@@ -128,6 +128,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
             exper = MaxGapExperiment_HaloIndep(exper_name, scattering_type, mPhi)
         elif exper_name in Poisson_exper:
             exper = PoissonExperiment_HaloIndep(exper_name, scattering_type, mPhi)
+        elif exper_name in GaussianLimit_exper:
+            exper = GaussianExperiment_HaloIndep(exper_name, scattering_type, mPhi)
         else:
             print("Error! This experiment was not implemented!")
             return
