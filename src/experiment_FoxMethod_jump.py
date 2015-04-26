@@ -163,7 +163,9 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 np.append(self.diff_response_tab, diff_resp_list.transpose(), axis=1)
             self.response_tab = np.append(self.response_tab, [resp], axis=0)
             self.curly_H_tab = np.append(self.curly_H_tab, curly_H.transpose(), axis=1)
+                # counts/kg/keVee
             self.xi_tab = np.append(self.xi_tab, [xi], axis=0)
+                # counts * day
         self.vmin_linspace = np.insert(self.vmin_linspace, 0., 0)
         file = output_file_tail + "_VminLinspace.dat"
         print(file)
@@ -271,6 +273,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         Nsignal = self.Exposure * np.dot(10**logeta_list, resp_integr)
         if vminStar is None:
             self.gamma_i = (self.mu_BKG_i + mu_i) / self.Exposure
+                # counts/kg/keVee/days
         result = self.NBKG + Nsignal - np.log(self.mu_BKG_i + mu_i).sum()
         if np.any(self.mu_BKG_i + mu_i < 0):
             raise ValueError

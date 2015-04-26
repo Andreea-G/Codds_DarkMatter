@@ -24,7 +24,7 @@ SpeedOfLight = 299792.458  # km/s
 AtomicMassUnit = 0.931494028
 ProtonMass = 1.00727646677 * AtomicMassUnit
 mPhiRef = 1000.
-rho = 0.3
+rho = 0.3  # GeV/cm**3
 conversion_factor = rho * SpeedOfLight**2 * 1e5 * 3600 * 24
 ConfidenceLevel = 0.9
 

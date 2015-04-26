@@ -572,7 +572,7 @@ class DAMATotalRateExperiment(Experiment):
         Experiment.__init__(self, expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.BinEdges = module.BinEdges
-        self.BinData = self.Exposure * module.BinData
+        self.BinData = self.Exposure * module.BinData  # unitless
 
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor
