@@ -12,21 +12,21 @@ def Vmin_range(exper_name, mx, delta, mPhi=1000., quenching=None, FOX_METHOD=Fal
         vmin_range_options = {(9., 0, 1000.): (vmin_step, 2000, vmin_step),
                               (3.5, -50, 1000.): (vmin_step, 2000, vmin_step),
                               (1.3, -200, 1000.): (vmin_step, 2000, vmin_step),
-                              (25., 0, 1000.): (vmin_step, 1000, vmin_step),
+                              (33., 0, 1000.): (vmin_step, 1000, vmin_step),
                               }
     elif "LUX" in exper_name:
         vmin_step = 5
         vmin_range_options = {(9., 0, 1000.): (450, 1000, vmin_step),
                               (3.5, -50, 1000.): (550, 1000, vmin_step),
                               (1.3, -200, 1000.): (750, 1000, vmin_step),
-                              (25., 0, 1000.): (vmin_step, 1000, vmin_step),
+                              (33., 0, 1000.): (vmin_step, 1000, vmin_step),
                               }
     else:
         vmin_step = 5
         vmin_range_options = {(9., 0, 1000.): (vmin_step, 1000, vmin_step),
                               (3.5, -50, 1000.): (vmin_step, 1000, vmin_step),
                               (1.3, -200, 1000.): (vmin_step, 1000, vmin_step),
-                              (25., 0, 1000.): (vmin_step, 1000, vmin_step),
+                              (33., 0, 1000.): (vmin_step, 1000, vmin_step),
                               }
     return vmin_range_options[(mx, delta, mPhi)]
 
@@ -70,5 +70,5 @@ def Vmin_FoxBand_range(exper_name, mx, delta, mPhi=1000.):
 # input of the form (mx, fn, delta, mPhi)
 input_list = [(9., -0.8, 0., 1000.), (3.5, -0.8, -50, 1000.), (1.3, -0.8, -200, 1000),
               (9., 1, 0, 1000.), (9., -0.7, 0, 1000.), (9, 0, 0, 1000),
-              (3.5, 1, -50, 1000.), (25., 0, 0, 1000)]
+              (3.5, 1, -50, 1000.), (33., 0, 0, 1000)]
 logeta_FoxBand_percent_range = (0.2, 0.2, 50)
