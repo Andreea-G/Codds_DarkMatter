@@ -160,16 +160,16 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                     exper.UpperLimit(mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
                                      output_file)
             else:
-                if FOX_METHOD[0]:
+                if FOX_METHOD.ResponseTables:
                     exper.ResponseTables(vmin_min, vmin_max, vmin_step, mx, fp, fn, delta,
                                          output_file_no_extension)
-                if FOX_METHOD[1]:
+                if FOX_METHOD.OptimalLikelihood:
                     if logeta_guess is None:
                         exper.OptimalLikelihood(output_file_no_extension)
                     else:
                         exper.OptimalLikelihood(output_file_no_extension,
                                                 logeta_guess=logeta_guess)
-                if FOX_METHOD[2]:
+                if FOX_METHOD.ImportOptimalLikelihood:
                     exper.ImportResponseTables(output_file_no_extension, plot=True)
                     exper.ImportOptimalLikelihood(output_file_no_extension, plot=True)
 #                    vars_list = np.array([509.763, 517.667, 589.725, -25., -25., -25.])
@@ -185,7 +185,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
 #                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list, vminStar, logetaStar, 2))
 #                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list, vminStar, logetaStar, 3))
                     exper.PlotOptimum()
-                if FOX_METHOD[3]:
+                if FOX_METHOD.ConstrainedOptimalLikelihood:
                     # Tests for delta = 0:
                     (vminStar, logetaStar) = (500, -25)
 #                    (vminStar, logetaStar) = (32.1343304717, -24.48487343)
@@ -213,6 +213,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
 #                    vars_list = np.array([509.763, 517.667, 589.725, -25., -25., -25.])
 #                    print("MinusLogLikelihood = ", exper.MinusLogLikelihood(vars_list))
                 if np.any(FOX_METHOD[4:]):
+                    if FOX_METHOD._fields[4] != 'VminLogetaSamplingTable':
+                        raise AttributeError("FOX_METHOD's attribute is not as expected.")
                     (vmin_band_min, vmin_band_max, vmin_num_steps) = vmin_FoxBand_range
                     (logeta_percent_minus, logeta_percent_plus, logeta_num_steps) = \
                         logeta_FoxBand_percent_range
@@ -237,7 +239,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                         exper.VminLogetaSamplingTable(output_file_no_extension,
                                                       logeta_percent_minus, logeta_percent_plus, logeta_num_steps,
                                                       plot=not np.any(FOX_METHOD[5:]))
-                if FOX_METHOD[5]:
+                if FOX_METHOD.LogLikelihoodList:
                     print("vmin_FoxBand_range = ", vmin_band_min, " ",
                           vmin_band_max, " ", vmin_num_steps)
                     print("logeta_FoxBand_percent_range = ", logeta_percent_minus, " ",
@@ -245,7 +247,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                     exper.LogLikelihoodList(output_file_no_extension, extra_tail=extra_tail,
                                             vmin_index_list=vmin_index_list,
                                             logeta_index_range=logeta_index_range)
-                if FOX_METHOD[6]:
+                if FOX_METHOD.FoxBand:
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     interpolation_order = 2
                     try:
@@ -267,7 +269,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
             np.savetxt(output_file, upper_limit)
 
     # produce plot
-    if MAKE_PLOT and not np.any(FOX_METHOD[:7]):
+    if MAKE_PLOT and not np.any(FOX_METHOD[:-1]):
         output_file = output_file_no_extension + ".dat"
         upper_limit = np.loadtxt(output_file)
         print("upper_limit = ", upper_limit)
@@ -275,7 +277,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                          plot_show=False)
 
     # make band plot
-    if FOX_METHOD[7] and exper_name == "CDMSSi2012":
+    if FOX_METHOD.FoxBandPlot and exper_name == "CDMSSi2012":
         output_file = output_file_no_extension + ".dat"
         exper.ImportOptimalLikelihood(output_file_no_extension)
         interp_kind = 'cubic'

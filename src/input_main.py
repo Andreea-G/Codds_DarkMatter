@@ -9,11 +9,20 @@ import numpy as np
 import inspect
 from itertools import product
 from runprogram import *
+from collections import namedtuple
 
 
 input_filename_list = {True: "input_DAMApaper",
                        False: "input_HaloIndep",
                        }
+
+FoxBools = namedtuple('FoxBools', ['ResponseTables', 'OptimalLikelihood',
+                                   'ImportOptimalLikelihood',
+                                   'ConstrainedOptimalLikelihood',
+                                   'VminLogetaSamplingTable', 'LogLikelihoodList',
+                                   'FoxBand', 'FoxBandPlot'])
+len_FoxBools = len(FoxBools._fields)
+FoxBools.__new__.__defaults__ = tuple([F] * len_FoxBools)
 
 
 class Input:
@@ -21,7 +30,7 @@ class Input:
                  implemented_exper_list=None, index_list=[0], input_slice=slice(None),
                  scattering_type='SI', scattering_type_list=None,
                  filename_tail_list=[""], extra_tail="", OUTPUT_MAIN_DIR="../Output/",
-                 MAKE_PLOT=False, RUN_PROGRAM=False, FOX_METHOD=None,
+                 MAKE_PLOT=False, RUN_PROGRAM=False, FOX_METHOD={},
                  plot_dots=False,
                  delta_logL=[1, 4]):
         print(HALO_DEP)
@@ -50,7 +59,7 @@ class Input:
         self.plot_dots = plot_dots
         self.RUN_PROGRAM = RUN_PROGRAM
         self.HALO_DEP = HALO_DEP
-        self.FOX_METHOD = FOX_METHOD if FOX_METHOD is not None else [False] * 8
+        self.FOX_METHOD = FoxBools(**FOX_METHOD)
 
         self.qKIMS_list = [0.05, 0.1]
         self.qDAMANa_list = [0.4, 0.3]
@@ -102,8 +111,10 @@ class Input:
                     module.Vmin_range(self.exper_name, self.mx, self.delta, mPhi=self.mPhi,
                                       quenching=self.quenching,
                                       FOX_METHOD=np.any(self.FOX_METHOD))
-                self.vmin_FoxBand_range = \
-                    module.Vmin_FoxBand_range(self.exper_name, self.mx, self.delta, self.mPhi)
+                if np.any(self.FOX_METHOD):
+                    self.vmin_FoxBand_range = \
+                        module.Vmin_FoxBand_range(self.exper_name, self.mx, self.delta,
+                                                  self.mPhi)
                 print(self.vmin_range)
                 kwargs = self._GetKwargs()
                 run_program(**kwargs)
