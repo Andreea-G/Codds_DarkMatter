@@ -164,8 +164,6 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
             np.array(list(filter(lambda x: self.Ethreshold < x < self.Emaximum,
                           self.ERecoilList))),
             0, self.Ethreshold), self.Emaximum)
-        print("Emin, Emax = ", self.Ethreshold, " ", self.Emaximum)
-        print("elist = ", self.ElistMaxGap)
 
     def TabulateMaximumGapLimit(self, vmin1, vmin2, mx, fp, fn, delta):
         print("vmin = ", vmin2)
@@ -262,8 +260,9 @@ class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
         self.BinError = module.BinError
         self.BinSize = module.BinSize
         self.chiSquared = module.chiSquared[1]
-        self.Expected_limit = (np.sqrt(self.chiSquared) * self.BinError + self.BinData) * \
-            self.BinSize
+#        self.Expected_limit = (np.sqrt(self.chiSquared) * self.BinError + self.BinData) * \
+#            self.BinSize
+        self.Expected_limit = module.Expected_limit * self.BinSize
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor
 
