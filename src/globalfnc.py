@@ -49,6 +49,19 @@ Poisson_exper = ["SIMPLEModeStage2"]
 FoxMethod_exper = ["CDMSSi2012"]
 
 
+''' Colors for plotting
+'''
+Color = {"superCDMS": 'peru',
+         "LUX2013zero": 'magenta', "LUX2013one": 'magenta', "LUX2013three": 'magenta',
+         "LUX2013five": 'magenta', "LUX2013many": 'magenta',
+         "XENON10": 'orange', "XENON100": 'royalblue',
+         "CDMSlite2013CoGeNTQ": 'cyan', "CDMSSi2012": 'red',
+         "KIMS2012": 'purple', "PICASSO": 'darkturquoise',
+         "DAMA2010NaSmRebinned_TotRateLimit": 'green',
+         "SIMPLEModeStage2": 'saddlebrown'
+         }
+
+
 def import_file(full_path_to_module):
     """ Imports Python module from file.
     """

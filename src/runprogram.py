@@ -7,6 +7,7 @@ Created on Sat Dec  6 15:32:34 2014
 
 from experiment_FoxMethod_jump import *
 import matplotlib.pyplot as plt
+linestyles = ['-', '--', '-.', ':']
 
 
 def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, kind=None, linewidth=3,
@@ -22,8 +23,14 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, kind=None, linewidth=3,
             plot_show = True or False, whether the plot should be shown or not.
 
     '''
-    from scipy.interpolate import interp1d
+    if not hasattr(Plot_Upper_Limit, "count"):
+        Plot_Upper_Limit.count = {}
+    if exper_name not in Plot_Upper_Limit.count:
+        Plot_Upper_Limit.count[exper_name] = -1
+    Plot_Upper_Limit.count[exper_name] += 1
+    linestyle = linestyles[Plot_Upper_Limit.count[exper_name] % len(linestyles)]
 
+    from scipy.interpolate import interp1d
     if plot_close:
         plt.close()
 
@@ -48,7 +55,9 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, kind=None, linewidth=3,
         x1 = np.linspace(x[0], x[-1], 1000)
         if plot_dots:
             plt.plot(x, y, "o")
-        plt.plot(x1, interp(x1), linewidth=linewidth)
+#        plt.plot(x1, interp(x1), linewidth=linewidth, color=Color[exper_name])
+        plt.plot(x1, interp(x1), linestyle=linestyle,
+                 linewidth=linewidth, color=Color[exper_name])
 
     # set axis labels, depending on whether it is for halo-dependent or not
     if HALO_DEP is True:
@@ -284,6 +293,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
 
         exper.PlotSamplingTable(output_file_no_extension,
                                 plot_close=False, plot_show=False, plot_optimum=False)
+        print("delta_logL =", delta_logL)
         try:
             len(delta_logL)
         except TypeError:
