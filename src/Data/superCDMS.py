@@ -7,7 +7,7 @@ Created on Wed Nov 19 00:18:55 2014
 from __future__ import absolute_import
 from __future__ import division
 import numpy as np
-from scipy.interpolate import interp1d
+from interp import interp1d
 pi = np.pi
 
 name = "superCDMS"
