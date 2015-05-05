@@ -226,8 +226,9 @@ def ERecoilBranch(vmin, mT, mx, delta, sign):
         sign: +1 or -1, corresponding to the upper and lower branch, respectively.
     '''
     muT = mx * mT / (mx + mT)
-    return 1.e6 / SpeedOfLight**2 * muT**2 * vmin**2 / (2.*mT) * \
-        (1. + sign * np.sqrt(1. - 2.*delta / (muT * vmin**2) * SpeedOfLight**2 * 1.e-6))**2
+    return 1.e6 * muT**2 / (2.*mT) * \
+        (vmin / SpeedOfLight +
+         sign * np.sqrt((vmin / SpeedOfLight)**2 - 2.*delta / muT * 1.e-6))**2
 
 
 def dERecoildVmin(vmin, mT, mx, delta, sign):
