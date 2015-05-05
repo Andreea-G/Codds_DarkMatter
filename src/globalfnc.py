@@ -216,6 +216,12 @@ def VMin(ER, mT, mx, delta):
     return SpeedOfLight * 1.e-3 / np.sqrt(2. * ER * mT) * abs(delta + ER * mT / muT)
 
 
+def VminDelta(mT, mx, delta):
+    muT = mx * mT / (mx + mT)
+    return SpeedOfLight / 500. * np.sqrt(delta / 2. / muT) if delta > 0 \
+        else np.array([0] * len(mT))
+
+
 def ERecoilBranch(vmin, mT, mx, delta, sign):
     ''' Recoil energy for given vmin.
     Input:

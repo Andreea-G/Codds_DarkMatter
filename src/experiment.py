@@ -83,13 +83,11 @@ class Experiment:
         # Form factors
         FF_default = np.array([[lambda y: 0]*2]*2)
         self._FFSigmaPPJ_function_list = \
-            np.array(list(map(lambda a, z:
-                              FFSigmaPPJ.get((np.trunc(a), np.trunc(z)), FF_default),
-                              self.A, self.Z)))
+            np.array([FFSigmaPPJ.get((np.trunc(A), np.trunc(Z)), FF_default)
+                      for A, Z in zip(self.A, self.Z)])
         self._FFSigmaPJ_function_list = \
-            np.array(list(map(lambda a, z:
-                              FFSigmaPJ.get((np.trunc(a), np.trunc(z)), FF_default),
-                              self.A, self.Z)))
+            np.array([FFSigmaPJ.get((np.trunc(A), np.trunc(Z)), FF_default)
+                      for A, Z in zip(self.A, self.Z)])
         # form factor
         self.FF = FF_options[self.scattering_type][module.FF[scattering_type]]
         # tests if it's been implemented in Haxton paper
@@ -289,13 +287,12 @@ class Experiment:
             For any finite resolution function (i.e. other than Dirac Delta).
         '''
         vmax = vesc + vobs
-        muT = self.mT * mx / (self.mT + mx)
-        vdelta = SpeedOfLight / 500. * np.sqrt(delta / 2. / muT) if delta > 0 \
-            else np.array([0] * self.numT)
-        ER_plus_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, 1)
-                                if j < vmax else 0., self.mT, vdelta))
-        ER_minus_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1)
-                                 if j < vmax else 1.e6, self.mT, vdelta))
+        vdelta = VminDelta(self.mT, mx, delta)
+        ER_plus_list = [ERecoilBranch(vmax, mT, mx, delta, 1) if vmax > vd else 0
+                        for mT, vd in zip(self.mT, vdelta)]
+        ER_minus_list = [ERecoilBranch(vmax, mT, mx, delta, -1) if vmax > vd else 1.e6
+                         for mT, vd in zip(self.mT, vdelta)]
+
         ER_plus = min(np.max(ER_plus_list), self.ERmaximum)
         ER_minus = np.min(ER_minus_list)
         midpoints = []
@@ -320,13 +317,12 @@ class Experiment:
             For Dirac Delta resolution function.
         '''
         vmax = vesc + vobs
-        muT = self.mT * mx / (self.mT + mx)
-        vdelta = SpeedOfLight / 500. * np.sqrt(delta / 2. / muT) if delta > 0 \
-            else np.array([0] * self.numT)
-        ER_plus_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, 1)
-                                if j < vmax else 0., self.mT, vdelta))
-        ER_minus_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1)
-                                 if j < vmax else 1.e6, self.mT, vdelta))
+        vdelta = VminDelta(self.mT, mx, delta)
+        ER_plus_list = [ERecoilBranch(vmax, mT, mx, delta, 1) if vmax > vd else 0
+                        for mT, vd in zip(self.mT, vdelta)]
+        ER_minus_list = [ERecoilBranch(vmax, mT, mx, delta, -1) if vmax > vd else 1.e6
+                         for mT, vd in zip(self.mT, vdelta)]
+
         # TODO! This is only valid for quenching factor 1!!! Extend to arbitrary q!
         ER_plus = min(min(np.max(ER_plus_list), self.ERmaximum), Eee2)
         ER_minus = max(np.min(ER_minus_list), Eee1)
@@ -364,10 +360,11 @@ class PoissonExperiment(Experiment):
         muT = self.mT * mx / (self.mT + mx)
         vdelta = SpeedOfLight / 500. * np.sqrt(delta / 2. / muT) if delta > 0 \
             else np.array([0] * self.numT)
-        Eee_max_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, 1)
-                                if j < vmax else 0., self.mT, vdelta))
-        Eee_min_list = list(map(lambda i, j: ERecoilBranch(vmax, i, mx, delta, -1)
-                                if j < vmax else 1.e6, self.mT, vdelta))
+        Eee_max_list = [ERecoilBranch(vmax, mT, mx, delta, 1) if vmax > vd else 0
+                        for mT, vd in zip(self.mT, vdelta)]
+        Eee_max_list = [ERecoilBranch(vmax, mT, mx, delta, -1) if vmax > vd else 1.e6
+                        for mT, vd in zip(self.mT, vdelta)]
+
         Eee_max = np.max(Eee_max_list)
         Eee_min = max(self.Ethreshold, np.min(Eee_min_list))
         int_response = self.IntegratedResponseSHM(Eee_min, Eee_max, mx, fp, fn, delta)
@@ -427,9 +424,8 @@ class GaussianExperiment(Experiment):
 
     def _GaussianUpperBoundSHM(self, mx, fp, fn, delta, output_file):
         predicted = conversion_factor / mx * \
-            np.array(list(map(lambda i, j:
-                              self.IntegratedResponseSHM(i, j, mx, fp, fn, delta),
-                              self.BinEdges_left, self.BinEdges_right)))
+            np.array([self.IntegratedResponseSHM(i, j, mx, fp, fn, delta)
+                      for i, j in zip(self.BinEdges_left, self.BinEdges_right)])
         sum_pred_squared = 1./self.BinSize**2 * sum((predicted/self.BinError)**2)
         sum_pred_bindata = 2./self.BinSize * \
             sum(predicted * self.BinData / self.BinError**2)
@@ -476,9 +472,8 @@ class MaxGapExperiment(Experiment):
 
     def MaximumGapUpperBoundSHM(self, mx, fp, fn, delta, output_file):
         print("mx = ", mx)
-        xtable = np.array(list(map(lambda i, j:
-                                   self.IntegratedResponseSHM(i, j, mx, fp, fn, delta),
-                               self.ElistMaxGap[:-1], self.ElistMaxGap[1:])))
+        xtable = np.array([self.IntegratedResponseSHM(i, j, mx, fp, fn, delta)
+                           for i, j in zip(self.ElistMaxGap[:-1], self.ElistMaxGap[1:])])
         mu_scaled = xtable.sum()
         x_scaled = np.max(xtable)
         if x_scaled == 0:
@@ -533,9 +528,8 @@ class DAMAExperiment(Experiment):
 
     def RegionSHM(self, mx, fp, fn, delta, output_file):
         predicted = self.Exposure * conversion_factor / mx * \
-            np.array(list(map(lambda i, j:
-                     self.IntegratedResponseSHM(i, j, mx, fp, fn, delta),
-                     self.BinEdges[:-1], self.BinEdges[1:])))
+            np.array([self.IntegratedResponseSHM(i, j, mx, fp, fn, delta)
+                      for i, j in zip(self.BinEdges[:-1], self.BinEdges[1:])])
         sum_pred_squared = sum((predicted/self.BinError)**2)
         sum_pred_bindata = sum(predicted * self.BinData / self.BinError**2)
         sigma_fit = max(sum_pred_bindata / sum_pred_squared, 0)
