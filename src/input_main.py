@@ -10,6 +10,7 @@ import inspect
 from itertools import product
 from runprogram import *
 from collections import namedtuple
+from math import erfinv
 
 
 input_filename_list = {True: "input_DAMApaper",
@@ -25,6 +26,10 @@ len_FoxBools = len(FoxBools._fields)
 FoxBools.__new__.__defaults__ = tuple([F] * len_FoxBools)
 
 
+def DeltaLogL(CL):
+    return [2 * erfinv(c/100)**2 for c in CL]
+
+
 class Input:
     def __init__(self, HALO_DEP,
                  implemented_exper_list=None, index_list=[0], input_slice=slice(None),
@@ -32,7 +37,7 @@ class Input:
                  filename_tail_list=[""], extra_tail="", OUTPUT_MAIN_DIR="../Output/",
                  MAKE_PLOT=False, RUN_PROGRAM=False, FOX_METHOD={},
                  plot_dots=False,
-                 delta_logL=[1, 4]):
+                 delta_logL=[1], delta_logL_CL=[90]):
         print(HALO_DEP)
         print(input_filename_list)
         module = import_file(input_filename_list[HALO_DEP] + ".py")
@@ -68,7 +73,12 @@ class Input:
 
         self.fp = 1
 
-        self.delta_logL = delta_logL  # for Fox method
+        if delta_logL is not None:
+            self.delta_logL = delta_logL  # for Fox method
+        else:
+            self.delta_logL = []
+        if delta_logL_CL is not None:
+            self.delta_logL.extend(DeltaLogL(delta_logL_CL))
 
     def SetExperList(self, index_list):
         self.exper_list = self.implemented_exper_list[index_list]
