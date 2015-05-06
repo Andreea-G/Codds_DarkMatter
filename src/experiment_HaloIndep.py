@@ -34,7 +34,7 @@ class Experiment_HaloIndep(Experiment):
             self.IntegratedResponse = self.IntegratedResponse_Other
 
     def DifferentialResponse(self, Eee, qER, const_factor):
-        ''' Differential response function d**2 R / (d Eee d ER)
+        ''' Differential response function d**2 R / (d Eee d vmin) in [1/kg/keV/(km/s)]
             NOT including the velocity integral eta0
             Input:
                 Eee: measured energy (electron equivalent)
@@ -61,6 +61,7 @@ class Experiment_HaloIndep(Experiment):
         const_factor = kilogram/SpeedOfLight**2 * \
             self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
             np.abs(dERecoildVmin(vmin, self.mT, mx, delta, sign)) * efficiencyER
+            # 1/kg/(km/s)
         return (ER, qER, const_factor)
 
     def DifferentialResponse_Full(self, vmin, Eee, mx, fp, fn, delta, sign):
@@ -262,7 +263,7 @@ class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
         self.chiSquared = module.chiSquared[1]
 #        self.Expected_limit = (np.sqrt(self.chiSquared) * self.BinError + self.BinData) * \
 #            self.BinSize
-        self.Expected_limit = module.Expected_limit * self.BinSize
+        self.Expected_limit = module.Expected_limit * self.BinSize # 1/day/kg
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor
 

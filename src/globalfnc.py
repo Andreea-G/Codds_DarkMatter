@@ -19,7 +19,7 @@ F = False
 PRECISSION = 1.e-3
 # Unit conversions
 fermiGeV = 1./0.1973269602  # Natural[GeV femto Meter]
-kilogram = 1e-9/1.782661758e-36
+kilogram = 1e-9/1.782661758e-36 # kg in GeV  (units: [GeV/kg])
 SpeedOfLight = 299792.458  # km/s
 AtomicMassUnit = 0.931494028
 ProtonMass = 1.00727646677 * AtomicMassUnit
