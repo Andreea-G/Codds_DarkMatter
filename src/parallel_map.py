@@ -1,6 +1,6 @@
 # Module providing the 'parmap' function for multiprocessing, which is used instead of
 # multiprocessing.Pool.map.
-# Code written by klaus se
+# Original code written by klaus se
 # see http://stackoverflow.com/questions/3288595/multiprocessing-using-pool-map-on-a-function-defined-in-a-class
 
 from __future__ import print_function
@@ -22,7 +22,8 @@ def fun(f, q_in, q_out):
 
 
 def parmap(f, X, processes=multiprocessing.cpu_count()):
-    ''' Used instead of Pool.map function for parallel programming
+    ''' Used instead of Pool.map function for parallel programming.
+        Works with lambdas and with member functions of classes.
     Input:
         f: callable, function to be called
         X: iterable. Apply f to each element in X, collecting the results in a list
