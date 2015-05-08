@@ -10,7 +10,7 @@ import inspect
 from itertools import product
 from runprogram import *
 from collections import namedtuple
-from math import erfinv
+from scipy.special import erfinv
 
 
 input_filename_list = {True: "input_DAMApaper",
