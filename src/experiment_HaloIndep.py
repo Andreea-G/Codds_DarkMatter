@@ -29,12 +29,12 @@ class Experiment_HaloIndep(Experiment):
     def __init__(self, expername, scattering_type, mPhi=mPhiRef):
         Experiment.__init__(self, expername, scattering_type, mPhi)
         if self.energy_resolution_type == "Dirac":
-            self.IntegratedResponse = self.IntegratedResponse_Dirac
+            self.Response = self.Response_Dirac
         else:
-            self.IntegratedResponse = self.IntegratedResponse_Other
+            self.Response = self.Response_Other
 
     def DifferentialResponse(self, Eee, qER, const_factor):
-        ''' Differential response function d**2 R / (d Eee d vmin) in [1/kg/keV/(km/s)]
+        ''' Differential response function d**2 R / (d Eee d ER)
             NOT including the velocity integral eta0
             Input:
                 Eee: measured energy (electron equivalent)
@@ -61,7 +61,6 @@ class Experiment_HaloIndep(Experiment):
         const_factor = kilogram/SpeedOfLight**2 * \
             self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
             np.abs(dERecoildVmin(vmin, self.mT, mx, delta, sign)) * efficiencyER
-            # 1/kg/(km/s)
         return (ER, qER, const_factor)
 
     def DifferentialResponse_Full(self, vmin, Eee, mx, fp, fn, delta, sign):
@@ -118,41 +117,16 @@ class Experiment_HaloIndep(Experiment):
             r_list_sum += r_list.sum()
         return r_list_sum
 
-    def IntegratedResponse_Other(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
+    def IntegratedResponse(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
         ''' Integrated Response Function between measured energies Eee1 and Eee2,
         and all recoil energies ER.
         NOT including eta0.
             For any finite resolution function (i.e. other than Dirac Delta).
         '''
         midpoints = []
-        integr = integrate.quad(self.Response_Other, vmin1, vmin2,
+        integr = integrate.quad(self.Response, vmin1, vmin2,
                                 args=(Eee1, Eee2, mx, fp, fn, delta), points=midpoints,
                                 epsrel=PRECISSION, epsabs=0)
-        return integr[0]
-
-    def IntegratedResponse_Dirac(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
-        ''' Integrated Response Function between measured energies Eee1 and Eee2,
-        and all recoil energies ER.
-        NOT including eta0.
-            For Dirac Delta resolution function.
-        '''
-        # TODO! This is only valid for quenching factor 1!!! Extend to arbitrary q!
-        E_delta = - delta * mx / (self.mT + mx)  # = muT * delta / self.mT for delta <= 0
-        vmin_of_E1 = VMin(Eee1, self.mT, mx, delta)
-        vmin_of_E2 = VMin(Eee2, self.mT, mx, delta)
-        if Eee1 <= max(E_delta) and Eee2 >= min(E_delta):
-            vmin_min = 0
-        else:
-            vmin_min = min(min(vmin_of_E1), min(vmin_of_E2))
-        vmin_max = max(max(vmin_of_E1), max(vmin_of_E2))
-        vmin1 = max(vmin_min, vmin1)
-        vmin2 = min(vmin_max, vmin2)
-        if vmin1 > vmin2:
-            return 0
-
-        integr = integrate.quad(self.Response_Dirac, vmin1, vmin2,
-                                args=(Eee1, Eee2, mx, fp, fn, delta))  # , vec_func=False
-#        print("Eee1, Eee2, integr = ", Eee1, " ", Eee2, " ", integr)
         return integr[0]
 
 
@@ -263,7 +237,7 @@ class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
         self.chiSquared = module.chiSquared[1]
 #        self.Expected_limit = (np.sqrt(self.chiSquared) * self.BinError + self.BinData) * \
 #            self.BinSize
-        self.Expected_limit = module.Expected_limit * self.BinSize # 1/day/kg
+        self.Expected_limit = module.Expected_limit * self.BinSize
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor
 
