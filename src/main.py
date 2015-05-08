@@ -46,7 +46,8 @@ def main():
     try:
         plt.close()
         inp.RunProgram()
-        plt.show()
+        if MAKE_PLOT:
+            plt.show()
     finally:
         if inp.RUN_PROGRAM:
             os.system("say 'Finished running program'")
