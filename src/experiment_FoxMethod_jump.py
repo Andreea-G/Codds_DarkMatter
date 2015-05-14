@@ -140,9 +140,9 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         vmin_prev = 0
         for vmin in self.vmin_linspace:
             print("vmin = ", vmin)
-            diff_resp_list = np.zeros((1, 3))
+            diff_resp_list = np.zeros((1, len(self.ERecoilList)))
             resp = 0
-            curly_H = np.zeros((1, 3))
+            curly_H = np.zeros((1, len(self.ERecoilList)))
             for sign in branches:
                 (ER, qER, const_factor) = self.ConstFactor(vmin, mx, fp, fn, delta, sign)
                 v_delta = 0  # TODO! generalize to endothermic
@@ -367,6 +367,14 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             self.q_tab = 2 * (self.xi_tab - self.h_sum_tab)
             self.h_sum_interp = unif.interp1d(self.vmin_linspace, self.h_sum_tab)
             self.q_interp = unif.interp1d(self.vmin_linspace, self.q_tab)
+
+            file = output_file_tail + "_HSumTable.dat"
+            print(file)
+            np.savetxt(file, self.h_sum_tab)
+            file = output_file_tail + "_QTable.dat"
+            print(file)
+            np.savetxt(file, self.q_tab)
+
             self.PlotTable(self.xi_interp, dimension=0, plot_show=False)
             self.PlotTable(self.h_sum_interp, dimension=0,
                            xlim=[0, 2000], ylim=[-2e24, 2e24],
