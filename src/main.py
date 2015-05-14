@@ -37,7 +37,7 @@ def main():
                 RUN_PROGRAM=RUN_PROGRAM, FOX_METHOD=FOX_METHOD,
                 MAKE_PLOT=MAKE_PLOT, plot_dots=plot_dots)
 
-    inp.SetScattering_type(['SI'])
+    inp.SetScattering_type(['SDPS'])
     inp.SetExperList([0])
     inp.SetInputList(slice(0, 1))
     inp.OUTPUT_MAIN_DIR = "../Output1/"
@@ -48,11 +48,13 @@ def main():
         plt.close()
         inp.RunProgram()
         if MAKE_PLOT:
+            plt.ylim([-32, -20])
+#            plt.ylim([-28, -13])
             plt.show()
     finally:
         if inp.RUN_PROGRAM:
             os.system("say 'Finished running program'")
-#            None
+#            pass
 
 
 if __name__ == '__main__':
