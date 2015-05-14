@@ -116,15 +116,15 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
     if HALO_DEP:
         print('Halo Dependent')
         if exper_name in MaximumGapLimit_exper:
-            exper = MaxGapExperiment(exper_name, scattering_type, mPhi)
+            class_name = MaxGapExperiment
         elif exper_name in GaussianLimit_exper:
-            exper = GaussianExperiment(exper_name, scattering_type, mPhi, quenching)
+            class_name = GaussianExperiment
         elif exper_name in Poisson_exper:
-            exper = PoissonExperiment(exper_name, scattering_type, mPhi)
+            class_name = PoissonExperiment
         elif exper_name in DAMARegion_exper:
-            exper = DAMAExperiment(exper_name, scattering_type, mPhi, quenching)
+            class_name = DAMAExperiment
         elif exper_name in DAMALimit_exper:
-            exper = DAMATotalRateExperiment(exper_name, scattering_type, mPhi, quenching)
+            class_name = DAMATotalRateExperiment
         else:
             print("Error! This experiment was not implemented!")
             return
@@ -132,19 +132,24 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
         print('Halo Independent')
         if exper_name in FoxMethod_exper and np.any(FOX_METHOD):
             print('Fox Method')
-            exper = Experiment_FoxMethod(exper_name, scattering_type, mPhi)
+            class_name = Experiment_FoxMethod
         elif exper_name in MaximumGapLimit_exper:
-            exper = MaxGapExperiment_HaloIndep(exper_name, scattering_type, mPhi)
+            class_name = MaxGapExperiment_HaloIndep
         elif exper_name in Poisson_exper:
-            exper = PoissonExperiment_HaloIndep(exper_name, scattering_type, mPhi)
+            class_name = PoissonExperiment_HaloIndep
         elif exper_name in GaussianLimit_exper:
-            exper = GaussianExperiment_HaloIndep(exper_name, scattering_type, mPhi,
-                                                 quenching)
+            class_name = GaussianExperiment_HaloIndep
         elif exper_name in DAMARegion_exper:
-            exper = Crosses_HaloIndep(exper_name, scattering_type, mPhi, quenching)
+            exper = Crosses_HaloIndep
         else:
             print("Error! This experiment was not implemented!")
             return
+
+        # if delta > 0 we have to use the integration in E recoil
+        if delta > 0:
+            class_name.__bases__ = (Experiment_HaloIndep_ER,)
+
+        exper = class_name(exper_name, scattering_type, mPhi, quenching)
 
     # get the file name specific to the parameters used for this run
     output_file_no_extension = \

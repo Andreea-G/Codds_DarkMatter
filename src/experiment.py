@@ -461,7 +461,7 @@ class GaussianExperiment(Experiment):
 class MaxGapExperiment(Experiment):
     ''' This is the class for experiments using the Maximum Gap Method.
     '''
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef):
+    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
         Experiment.__init__(self, expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.ERecoilList = module.ERecoilList

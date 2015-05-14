@@ -9,6 +9,7 @@ from __future__ import division
 from __future__ import absolute_import
 from __future__ import print_function
 from experiment import *
+from experiment_HaloIndep_er import *
 import parallel_map as par
 
 
@@ -131,8 +132,8 @@ class Experiment_HaloIndep(Experiment):
 
 
 class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef):
-        Experiment_HaloIndep.__init__(self, expername, scattering_type, mPhi)
+    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        super().__init__(expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.ERecoilList = module.ERecoilList
         self.ElistMaxGap = np.append(np.insert(
@@ -193,8 +194,8 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
 
 
 class PoissonExperiment_HaloIndep(Experiment_HaloIndep):
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef):
-        Experiment_HaloIndep.__init__(self, expername, scattering_type, mPhi)
+    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        super().__init__(expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.Expected_limit = module.Expected_limit
 
@@ -227,7 +228,7 @@ class PoissonExperiment_HaloIndep(Experiment_HaloIndep):
 
 class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
     def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        Experiment_HaloIndep.__init__(self, expername, scattering_type, mPhi)
+        super().__init__(expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.BinEdges_left = module.BinEdges_left
         self.BinEdges_right = module.BinEdges_right
@@ -269,7 +270,7 @@ class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
 
 class Crosses_HaloIndep(Experiment_HaloIndep):
     def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        Experiment_HaloIndep.__init__(self, expername, scattering_type, mPhi)
+        super().__init__(expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.BinEdges = module.BinEdges
         self.BinData = module.BinData
