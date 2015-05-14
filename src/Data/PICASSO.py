@@ -19,7 +19,8 @@ modulated = False
 energy_resolution_type = "Dirac"
 # actually Bubble Nucleation, but similar enough to implement like Dirac
 
-def EnergyResolution(e): 0.5
+def EnergyResolution(e):
+    return 0.5 * np.ones_like(e)
 
 FFSD = 'GaussianFFSD'
 FFSI = 'HelmFF'
@@ -34,19 +35,18 @@ target_nuclide_mass_list = np.array([17.6969])
 num_target_nuclides = target_nuclide_mass_list.size
 
 def QuenchingFactor(e):
-    try:
-        return np.ones(len(e))
-    except TypeError:
-        return np.array(1)
+    return np.ones_like(e)
 
 Ethreshold = 1.7
 Emaximum = 100
 ERmaximum = np.inf
 
-def Efficiency_ER(er): return 1.
+def Efficiency_ER(er):
+    return np.ones_like(er)
 
 alpha = 5.
-def Efficiency(e, er): return 1. - np.exp(alpha * (1. - er/e))
+def Efficiency(e, er):
+    return 1. - np.exp(alpha * (1. - er/e))
 
 Exposure = 1.  # not needed
 ERecoilList = np.array([])

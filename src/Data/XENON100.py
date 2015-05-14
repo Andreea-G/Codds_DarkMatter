@@ -18,11 +18,7 @@ energy_resolution_type = "Poisson"
 
 
 def EnergyResolution(e):
-    try:
-        res = 0.5 * np.ones(len(e))
-    except TypeError:
-        res = 0.5
-    return res
+    return 0.5 * np.ones_like(e)
 
 
 FFSD = 'GaussianFFSD'

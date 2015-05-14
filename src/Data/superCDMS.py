@@ -15,7 +15,8 @@ modulated = False
 
 energy_resolution_type = "Dirac"
 
-def EnergyResolution(e): return np.ones(e.size)
+def EnergyResolution(e):
+    return np.ones_like(e)
 
 FFSD = 'GaussianFFSD'
 FFSI = 'HelmFF'
@@ -36,10 +37,7 @@ target_nuclide_mass_list = np.array([65.134, 66.995, 67.9278, 68.8571, 70.7203])
 num_target_nuclides = target_nuclide_mass_list.size
 
 def QuenchingFactor(e):
-    try:
-        return np.ones(len(e))
-    except TypeError:
-        return np.array(1)
+    return np.ones_like(e)
 
 Ethreshold = 1.63799
 Emaximum = 10.0011
@@ -55,7 +53,8 @@ Efficiency_interp = \
                        0.43731, 0.44819, 0.459066, 0.506, 0.514216, 0.543101, 0.544292,
                        0.529854, 0.532668]))
 
-def Efficiency(e, er): return np.ones(er.size)
+def Efficiency(e, er):
+    return np.ones_like(er)
 
 def Efficiency_ER(e):
     return Efficiency_interp(e) if Ethreshold <= e < Emaximum else np.array(0.)

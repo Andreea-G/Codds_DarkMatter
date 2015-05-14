@@ -16,7 +16,8 @@ modulated = False
 
 energy_resolution_type = "Dirac"
 
-def EnergyResolution(e): return 1.
+def EnergyResolution(e):
+    return np.ones_like(e)
 
 FFSD = 'GaussianFFSD'
 FFSI = 'HelmFF'
@@ -38,16 +39,14 @@ target_nuclide_mass_list = np.array([11.1779, 12.1125, 32.5733, 34.4335, 17.6969
 num_target_nuclides = target_nuclide_mass_list.size
 
 def QuenchingFactor(e):
-    try:
-        return np.ones(len(e))
-    except TypeError:
-        return np.array(1)
+    return np.ones_like(e)
 
 Ethreshold = 8
 Emaximum = np.inf
 ERmaximum = np.inf
 
-def Efficiency(e, er): return 1.
+def Efficiency(e, er):
+    return 1.
 
 def Efficiency_ER(e):
     return np.array(0.97 * (1 - np.exp(-4.2 * (e/8 - 1)))) \

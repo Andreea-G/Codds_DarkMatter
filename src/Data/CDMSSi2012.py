@@ -19,7 +19,8 @@ modulated = False
 
 energy_resolution_type = "Gaussian"
 
-def EnergyResolution(e): return np.sqrt(0.085849 + 0.003136 * e)
+def EnergyResolution(e):
+    return np.sqrt(0.085849 + 0.003136 * e)
 
 FFSD = 'GaussianFFSD'
 FFSI = 'HelmFF'
@@ -35,11 +36,7 @@ target_nuclide_mass_list = np.array([26.0603, 26.9914, 27.9204])
 num_target_nuclides = target_nuclide_mass_list.size
 
 def QuenchingFactor(e):
-    try:
-        return np.ones(len(e))
-    except TypeError:
-        return np.array(1)
-
+    return np.ones_like(e)
 
 Ethreshold = 7.
 Emaximum = 100.
@@ -65,7 +62,8 @@ Efficiency_interp = interp1d(x, y)
 def Efficiency(e):
     return Efficiency_interp(e) if e >= Ethreshold else 0.
 
-def Efficiency_ER(er): return np.ones(er.size)
+def Efficiency_ER(er):
+    return np.ones_like(er)
 
 Exposure = 140.2
 ERecoilList = np.array([8.2, 9.5, 12.3])
