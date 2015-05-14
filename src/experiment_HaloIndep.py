@@ -246,7 +246,7 @@ class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
             np.array(list(map(lambda i, j:
                               self.IntegratedResponse(0, vmin, i, j, mx, fp, fn, delta),
                               self.BinEdges_left, self.BinEdges_right)))
-        result = np.min(self.Expected_limit / self.Exposure / int_response)
+        result = np.min(self.Expected_limit / int_response)
         if result > 0:
             result = np.log10(result)
         else:
