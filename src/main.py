@@ -15,7 +15,8 @@ def main():
          "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many",
          "SIMPLEModeStage2", "PICASSO", "KIMS2012", "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned",
          "DAMA2010NaSmRebinned_TotRateLimit",
-         "XENON10", "XENON100", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
+         "XENON10", "XENON100", "CDMSlite2013CoGeNTQ", "CDMSSi2012",
+         "CDMSSiGe_artif", "CDMSSi_artif"]
 
     FOX_METHOD = {}
 #    FOX_METHOD['ResponseTables'] = T
@@ -36,11 +37,11 @@ def main():
                 RUN_PROGRAM=RUN_PROGRAM, FOX_METHOD=FOX_METHOD,
                 MAKE_PLOT=MAKE_PLOT, plot_dots=plot_dots)
 
-    inp.SetScattering_type(['SI', 'SDAV', 'SDPS'])
+    inp.SetScattering_type(['SI'])
     inp.SetExperList([0])
     inp.SetInputList(slice(0, 1))
     inp.OUTPUT_MAIN_DIR = "../Output1/"
-    inp.filename_tail_list = ["_delete"]
+    inp.filename_tail_list = [""]
     inp.extra_tail = "_mix"
 
     try:
