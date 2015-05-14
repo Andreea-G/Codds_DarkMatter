@@ -46,7 +46,7 @@ GaussianLimit_exper = ["KIMS2012", "PICASSO"]
 DAMARegion_exper = ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]
 DAMALimit_exper = ["DAMA2010NaSmRebinned_TotRateLimit"]
 Poisson_exper = ["SIMPLEModeStage2"]
-FoxMethod_exper = ["CDMSSi2012"]
+FoxMethod_exper = ["CDMSSi2012", "CDMSSiGe_artif", "CDMSSi_artif"]
 
 
 ''' Colors for plotting
