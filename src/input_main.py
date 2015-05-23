@@ -38,8 +38,7 @@ class Input:
                  MAKE_PLOT=False, RUN_PROGRAM=False, FOX_METHOD={},
                  plot_dots=False,
                  delta_logL=[1], delta_logL_CL=[90]):
-        print(HALO_DEP)
-        print(input_filename_list)
+        print('HALO_DEP =', HALO_DEP)
         module = import_file(input_filename_list[HALO_DEP] + ".py")
 
         if implemented_exper_list is not None:
@@ -49,7 +48,7 @@ class Input:
                 np.array(["superCDMS",
                           "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many",
                           "SIMPLEModeStage2", "PICASSO", "KIMS2012", "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned",
-                          "DAMA2010NaSmRebinned_TotRateLimit",
+                          "DAMA2010NaSmRebinned DAMA2010ISmRebinned", "DAMA2010NaSmRebinned_TotRateLimit",
                           "XENON10", "XENON100", "CDMSlite2013CoGeNTQ", "CDMSSi2012"])
         self.SetExperList(index_list)
         self.scattering_type_list = scattering_type_list \
@@ -101,7 +100,8 @@ class Input:
                           "DAMA2010ISmRebinned": self.qDAMAI_list,
                           "DAMA2010NaSmRebinned_TotRateLimit": self.qDAMANa_Rate_list,
                           }
-        return quenching_list.get(self.exper_name, [None])
+        q = [quenching_list.get(exp, [None]) for exp in self.exper_name.split()]
+        return q[0] if len(q) == 1 else zip(*q)
 
     def _GetKwargs(self):
         attributes = inspect.getmembers(self, lambda a: not(inspect.isroutine(a)))

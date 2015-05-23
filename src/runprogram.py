@@ -123,6 +123,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
             class_name = PoissonExperiment
         elif exper_name in DAMARegion_exper:
             class_name = DAMAExperiment
+        elif exper_name.split()[0] in DAMARegion_exper:
+            class_name = DAMAExperimentCombined
         elif exper_name in DAMALimit_exper:
             class_name = DAMATotalRateExperiment
         else:
@@ -149,7 +151,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
         if delta > 0:
             class_name.__bases__ = (Experiment_HaloIndep_ER,)
 
-        exper = class_name(exper_name, scattering_type, mPhi, quenching)
+    exper = class_name(exper_name, scattering_type, mPhi, quenching)
 
     # get the file name specific to the parameters used for this run
     output_file_no_extension = \

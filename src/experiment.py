@@ -522,14 +522,16 @@ class DAMAExperiment(Experiment):
         self.BinEdges = module.BinEdges
         self.BinData = self.Exposure * module.BinData
         self.BinError = self.Exposure * module.BinError
-
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor
 
-    def RegionSHM(self, mx, fp, fn, delta, output_file):
-        predicted = self.Exposure * conversion_factor / mx * \
+    def _Predicted(self, mx, fp, fn, delta):
+        return self.Exposure * conversion_factor / mx * \
             np.array([self.IntegratedResponseSHM(i, j, mx, fp, fn, delta)
                       for i, j in zip(self.BinEdges[:-1], self.BinEdges[1:])])
+
+    def RegionSHM(self, mx, fp, fn, delta, output_file):
+        predicted = self._Predicted(mx, fp, fn, delta)
         sum_pred_squared = sum((predicted/self.BinError)**2)
         sum_pred_bindata = sum(predicted * self.BinData / self.BinError**2)
         sigma_fit = max(sum_pred_bindata / sum_pred_squared, 0)
@@ -559,6 +561,28 @@ class DAMAExperiment(Experiment):
         return upper_limit
 
 
+class DAMAExperimentCombined(DAMAExperiment, Experiment):
+    ''' This is the class for finding the best-fit regions for the DAMA experiment
+    when considering the combined analysis of Na and I.
+    Constructor:
+        A list or tuple of 2 experiment names must be given, and, if not None, then
+    a list or tuple of 2 quenching_factors, one for Na and one for I.
+    '''
+    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        expername = expername.split()
+        super().__init__(expername[0], scattering_type, mPhi)
+        self.other = self.__class__.__bases__[1](expername[1], scattering_type, mPhi)
+        if quenching_factor is not None:
+            self.QuenchingFactor = lambda e: quenching_factor[0]
+            self.other.QuenchingFactor = lambda e: quenching_factor[1]
+
+    def _Predicted(self, mx, fp, fn, delta):
+        return self.Exposure * conversion_factor / mx * \
+            np.array([self.IntegratedResponseSHM(i, j, mx, fp, fn, delta) +
+                      self.other.IntegratedResponseSHM(i, j, mx, fp, fn, delta)
+                      for i, j in zip(self.BinEdges[:-1], self.BinEdges[1:])])
+
+
 class DAMATotalRateExperiment(Experiment):
     ''' This is the class for finding the upper limit due to DAMA total rate.
     '''
@@ -567,7 +591,6 @@ class DAMATotalRateExperiment(Experiment):
         module = import_file(INPUT_DIR + expername + ".py")
         self.BinEdges = module.BinEdges
         self.BinData = self.Exposure * module.BinData  # unitless
-
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor
 
