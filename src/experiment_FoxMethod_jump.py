@@ -86,7 +86,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 routine. Can be 'SLSQP' or 'COBYLA'
     '''
     def __init__(self, expername, scattering_type, mPhi=mPhiRef, method='SLSQP'):
-        Experiment_HaloIndep.__init__(self, expername, scattering_type, mPhi)
+        super().__init__(expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.ERecoilList = module.ERecoilList
         self.mu_BKG_i = module.mu_BKG_i

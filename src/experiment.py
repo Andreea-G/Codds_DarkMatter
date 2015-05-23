@@ -351,7 +351,7 @@ class PoissonExperiment(Experiment):
             modules.
     '''
     def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        Experiment.__init__(self, expername, scattering_type, mPhi)
+        super().__init__(expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.Expected_limit = module.Expected_limit
 
@@ -411,7 +411,7 @@ class GaussianExperiment(Experiment):
     ''' This is the class for experiments with Gaussian analysis.
     '''
     def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        Experiment.__init__(self, expername, scattering_type, mPhi)
+        super().__init__(expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.BinEdges_left = module.BinEdges_left
         self.BinEdges_right = module.BinEdges_right
@@ -462,7 +462,7 @@ class MaxGapExperiment(Experiment):
     ''' This is the class for experiments using the Maximum Gap Method.
     '''
     def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        Experiment.__init__(self, expername, scattering_type, mPhi)
+        super().__init__(expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.ERecoilList = module.ERecoilList
         self.ElistMaxGap = \
@@ -517,7 +517,7 @@ class DAMAExperiment(Experiment):
     ''' This is the class for finding the best-fit regions for the DAMA experiment.
     '''
     def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        Experiment.__init__(self, expername, scattering_type, mPhi)
+        super().__init__(expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.BinEdges = module.BinEdges
         self.BinData = self.Exposure * module.BinData
@@ -563,7 +563,7 @@ class DAMATotalRateExperiment(Experiment):
     ''' This is the class for finding the upper limit due to DAMA total rate.
     '''
     def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        Experiment.__init__(self, expername, scattering_type, mPhi)
+        super().__init__(expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.BinEdges = module.BinEdges
         self.BinData = self.Exposure * module.BinData  # unitless
