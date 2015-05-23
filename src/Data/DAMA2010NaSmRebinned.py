@@ -7,7 +7,6 @@ Created on Wed Nov 19 00:18:55 2014
 from __future__ import absolute_import
 from __future__ import division
 import numpy as np
-from interp import interp1d
 pi = np.pi
 
 name = "DAMA2010NaSmRebinned"
@@ -24,6 +23,7 @@ FF = {'SI': FFSI,
       'SDPS': FFSD,
       'SDAV': FFSD,
       }
+
 target_nuclide_AZC_list = np.array([[23, 11, 0.153373]])
 target_nuclide_JSpSn_list = \
     np.array([[3./2, 0.2477 * np.sqrt(5./3 / pi), .0198 * np.sqrt(5./3 / pi)]])
