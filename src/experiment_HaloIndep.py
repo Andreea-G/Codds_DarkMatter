@@ -11,6 +11,7 @@ from __future__ import print_function
 from experiment import *
 from experiment_HaloIndep_er import *
 import parallel_map as par
+from scipy.linalg import det, inv
 
 
 class Experiment_HaloIndep(Experiment):
@@ -278,6 +279,7 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
         self.QuenchingFactorOfEee = module.QuenchingFactorOfEee
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor
+        self._int_resp = self.IntegratedResponse
 
     def _VminRange(self, E1, E2, mT, mx, delta):
         E_delta = - delta * mx / (mT + mx)
@@ -311,7 +313,7 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
         kwargs = ({'Eee1': Eee1, 'Eee2': Eee2, 'mT_avg': mT_avg,
                    'mx': mx, 'fp': fp, 'fn': fn, 'delta': delta,
                    'nsigma': nsigma}
-                  for Eee1, Eee2 in np.transpose([self.BinEdges[:-1], self.BinEdges[1:]]))
+                  for Eee1, Eee2 in zip(self.BinEdges[:-1], self.BinEdges[1:]))
         return np.array(par.parmap(self._Box, kwargs, processes))
 
     def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
@@ -328,3 +330,45 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
         with open(output_file, 'ab') as f_handle:
             np.savetxt(f_handle, result)
         return result
+
+    def IntResponseMatrix(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
+                          output_file, nsigma=1, processes=None):
+        np.set_printoptions(threshold=np.nan)
+        vmin_list = np.linspace(vmin_min, vmin_max, (vmin_max - vmin_min)/vmin_step + 1)
+        kwargs = ({'vmin1': vmin1, 'vmin2': vmin2,
+                   'Eee1': Eee1, 'Eee2': Eee2,
+                   'mx': mx, 'fp': fp, 'fn': fn, 'delta': delta}
+                  for vmin1, vmin2 in zip(vmin_list[:-1], vmin_list[1:])
+                  for Eee1, Eee2 in zip(self.BinEdges[:-1], self.BinEdges[1:]))
+        matr = [self._int_resp(**k) for k in kwargs]
+        matr = np.reshape(matr, (len(vmin_list)-1, len(self.BinEdges)-1))
+        print('matrix =')
+        print(matr)
+        print(np.shape(matr))
+        print('determinant =', det(matr))
+        print('inverse =')
+        print(inv(matr))
+
+        with open(output_file, 'ab') as f_handle:
+            np.savetxt(f_handle, matr)
+        return matr
+
+
+class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
+    ''' This is the class for finding the best-fit regions for the DAMA experiment
+    when considering the combined analysis of Na and I.
+    Constructor:
+        A list or tuple of 2 experiment names must be given, and, if not None, then
+    a list or tuple of 2 quenching_factors, one for Na and one for I.
+    '''
+    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        expername = expername.split()
+        super().__init__(expername[0], scattering_type, mPhi)
+        self.other = self.__class__.__bases__[1](expername[1], scattering_type, mPhi)
+        if quenching_factor is not None:
+            self.QuenchingFactor = lambda e: quenching_factor[0]
+            self.other.QuenchingFactor = lambda e: quenching_factor[1]
+
+    def _int_resp(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
+        return self.IntegratedResponse(vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta) \
+            + self.other.IntegratedResponse(vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta)

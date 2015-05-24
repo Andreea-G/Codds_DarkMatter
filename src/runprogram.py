@@ -143,6 +143,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
             class_name = GaussianExperiment_HaloIndep
         elif exper_name in DAMARegion_exper:
             class_name = Crosses_HaloIndep
+        elif exper_name.split()[0] in DAMARegion_exper:
+            class_name = Crosses_HaloIndep_Combined
         else:
             print("Error! This experiment was not implemented!")
             return
