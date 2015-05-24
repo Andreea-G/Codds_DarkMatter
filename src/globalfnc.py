@@ -124,10 +124,7 @@ def Output_file_name(exper_name, scattering_type, mPhi, mx, fp, fn, delta, HALO_
     ''' Gives the name of the output file name for the given input parameters.
     '''
     output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
-    if exper_name in DAMARegion_exper or exper_name in DAMALimit_exper:
-        output_file_no_extension = "./" + output_dir + "pbesebTab_" + exper_name
-    else:
-        output_file_no_extension = "./" + output_dir + "UpperLimit_" + exper_name
+    output_file_no_extension = "./" + output_dir + "UpperLimit_" + exper_name
 
     if HALO_DEP:
         output_file_no_extension += "_mxsigma"
