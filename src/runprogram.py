@@ -57,7 +57,7 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, kind=None, linewidth=3,
             plt.plot(x, y, "o")
 #        plt.plot(x1, interp(x1), linewidth=linewidth, color=Color[exper_name])
         plt.plot(x1, interp(x1), linestyle=linestyle,
-                 linewidth=linewidth, color=Color[exper_name])
+                 linewidth=linewidth, color=Color[exper_name.split()[0]])
 
     # set axis labels, depending on whether it is for halo-dependent or not
     if HALO_DEP is True:
@@ -289,10 +289,21 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
     # produce plot
     if MAKE_PLOT and not np.any(FOX_METHOD[:-1]):
         output_file = output_file_no_extension + ".dat"
-        upper_limit = np.loadtxt(output_file)
-        print("upper_limit = ", upper_limit)
-        Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, plot_dots=plot_dots, plot_close=False,
-                         plot_show=False)
+        if exper_name.split()[0] in DAMARegion_exper:
+            for CL in [68]:
+                [lower_limit, upper_limit] = exper.Region(CL, output_file)
+                print("lower_limit = ", lower_limit)
+                print("upper_limit = ", upper_limit)
+                Plot_Upper_Limit(exper_name, lower_limit, HALO_DEP,
+                                 plot_dots=plot_dots, plot_close=False, plot_show=False)
+                Plot_Upper_Limit.count[exper_name] -= 1
+                Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP,
+                                 plot_dots=plot_dots, plot_close=False, plot_show=False)
+        else:
+            upper_limit = np.loadtxt(output_file)
+            print("upper_limit = ", upper_limit)
+            Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP,
+                             plot_dots=plot_dots, plot_close=False, plot_show=False)
 
     # make band plot
     if FOX_METHOD.FoxBandPlot and exper_name == "CDMSSi2012":

@@ -9,8 +9,8 @@ from globalfnc import *
 from haxtonFF import *
 import numpy as np
 from numpy import pi
-from scipy import integrate
-from scipy.optimize import fsolve
+from scipy import integrate, interpolate
+from scipy.optimize import fsolve, minimize
 from scipy.special import lambertw
 import parallel_map as par
 
@@ -513,6 +513,11 @@ class MaxGapExperiment(Experiment):
         return result[result[:, 1] != np.inf]
 
 
+def TwoDeltaLogL(CL):
+    two_delta_logL = {68: 2.3, 90: 4.61}
+    return two_delta_logL[CL]
+
+
 class DAMAExperiment(Experiment):
     ''' This is the class for finding the best-fit regions for the DAMA experiment.
     '''
@@ -560,6 +565,70 @@ class DAMAExperiment(Experiment):
         print("upper_limit = ", upper_limit)
         return upper_limit
 
+    def LogLMax(self, output_file, mx_fit_guess=7):
+        table = np.transpose(np.loadtxt(output_file))
+        mx_list = table[0]
+        mx_min = mx_list[0]
+        mx_max = mx_list[-1]
+        print('mx_min, mx_max =', mx_min, mx_max)
+        log_likelihood_max = table[2]
+        neg_log_likelihood_max_interp = interpolate.interp1d(mx_list, -log_likelihood_max)
+        self.mx_fit = minimize(neg_log_likelihood_max_interp, mx_fit_guess,
+                               bounds=[(mx_min, mx_max)]).x[0]
+        print('mx_fit =', self.mx_fit)
+        self.logL_max = -neg_log_likelihood_max_interp(self.mx_fit)
+        print('logL_max =', self.logL_max)
+
+    def UpperLowerLists(self, CL, output_file, num_mx=1000):
+        self.logL_target = self.logL_max - TwoDeltaLogL(CL)
+
+        table = np.transpose(np.loadtxt(output_file))
+        num_dimensions = table.shape[0]
+        num_bins = (num_dimensions - 3)//3
+        print('num_dimensions =', num_dimensions)
+        print('num_bins =', num_bins)
+        mx_list = table[0]
+        print('mx_list =', mx_list)
+        sigma_fit_interp = interpolate.interp1d(mx_list, table[1])
+        log_likelihood_max_interp = interpolate.interp1d(mx_list, table[2])
+
+        predicted_interp = [interpolate.interp1d(mx_list, table[i])
+                            for i in range(3, 3 + num_bins)]
+        data_interp = [interpolate.interp1d(mx_list, table[i])
+                       for i in range(3 + num_bins, 3 + 2 * num_bins)]
+        error_interp = [interpolate.interp1d(mx_list, table[i])
+                        for i in range(3 + 2 * num_bins, 3 + 3 * num_bins)]
+
+        mx_list = np.logspace(np.log10(mx_list[0]), np.log10(mx_list[-1]), num=num_mx)
+
+        sigma_fit = np.array([sigma_fit_interp(mx) for mx in mx_list])
+        logL_max = np.array([log_likelihood_max_interp(mx) for mx in mx_list])
+        predicted = np.array([[p(mx) for p in predicted_interp] for mx in mx_list])
+        data = np.array([[d(mx) for d in data_interp] for mx in mx_list])
+        error = np.array([[err(mx) for err in error_interp] for mx in mx_list])
+
+        limit_low = []
+        limit_high = []
+        print('logL_max =', logL_max)
+        print('self.logL_target =', self.logL_target)
+
+        def logL(ratio, index, predicted=predicted, data=data, error=error):
+            return -sum((ratio * predicted[index] - data[index])**2 /
+                        (2 * error[index]**2))
+        for index in range(len(mx_list)):
+            if logL_max[index] > self.logL_target:
+                mx = mx_list[index]
+                ratio = fsolve(lambda r: logL(r, index) - self.logL_target, 0.5)[0]
+                limit_low.append([np.log10(mx), np.log10(ratio * sigma_fit[index])])
+                ratio = fsolve(lambda r: logL(r, index) - self.logL_target, 3)[0]
+                limit_high.append([np.log10(mx), np.log10(ratio * sigma_fit[index])])
+
+        return [np.array(limit_low), np.array(limit_high)]
+
+    def Region(self, CL, output_file, num_mx=1000):
+        self.LogLMax(output_file)
+        return self.UpperLowerLists(CL, output_file, num_mx=num_mx)
+
 
 class DAMAExperimentCombined(DAMAExperiment, Experiment):
     ''' This is the class for finding the best-fit regions for the DAMA experiment
@@ -581,6 +650,17 @@ class DAMAExperimentCombined(DAMAExperiment, Experiment):
             np.array([self.IntegratedResponseSHM(i, j, mx, fp, fn, delta) +
                       self.other.IntegratedResponseSHM(i, j, mx, fp, fn, delta)
                       for i, j in zip(self.BinEdges[:-1], self.BinEdges[1:])])
+
+    def _exchange(self, string, old, new):
+        return string.replace(old, new).replace(new, old, 1)
+
+    def Region(self, CL, output_file, num_mx=1000):
+        flipped_file = self._exchange(output_file, 'Na', 'I')
+        q_Na = max(self.QuenchingFactor(0), self.other.QuenchingFactor(0))
+        q_I = min(self.QuenchingFactor(0), self.other.QuenchingFactor(0))
+        flipped_file = self._exchange(flipped_file, str(q_Na), str(q_I))
+        self.LogLMax(flipped_file)
+        return self.UpperLowerLists(CL, output_file, num_mx=num_mx)
 
 
 class DAMATotalRateExperiment(Experiment):
