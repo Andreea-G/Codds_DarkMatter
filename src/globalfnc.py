@@ -9,8 +9,9 @@ from __future__ import division
 from __future__ import absolute_import
 from __future__ import print_function
 import numpy as np
-from math import erf
 import math
+from scipy.special import erf, erfinv, gammainc
+from scipy.stats import chi2
 pi = np.pi
 
 T = True    # short-hand notation
@@ -19,7 +20,7 @@ F = False
 PRECISSION = 1.e-3
 # Unit conversions
 fermiGeV = 1./0.1973269602  # Natural[GeV femto Meter]
-kilogram = 1e-9/1.782661758e-36 # kg in GeV  (units: [GeV/kg])
+kilogram = 1e-9/1.782661758e-36  # kg in GeV  (units: [GeV/kg])
 SpeedOfLight = 299792.458  # km/s
 AtomicMassUnit = 0.931494028
 ProtonMass = 1.00727646677 * AtomicMassUnit
@@ -62,6 +63,18 @@ Color = {"superCDMS": 'peru',
          "DAMA2010ISmRebinned": 'green',
          "SIMPLEModeStage2": 'saddlebrown'
          }
+
+
+def confidence_level(sigma):
+    return erf(sigma/np.sqrt(2))
+
+
+def sigma_dev(CL):
+    return np.sqrt(2) * erfinv(CL)
+
+
+def chi_squared(dof, CL=ConfidenceLevel):
+    return chi2.ppf(CL, dof)
 
 
 def import_file(full_path_to_module):

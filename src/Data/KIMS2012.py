@@ -41,7 +41,7 @@ Ethreshold = 3
 Emaximum = 11
 ERmaximum = 300.
 
-def Efficiency_ER(er): 
+def Efficiency_ER(er):
     return np.ones_like(er)
 
 Efficiency_interp = interp1d(np.array([3., 10., 11.]), np.array([0.3, 1.1, 1.1]))
@@ -62,11 +62,3 @@ BinError = np.array([0.008209, 0.007622, 0.007036, 0.003078, 0.007622, 0.002345,
 Expected_limit = np.array([0.016759777, 0.016871508, 0.014636871, 0.008156424,
                            0.015810056, 0.016145252, 0.028268157, 0.026368715])
 # from Fig 4 of 1204.2646v2
-
-if ConfidenceLevel == 0.9:
-    chiSquared = {1: 2.70554, 8: 13.3616}
-elif ConfidenceLevel == 0.99:
-    chiSquared = {1: 6.6349, 8: 20.0902}
-else:
-    chiSquared = {1: 2.70554, 8: 13.3616}
-    print("Warning! You asked for a ConfidenceLevel that is not given! Using 0.9 instead.")

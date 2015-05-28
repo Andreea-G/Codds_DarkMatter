@@ -418,7 +418,7 @@ class GaussianExperiment(Experiment):
         self.BinData = module.BinData
         self.BinError = module.BinError
         self.BinSize = module.BinSize
-        self.chiSquared = module.chiSquared[self.BinData.size]
+        self.chiSquared = chi_squared(self.BinData.size)
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor
 
@@ -513,11 +513,6 @@ class MaxGapExperiment(Experiment):
         return result[result[:, 1] != np.inf]
 
 
-def TwoDeltaLogL(CL):
-    two_delta_logL = {68: 2.3, 90: 4.61}
-    return two_delta_logL[CL]
-
-
 class DAMAExperiment(Experiment):
     ''' This is the class for finding the best-fit regions for the DAMA experiment.
     '''
@@ -580,7 +575,7 @@ class DAMAExperiment(Experiment):
         print('logL_max =', self.logL_max)
 
     def UpperLowerLists(self, CL, output_file, num_mx=1000):
-        self.logL_target = self.logL_max - TwoDeltaLogL(CL)
+        self.logL_target = self.logL_max - chi_squared(2, CL)
 
         table = np.transpose(np.loadtxt(output_file))
         num_dimensions = table.shape[0]
@@ -588,7 +583,6 @@ class DAMAExperiment(Experiment):
         print('num_dimensions =', num_dimensions)
         print('num_bins =', num_bins)
         mx_list = table[0]
-        print('mx_list =', mx_list)
         sigma_fit_interp = interpolate.interp1d(mx_list, table[1])
         log_likelihood_max_interp = interpolate.interp1d(mx_list, table[2])
 
@@ -609,8 +603,6 @@ class DAMAExperiment(Experiment):
 
         limit_low = []
         limit_high = []
-        print('logL_max =', logL_max)
-        print('self.logL_target =', self.logL_target)
 
         def logL(ratio, index, predicted=predicted, data=data, error=error):
             return -sum((ratio * predicted[index] - data[index])**2 /
