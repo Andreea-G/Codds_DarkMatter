@@ -293,7 +293,12 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
             if hasattr(Plot_Upper_Limit, 'count'):
                 Plot_Upper_Limit.count[exper_name] = -1
             for CL in [confidence_level(1), 0.9]:
-                [lower_limit, upper_limit] = exper.Region(CL, output_file)
+                output_file_regions = output_file_no_extension + \
+                                      "_CL" + str(round(CL, 2))
+                output_file_lower = output_file_regions + "_lower_limit.dat"
+                output_file_upper = output_file_regions + "_upper_limit.dat"
+                [lower_limit, upper_limit] = \
+                    exper.Region(CL, output_file, output_file_lower, output_file_upper)
                 Plot_Upper_Limit(exper_name, lower_limit, HALO_DEP,
                                  plot_dots=plot_dots, plot_close=False, plot_show=False)
                 Plot_Upper_Limit.count[exper_name] -= 1

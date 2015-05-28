@@ -574,7 +574,8 @@ class DAMAExperiment(Experiment):
         self.logL_max = -neg_log_likelihood_max_interp(self.mx_fit)
         print('logL_max =', self.logL_max)
 
-    def UpperLowerLists(self, CL, output_file, num_mx=1000):
+    def UpperLowerLists(self, CL, output_file, output_file_lower, output_file_upper,
+                        num_mx=1000):
         self.logL_target = self.logL_max - chi_squared(2, CL)
 
         table = np.transpose(np.loadtxt(output_file))
@@ -615,11 +616,16 @@ class DAMAExperiment(Experiment):
                 ratio = fsolve(lambda r: logL(r, index) - self.logL_target, 3)[0]
                 limit_high.append([np.log10(mx), np.log10(ratio * sigma_fit[index])])
 
+        limit_low = np.array(limit_low)
+        limit_high = np.array(limit_high)
+        np.savetxt(output_file_lower, limit_low)
+        np.savetxt(output_file_upper, limit_high)
         return [np.array(limit_low), np.array(limit_high)]
 
-    def Region(self, CL, output_file, num_mx=1000):
+    def Region(self, CL, output_file, output_file_lower, output_file_upper, num_mx=1000):
         self.LogLMax(output_file)
-        return self.UpperLowerLists(CL, output_file, num_mx=num_mx)
+        return self.UpperLowerLists(CL, output_file, output_file_lower, output_file_upper,
+                                    num_mx=num_mx)
 
 
 class DAMAExperimentCombined(DAMAExperiment, Experiment):
@@ -646,13 +652,14 @@ class DAMAExperimentCombined(DAMAExperiment, Experiment):
     def _exchange(self, string, old, new):
         return string.replace(old, new).replace(new, old, 1)
 
-    def Region(self, CL, output_file, num_mx=1000):
+    def Region(self, CL, output_file, output_file_lower, output_file_upper, num_mx=1000):
         flipped_file = self._exchange(output_file, 'Na', 'I')
         q_Na = max(self.QuenchingFactor(0), self.other.QuenchingFactor(0))
         q_I = min(self.QuenchingFactor(0), self.other.QuenchingFactor(0))
         flipped_file = self._exchange(flipped_file, str(q_Na), str(q_I))
         self.LogLMax(flipped_file)
-        return self.UpperLowerLists(CL, output_file, num_mx=num_mx)
+        return self.UpperLowerLists(CL, output_file, output_file_lower, output_file_upper,
+                                    num_mx=num_mx)
 
 
 class DAMATotalRateExperiment(Experiment):
