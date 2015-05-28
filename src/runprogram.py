@@ -290,10 +290,10 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
     if MAKE_PLOT and not np.any(FOX_METHOD[:-1]):
         output_file = output_file_no_extension + ".dat"
         if exper_name.split()[0] in DAMARegion_exper:
-            for CL in [68]:
+            if hasattr(Plot_Upper_Limit, 'count'):
+                Plot_Upper_Limit.count[exper_name] = -1
+            for CL in [confidence_level(1), 0.9]:
                 [lower_limit, upper_limit] = exper.Region(CL, output_file)
-                print("lower_limit = ", lower_limit)
-                print("upper_limit = ", upper_limit)
                 Plot_Upper_Limit(exper_name, lower_limit, HALO_DEP,
                                  plot_dots=plot_dots, plot_close=False, plot_show=False)
                 Plot_Upper_Limit.count[exper_name] -= 1
