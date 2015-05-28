@@ -64,9 +64,9 @@ BinError = np.array([7.170051, 1.77665, 9.073604, 9.200507, 1.269036,
                      1.649746, 1.77665, 4.63198])
 
 if ConfidenceLevel == 0.9:
-    chiSquared = 13.3616
+    chiSquared = {1: 2.70554, 8: 13.3616}
 elif ConfidenceLevel == 0.99:
-    chiSquared = 20.0902
+    chiSquared = {1: 6.6349, 8: 20.0902}
 else:
-    chiSquared = 13.3616
+    chiSquared = {1: 2.70554, 8: 13.3616}
     print("Warning! You asked for a ConfidenceLevel that is not given! Using 0.9 instead.")
