@@ -47,9 +47,10 @@ class Input:
             self.implemented_exper_list = \
                 np.array(["superCDMS",
                           "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many",
-                          "SIMPLEModeStage2", "PICASSO", "KIMS2012", "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned",
-                          "DAMA2010NaSmRebinned DAMA2010ISmRebinned", "DAMA2010NaSmRebinned_TotRateLimit",
-                          "XENON10", "XENON100", "CDMSlite2013CoGeNTQ", "CDMSSi2012"])
+                          "SIMPLEModeStage2", "PICASSO", "KIMS2012", "XENON10", "XENON100",
+                          "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned", "DAMA2010NaSmRebinned_TotRateLimit",
+                          "DAMA2010NaSmRebinned DAMA2010ISmRebinned", "DAMA2010ISmRebinned DAMA2010NaSmRebinned",
+                          "CDMSlite2013CoGeNTQ", "CDMSSi2012", "CDMSSiGe_artif", "CDMSSi_artif"])
         self.SetExperList(index_list)
         self.scattering_type_list = scattering_type_list \
             if scattering_type_list is not None \
@@ -101,7 +102,8 @@ class Input:
                           "DAMA2010NaSmRebinned_TotRateLimit": self.qDAMANa_Rate_list,
                           }
         q = [quenching_list.get(exp, [None]) for exp in self.exper_name.split()]
-        return q[0] if len(q) == 1 else zip(*q)
+        print('q =', repr(q))
+        return zip(*q)
 
     def _GetKwargs(self):
         attributes = inspect.getmembers(self, lambda a: not(inspect.isroutine(a)))
@@ -118,14 +120,17 @@ class Input:
                            self.filename_tail_list, self.input_list):
             for self.quenching in self.QuenchingList():
                 self.vmin_range = \
-                    module.Vmin_range(self.exper_name, self.mx, self.delta, mPhi=self.mPhi,
-                                      quenching=self.quenching,
+                    module.Vmin_range(self.exper_name.split()[0], self.mx,
+                                      self.delta, mPhi=self.mPhi,
+                                      quenching=self.quenching[0],
                                       FOX_METHOD=np.any(self.FOX_METHOD))
                 if np.any(self.FOX_METHOD):
                     self.vmin_FoxBand_range = \
-                        module.Vmin_FoxBand_range(self.exper_name, self.mx, self.delta,
-                                                  self.mPhi)
+                        module.Vmin_FoxBand_range(self.exper_name.split()[0], self.mx,
+                                                  self.delta, self.mPhi)
                 print(self.vmin_range)
+                if len(self.quenching) == 1:
+                    self.quenching = self.quenching[0]
                 kwargs = self._GetKwargs()
                 run_program(**kwargs)
         return
@@ -138,9 +143,11 @@ class Input:
                            self.filename_tail_list, self.input_list):
             for self.quenching in self.QuenchingList():
                 self.mx_range = \
-                    module.DM_mass_range(self.exper_name, self.delta, self.mPhi,
-                                         self.quenching)
+                    module.DM_mass_range(self.exper_name.split()[0], self.delta,
+                                         self.mPhi, self.quenching[0])
                 print(self.mx_range)
+                if len(self.quenching) == 1:
+                    self.quenching = self.quenching[0]
                 kwargs = self._GetKwargs()
                 run_program(**kwargs)
         return

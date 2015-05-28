@@ -13,10 +13,10 @@ def main():
     implemented_exper_list = \
         ["superCDMS",
          "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many",
-         "SIMPLEModeStage2", "PICASSO", "KIMS2012", "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned",
-         "DAMA2010NaSmRebinned DAMA2010ISmRebinned", "DAMA2010NaSmRebinned_TotRateLimit",
-         "XENON10", "XENON100", "CDMSlite2013CoGeNTQ", "CDMSSi2012",
-         "CDMSSiGe_artif", "CDMSSi_artif"]
+         "SIMPLEModeStage2", "PICASSO", "KIMS2012", "XENON10", "XENON100",
+         "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned", "DAMA2010NaSmRebinned_TotRateLimit",
+         "DAMA2010NaSmRebinned DAMA2010ISmRebinned", "DAMA2010ISmRebinned DAMA2010NaSmRebinned",
+         "CDMSlite2013CoGeNTQ", "CDMSSi2012", "CDMSSiGe_artif", "CDMSSi_artif"]
 
     FOX_METHOD = {}
 #    FOX_METHOD['ResponseTables'] = T
@@ -40,7 +40,7 @@ def main():
     inp.SetScattering_type(['SDPS'])
     inp.SetExperList([0])
     inp.SetInputList(slice(0, 1))
-    inp.OUTPUT_MAIN_DIR = "../Output1/"
+    inp.OUTPUT_MAIN_DIR = "../Output/"
     inp.filename_tail_list = [""]
     inp.extra_tail = "_mix"
 
