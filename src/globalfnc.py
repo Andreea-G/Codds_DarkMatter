@@ -58,6 +58,8 @@ Color = {"superCDMS": 'peru',
          "CDMSlite2013CoGeNTQ": 'cyan', "CDMSSi2012": 'red',
          "KIMS2012": 'purple', "PICASSO": 'darkturquoise',
          "DAMA2010NaSmRebinned_TotRateLimit": 'green',
+         "DAMA2010NaSmRebinned": 'green',
+         "DAMA2010ISmRebinned": 'green',
          "SIMPLEModeStage2": 'saddlebrown'
          }
 
