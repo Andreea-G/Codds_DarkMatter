@@ -13,6 +13,7 @@ from scipy import integrate, interpolate
 from scipy.optimize import fsolve, minimize
 from scipy.special import lambertw
 import parallel_map as par
+import matplotlib.pyplot as plt
 
 INPUT_DIR = "Data/"
 
@@ -560,23 +561,38 @@ class DAMAExperiment(Experiment):
         print("upper_limit = ", upper_limit)
         return upper_limit
 
-    def LogLMax(self, output_file, mx_fit_guess=7):
+    def LogLMax(self, output_file, mx_fit_guess=None):
         table = np.transpose(np.loadtxt(output_file))
         mx_list = table[0]
         mx_min = mx_list[0]
         mx_max = mx_list[-1]
+        if mx_fit_guess is None:
+            mx_fit_guess = (mx_min + mx_max)/2
         print('mx_min, mx_max =', mx_min, mx_max)
         log_likelihood_max = table[2]
-        neg_log_likelihood_max_interp = interpolate.interp1d(mx_list, -log_likelihood_max)
-        self.mx_fit = minimize(neg_log_likelihood_max_interp, mx_fit_guess,
-                               bounds=[(mx_min, mx_max)]).x[0]
-        print('mx_fit =', self.mx_fit)
-        self.logL_max = -neg_log_likelihood_max_interp(self.mx_fit)
-        print('logL_max =', self.logL_max)
+        neg_log_likelihood_max_interp = interpolate.interp1d(mx_list, -log_likelihood_max,
+                                                             kind='quadratic')
+        mx_fit = minimize(neg_log_likelihood_max_interp, mx_fit_guess, tol=1e-4,
+                          bounds=[(1.01 * mx_min, 0.99 * mx_max)]).x
+        print('mx_fit =', mx_fit)
+        logL_max = -neg_log_likelihood_max_interp(mx_fit)
+        print('logL_max =', logL_max)
+        return mx_fit, logL_max, mx_list, log_likelihood_max
+
+    def _UpperLowerLists(self, mx, logL_max, sigma, pred, data, err):
+        def logL(ratio, pred=pred, data=data, err=err):
+            return -sum((ratio * pred - data)**2 / (2 * err**2)) - self.logL_target
+        if logL_max > self.logL_target:
+            ratio_low = fsolve(logL, 0.5)[0]
+            ratio_high = fsolve(logL, 3)[0]
+            return [[np.log10(mx), np.log10(ratio_low * sigma)],
+                    [np.log10(mx), np.log10(ratio_high * sigma)]]
+        return []
 
     def UpperLowerLists(self, CL, output_file, output_file_lower, output_file_upper,
-                        num_mx=1000):
-        self.logL_target = self.logL_max - chi_squared(2, CL)
+                        num_mx=1000, processes=None):
+        print('CL =', CL, 'chi2 =', chi_squared(2, CL))
+        self.logL_target = self.logL_max - chi_squared(2, CL)/2
 
         table = np.transpose(np.loadtxt(output_file))
         num_dimensions = table.shape[0]
@@ -602,30 +618,32 @@ class DAMAExperiment(Experiment):
         data = np.array([[d(mx) for d in data_interp] for mx in mx_list])
         error = np.array([[err(mx) for err in error_interp] for mx in mx_list])
 
-        limit_low = []
-        limit_high = []
+        kwargs = ({'mx': mx_list[index],
+                   'logL_max': logL_max[index],
+                   'sigma': sigma_fit[index],
+                   'pred': predicted[index],
+                   'data': data[index],
+                   'err': error[index]
+                   }
+                  for index in range(len(mx_list)))
+        limits = [l for l in par.parmap(self._UpperLowerLists, kwargs, processes=processes,
+                                        verbose=False) if l]
+        if limits:
+            limits = np.transpose(limits, axes=(1, 0, 2))
+            limit_low = limits[0]
+            limit_high = limits[1]
+        else:
+            limit_low = limit_high = []
 
-        def logL(ratio, index, predicted=predicted, data=data, error=error):
-            return -sum((ratio * predicted[index] - data[index])**2 /
-                        (2 * error[index]**2))
-        for index in range(len(mx_list)):
-            if logL_max[index] > self.logL_target:
-                mx = mx_list[index]
-                ratio = fsolve(lambda r: logL(r, index) - self.logL_target, 0.5)[0]
-                limit_low.append([np.log10(mx), np.log10(ratio * sigma_fit[index])])
-                ratio = fsolve(lambda r: logL(r, index) - self.logL_target, 3)[0]
-                limit_high.append([np.log10(mx), np.log10(ratio * sigma_fit[index])])
-
-        limit_low = np.array(limit_low)
-        limit_high = np.array(limit_high)
         np.savetxt(output_file_lower, limit_low)
         np.savetxt(output_file_upper, limit_high)
         return [np.array(limit_low), np.array(limit_high)]
 
-    def Region(self, CL, output_file, output_file_lower, output_file_upper, num_mx=1000):
-        self.LogLMax(output_file)
+    def Region(self, delta, CL, output_file, output_file_lower, output_file_upper,
+               num_mx=1000, processes=None):
+        self.mx_fit, self.logL_max, mx_list, log_likelihood_max = self.LogLMax(output_file)
         return self.UpperLowerLists(CL, output_file, output_file_lower, output_file_upper,
-                                    num_mx=num_mx)
+                                    num_mx=num_mx, processes=processes)
 
 
 class DAMAExperimentCombined(DAMAExperiment, Experiment):
@@ -652,14 +670,35 @@ class DAMAExperimentCombined(DAMAExperiment, Experiment):
     def _exchange(self, string, old, new):
         return string.replace(old, new).replace(new, old, 1)
 
-    def Region(self, CL, output_file, output_file_lower, output_file_upper, num_mx=1000):
-        flipped_file = self._exchange(output_file, 'Na', 'I')
-        q_Na = max(self.QuenchingFactor(0), self.other.QuenchingFactor(0))
-        q_I = min(self.QuenchingFactor(0), self.other.QuenchingFactor(0))
-        flipped_file = self._exchange(flipped_file, str(q_Na), str(q_I))
-        self.LogLMax(flipped_file)
+    def Region(self, delta, CL, output_file, output_file_lower, output_file_upper,
+               num_mx=1000, processes=None):
+        if output_file.find('Na') < output_file.find('I'):
+            old, new = 'I', 'Na'
+        else:
+            old, new = 'Na', 'I'
+        flipped_file = self._exchange(output_file, old, new)
+        flipped_file = self._exchange(flipped_file, str(self.other.QuenchingFactor(0)),
+                                      str(self.QuenchingFactor(0)))
+        self.mx_fit, self.logL_max, self.mx_list, self.log_likelihood_max = self.LogLMax(output_file)
+        plt.close()
+        plt.plot(self.mx_list, self.log_likelihood_max, 'r')
+        plt.plot(self.mx_list, [self.logL_max] * len(self.mx_list), 'r')
+
+        try:
+            mx_fit, logL_max, mx_list, log_likelihood_max = self.LogLMax(flipped_file)
+            plt.plot(mx_list, log_likelihood_max, 'b')
+            plt.plot(mx_list, [logL_max] * len(mx_list), 'b')
+            if logL_max > self.logL_max:
+                self.mx_fit = mx_fit
+                self.logL_max = logL_max
+                self.mx_list = mx_list
+                self.log_likelihood_max = log_likelihood_max
+        except:
+            pass
+        plt.plot(self.mx_list, [self.logL_max] * len(self.mx_list), 'o')
+        plt.show()
         return self.UpperLowerLists(CL, output_file, output_file_lower, output_file_upper,
-                                    num_mx=num_mx)
+                                    num_mx=num_mx, processes=processes)
 
 
 class DAMATotalRateExperiment(Experiment):
