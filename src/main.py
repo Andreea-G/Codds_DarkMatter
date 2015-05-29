@@ -28,17 +28,18 @@ def main():
 #    FOX_METHOD['FoxBand'] = T
 #    FOX_METHOD['FoxBandPlot'] = T
 
-    HALO_DEP = F
-    plot_dots = T
+    HALO_DEP = T
+    plot_dots = F
     RUN_PROGRAM = F
+    MAKE_REGIONS = F
     MAKE_PLOT = T
 
     inp = Input(HALO_DEP, implemented_exper_list=implemented_exper_list,
-                RUN_PROGRAM=RUN_PROGRAM, FOX_METHOD=FOX_METHOD,
+                RUN_PROGRAM=RUN_PROGRAM, MAKE_REGIONS=MAKE_REGIONS, FOX_METHOD=FOX_METHOD,
                 MAKE_PLOT=MAKE_PLOT, plot_dots=plot_dots)
 
     inp.SetScattering_type(['SDPS'])
-    inp.SetExperList([0])
+    inp.SetExperList([14, 15])
     inp.SetInputList(slice(0, 1))
     inp.OUTPUT_MAIN_DIR = "../Output/"
     inp.filename_tail_list = [""]
@@ -48,7 +49,7 @@ def main():
         plt.close()
         inp.RunProgram()
         if MAKE_PLOT:
-            plt.ylim([-32, -20])
+#            plt.ylim([-32, -20])
 #            plt.ylim([-28, -13])
             plt.show()
     finally:
