@@ -73,12 +73,12 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, kind=None, linewidth=3,
 
 
 def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
-                RUN_PROGRAM, MAKE_PLOT, HALO_DEP, FOX_METHOD,
+                RUN_PROGRAM, MAKE_REGIONS, MAKE_PLOT, HALO_DEP, FOX_METHOD,
                 mx=None, mx_range=None, vmin_range=None,
                 vmin_FoxBand_range=None, logeta_FoxBand_percent_range=None,
                 steepness=None, logeta_guess=None,
                 vmin_index_list=None, logeta_index_range=None,
-                delta_logL=1,
+                confidence_levels=[0.9],
                 filename_tail="", OUTPUT_MAIN_DIR="Output/", extra_tail="",
                 plot_dots=True, quenching=None):
     ''' Main run of the program.
@@ -268,10 +268,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                 if FOX_METHOD.FoxBand:
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     interpolation_order = 2
-                    try:
-                        len(delta_logL)
-                    except TypeError:
-                        delta_logL = [delta_logL]
+                    delta_logL = [chi_squared1(c) for c in confidence_levels]
                     for d_logL in delta_logL:
                         multiplot = (d_logL == delta_logL[0]) and MAKE_PLOT
                         exper.FoxBand(output_file_no_extension, d_logL,
@@ -286,25 +283,34 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
             print(output_file)  # write to file
             np.savetxt(output_file, upper_limit)
 
+    # make regions
+    if MAKE_REGIONS and exper_name.split()[0] in DAMARegion_exper:
+        output_file = output_file_no_extension + ".dat"
+        for CL in confidence_levels:
+            output_file_regions = output_file_no_extension + \
+                                  "_CL" + str(round(CL, 2))
+            output_file_lower = output_file_regions + "_lower_limit.dat"
+            output_file_upper = output_file_regions + "_upper_limit.dat"
+            exper.Region(delta, CL, output_file, output_file_lower, output_file_upper)
+
     # produce plot
     if MAKE_PLOT and not np.any(FOX_METHOD[:-1]):
-        output_file = output_file_no_extension + ".dat"
         if exper_name.split()[0] in DAMARegion_exper:
-            if hasattr(Plot_Upper_Limit, 'count'):
-                Plot_Upper_Limit.count[exper_name] = -1
-            for CL in [confidence_level(1), 0.9]:
-                output_file_regions = output_file_no_extension + \
-                                      "_CL" + str(round(CL, 2))
+            for CL in confidence_levels:
+                if hasattr(Plot_Upper_Limit, 'count'):
+                    Plot_Upper_Limit.count[exper_name] = -1
+                output_file_regions = output_file_no_extension + "_CL" + str(round(CL, 2))
                 output_file_lower = output_file_regions + "_lower_limit.dat"
                 output_file_upper = output_file_regions + "_upper_limit.dat"
-                [lower_limit, upper_limit] = \
-                    exper.Region(CL, output_file, output_file_lower, output_file_upper)
+                lower_limit = np.loadtxt(output_file_lower)
+                upper_limit = np.loadtxt(output_file_upper)
                 Plot_Upper_Limit(exper_name, lower_limit, HALO_DEP,
                                  plot_dots=plot_dots, plot_close=False, plot_show=False)
                 Plot_Upper_Limit.count[exper_name] -= 1
                 Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP,
                                  plot_dots=plot_dots, plot_close=False, plot_show=False)
         else:
+            output_file = output_file_no_extension + ".dat"
             upper_limit = np.loadtxt(output_file)
             print("upper_limit = ", upper_limit)
             Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP,
@@ -318,11 +324,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
 
         exper.PlotSamplingTable(output_file_no_extension,
                                 plot_close=False, plot_show=False, plot_optimum=False)
+        delta_logL = [chi_squared1(c) for c in confidence_levels]
         print("delta_logL =", delta_logL)
-        try:
-            len(delta_logL)
-        except TypeError:
-            delta_logL = [delta_logL]
         for d_logL in delta_logL:
             exper.ImportFoxBand(output_file_no_extension, d_logL)
             Plot_Upper_Limit(exper_name, exper.vmin_logeta_band_low, HALO_DEP,

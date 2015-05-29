@@ -26,18 +26,14 @@ len_FoxBools = len(FoxBools._fields)
 FoxBools.__new__.__defaults__ = tuple([F] * len_FoxBools)
 
 
-def DeltaLogL(CL):
-    return [2 * erfinv(c/100)**2 for c in CL]
-
-
 class Input:
     def __init__(self, HALO_DEP,
                  implemented_exper_list=None, index_list=[0], input_slice=slice(None),
                  scattering_type='SI', scattering_type_list=None,
                  filename_tail_list=[""], extra_tail="", OUTPUT_MAIN_DIR="../Output/",
-                 MAKE_PLOT=False, RUN_PROGRAM=False, FOX_METHOD={},
+                 MAKE_PLOT=False, RUN_PROGRAM=False, MAKE_REGIONS=False, FOX_METHOD={},
                  plot_dots=False,
-                 delta_logL=[1], delta_logL_CL=[90]):
+                 sigma_dev_list=[1], CL_list=[0.9]):
         print('HALO_DEP =', HALO_DEP)
         module = import_file(input_filename_list[HALO_DEP] + ".py")
 
@@ -63,6 +59,7 @@ class Input:
         self.MAKE_PLOT = MAKE_PLOT
         self.plot_dots = plot_dots
         self.RUN_PROGRAM = RUN_PROGRAM
+        self.MAKE_REGIONS = MAKE_REGIONS
         self.HALO_DEP = HALO_DEP
         self.FOX_METHOD = FoxBools(**FOX_METHOD)
 
@@ -73,12 +70,12 @@ class Input:
 
         self.fp = 1
 
-        if delta_logL is not None:
-            self.delta_logL = delta_logL  # for Fox method
+        if CL_list is not None:
+            self.confidence_levels = CL_list
         else:
-            self.delta_logL = []
-        if delta_logL_CL is not None:
-            self.delta_logL.extend(DeltaLogL(delta_logL_CL))
+            self.confidence_levels = []
+        if sigma_dev_list is not None:
+            self.confidence_levels.extend([confidence_level(s) for s in sigma_dev_list])
 
     def SetExperList(self, index_list):
         self.exper_list = self.implemented_exper_list[index_list]
@@ -142,14 +139,21 @@ class Input:
                 in product(self.exper_list, self.scattering_type_list,
                            self.filename_tail_list, self.input_list):
             for self.quenching in self.QuenchingList():
-                self.mx_range = \
-                    module.DM_mass_range(self.exper_name.split()[0], self.delta,
-                                         self.mPhi, self.quenching[0])
+                try:
+                    self.mx_range = \
+                        module.DM_mass_range(self.exper_name.split()[0], self.delta,
+                                             self.mPhi, self.quenching[0])
+                except KeyError as key_error:
+                    print('KeyError:', key_error)
+                    continue
                 print(self.mx_range)
                 if len(self.quenching) == 1:
                     self.quenching = self.quenching[0]
                 kwargs = self._GetKwargs()
-                run_program(**kwargs)
+                try:
+                    run_program(**kwargs)
+                except FileNotFoundError as file_error:
+                    print('FileNotFoundError:', file_error)
         return
 
     def RunProgram(self):

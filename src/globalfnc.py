@@ -10,7 +10,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 import numpy as np
 import math
-from scipy.special import erf, erfinv, gammainc
+from scipy.special import erf, erfinv
 from scipy.stats import chi2
 pi = np.pi
 
@@ -77,9 +77,14 @@ def chi_squared(dof, CL=ConfidenceLevel):
     return chi2.ppf(CL, dof)
 
 
+def chi_squared1(CL=ConfidenceLevel):
+    # special case for dof = 1
+    return sigma_dev(CL)**2
+
+
 def import_file(full_path_to_module):
-    """ Imports Python module from file.
-    """
+    ''' Imports Python module from file.
+    '''
     import os
     import sys
     directory, module_name = os.path.split(full_path_to_module)
