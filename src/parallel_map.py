@@ -7,12 +7,13 @@ from __future__ import print_function
 import multiprocessing
 
 
-def fun(f, q_in, q_out):
+def fun(f, q_in, q_out, verbose):
     while True:
         i, x = q_in.get()
         if i is None:
             break
-        print("process #", i)
+        if verbose:
+            print("process #", i)
         if isinstance(x, tuple):
             q_out.put((i, f(*x)))
         elif isinstance(x, dict):
@@ -21,7 +22,7 @@ def fun(f, q_in, q_out):
             q_out.put((i, f(x)))
 
 
-def parmap(f, X, processes=multiprocessing.cpu_count()):
+def parmap(f, X, processes=multiprocessing.cpu_count(), verbose=True):
     ''' Used instead of Pool.map function for parallel programming.
         Works with lambdas and with member functions of classes.
     Input:
@@ -36,7 +37,7 @@ def parmap(f, X, processes=multiprocessing.cpu_count()):
     q_in = multiprocessing.Queue(1)
     q_out = multiprocessing.Queue()
 
-    proc = [multiprocessing.Process(target=fun, args=(f, q_in, q_out))
+    proc = [multiprocessing.Process(target=fun, args=(f, q_in, q_out, verbose))
             for _ in range(processes)]
     for p in proc:
         p.daemon = True
