@@ -11,12 +11,12 @@ from input_main import *
 
 def main():
     implemented_exper_list = \
-        ["superCDMS",
-         "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many",
-         "SIMPLEModeStage2", "PICASSO", "KIMS2012", "XENON10", "XENON100",
-         "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned", "DAMA2010NaSmRebinned_TotRateLimit",
-         "DAMA2010NaSmRebinned DAMA2010ISmRebinned", "DAMA2010ISmRebinned DAMA2010NaSmRebinned",
-         "CDMSlite2013CoGeNTQ", "CDMSSi2012", "CDMSSiGe_artif", "CDMSSi_artif"]
+        ["superCDMS",  # 0
+         "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many",  # 1 - 5
+         "SIMPLEModeStage2", "PICASSO", "KIMS2012", "XENON10", "XENON100",  # 6 - 10
+         "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned", "DAMA2010NaSmRebinned_TotRateLimit",  # 11 - 13
+         "DAMA2010NaSmRebinned DAMA2010ISmRebinned", "DAMA2010ISmRebinned DAMA2010NaSmRebinned",  # 14 - 15
+         "CDMSlite2013CoGeNTQ", "CDMSSi2012", "CDMSSiGeArtif", "CDMSSiArtif"]  # 16 - 19
 
     FOX_METHOD = {}
 #    FOX_METHOD['ResponseTables'] = T
@@ -44,6 +44,7 @@ def main():
     inp.OUTPUT_MAIN_DIR = "../Output/"
     inp.filename_tail_list = [""]
     inp.extra_tail = "_mix"
+#    inp.confidence_levels.extend([confidence_level(s) for s in [3, 5, 7]] + [0.99])
 
     try:
         plt.close()
@@ -53,7 +54,7 @@ def main():
 #            plt.ylim([-28, -13])
             plt.show()
     finally:
-        if inp.RUN_PROGRAM:
+        if inp.RUN_PROGRAM or inp.MAKE_REGIONS:
             os.system("say 'Finished running program'")
 #            pass
 

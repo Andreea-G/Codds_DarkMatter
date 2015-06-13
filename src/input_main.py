@@ -45,7 +45,7 @@ class Input:
                           "SIMPLEModeStage2", "PICASSO", "KIMS2012", "XENON10", "XENON100",
                           "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned", "DAMA2010NaSmRebinned_TotRateLimit",
                           "DAMA2010NaSmRebinned DAMA2010ISmRebinned", "DAMA2010ISmRebinned DAMA2010NaSmRebinned",
-                          "CDMSlite2013CoGeNTQ", "CDMSSi2012", "CDMSSiGe_artif", "CDMSSi_artif"])
+                          "CDMSlite2013CoGeNTQ", "CDMSSi2012", "CDMSSiGeArtif", "CDMSSiArtif"])
         self.SetExperList(index_list)
         self.scattering_type_list = scattering_type_list \
             if scattering_type_list is not None \
