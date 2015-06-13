@@ -571,9 +571,10 @@ class DAMAExperiment(Experiment):
         print('mx_min, mx_max =', mx_min, mx_max)
         log_likelihood_max = table[2]
         neg_log_likelihood_max_interp = interpolate.interp1d(mx_list, -log_likelihood_max,
-                                                             kind='quadratic')
+                                                             kind='linear')
+        print('logL_guess =', neg_log_likelihood_max_interp(mx_fit_guess))
         mx_fit = minimize(neg_log_likelihood_max_interp, mx_fit_guess, tol=1e-4,
-                          bounds=[(1.01 * mx_min, 0.99 * mx_max)]).x
+                          bounds=[(1.1 * mx_min, 0.9 * mx_max)]).x
         print('mx_fit =', mx_fit)
         logL_max = -neg_log_likelihood_max_interp(mx_fit)
         print('logL_max =', logL_max)
@@ -671,7 +672,7 @@ class DAMAExperimentCombined(DAMAExperiment, Experiment):
         return string.replace(old, new).replace(new, old, 1)
 
     def Region(self, delta, CL, output_file, output_file_lower, output_file_upper,
-               num_mx=1000, processes=None):
+               num_mx=1000, processes=None, plot=False):
         if output_file.find('Na') < output_file.find('I'):
             old, new = 'I', 'Na'
         else:
@@ -680,23 +681,25 @@ class DAMAExperimentCombined(DAMAExperiment, Experiment):
         flipped_file = self._exchange(flipped_file, str(self.other.QuenchingFactor(0)),
                                       str(self.QuenchingFactor(0)))
         self.mx_fit, self.logL_max, self.mx_list, self.log_likelihood_max = self.LogLMax(output_file)
-        plt.close()
-        plt.plot(self.mx_list, self.log_likelihood_max, 'r')
-        plt.plot(self.mx_list, [self.logL_max] * len(self.mx_list), 'r')
+        if plot:
+            plt.close()
+            plt.plot(self.mx_list, self.log_likelihood_max, 'r')
+            plt.plot(self.mx_list, [self.logL_max] * len(self.mx_list), 'r')
 
         try:
             mx_fit, logL_max, mx_list, log_likelihood_max = self.LogLMax(flipped_file)
-            plt.plot(mx_list, log_likelihood_max, 'b')
-            plt.plot(mx_list, [logL_max] * len(mx_list), 'b')
+            if plot:
+                plt.plot(mx_list, log_likelihood_max, 'b')
+                plt.plot(mx_list, [logL_max] * len(mx_list), 'b')
             if logL_max > self.logL_max:
                 self.mx_fit = mx_fit
                 self.logL_max = logL_max
                 self.mx_list = mx_list
                 self.log_likelihood_max = log_likelihood_max
         except:
-            pass
-        plt.plot(self.mx_list, [self.logL_max] * len(self.mx_list), 'o')
-        plt.show()
+            if plot:
+                plt.plot(self.mx_list, [self.logL_max] * len(self.mx_list), 'o')
+                plt.show()
         return self.UpperLowerLists(CL, output_file, output_file_lower, output_file_upper,
                                     num_mx=num_mx, processes=processes)
 
