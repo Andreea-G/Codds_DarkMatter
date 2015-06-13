@@ -334,7 +334,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             minimizer_kwargs = {"constraints": constr, "args": (constr_func,)}
             optimum_log_likelihood = basinhopping(self._MinusLogLikelihood, vars_guess,
                                                   minimizer_kwargs=minimizer_kwargs,
-                                                  niter=10, stepsize=0.1)
+                                                  niter=30, stepsize=0.1)
         else:
             optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess,
                                               args=(constr_func,), constraints=constr)
