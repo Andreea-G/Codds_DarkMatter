@@ -1,0 +1,6 @@
+FOLDER=$1
+pushd $FOLDER
+for f in *.*; do g=${f%%.*}_${f#*.}; mv $f $g; done
+for f in *_pdf; do g=${f%_pdf}.pdf; mv $f $g; done
+popd
+
