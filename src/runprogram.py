@@ -128,7 +128,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
         elif exper_name in DAMALimit_exper:
             class_name = DAMATotalRateExperiment
         else:
-            print("Error! This experiment was not implemented!")
+            print("NotImplementedError: This experiment was not implemented!")
             return
     else:
         print('Halo Independent')
@@ -146,7 +146,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
         elif exper_name.split()[0] in DAMARegion_exper:
             class_name = Crosses_HaloIndep_Combined
         else:
-            print("Error! This experiment was not implemented!")
+            print("NotImplementedError: This experiment was not implemented!")
             return
 
         # if delta > 0 we have to use the integration in E recoil
@@ -288,7 +288,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
         output_file = output_file_no_extension + ".dat"
         for CL in confidence_levels:
             output_file_regions = output_file_no_extension + \
-                                  "_CL" + str(round(CL, 2))
+                                  "_" + str(round(sigma_dev(CL), 2)) + "sigma"
             output_file_lower = output_file_regions + "_lower_limit.dat"
             output_file_upper = output_file_regions + "_upper_limit.dat"
             exper.Region(delta, CL, output_file, output_file_lower, output_file_upper)
@@ -299,7 +299,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
             for CL in confidence_levels:
                 if hasattr(Plot_Upper_Limit, 'count'):
                     Plot_Upper_Limit.count[exper_name] = -1
-                output_file_regions = output_file_no_extension + "_CL" + str(round(CL, 2))
+                output_file_regions = output_file_no_extension + \
+                    "_" + str(round(sigma_dev(CL), 2)) + "sigma"
                 output_file_lower = output_file_regions + "_lower_limit.dat"
                 output_file_upper = output_file_regions + "_upper_limit.dat"
                 lower_limit = np.loadtxt(output_file_lower)

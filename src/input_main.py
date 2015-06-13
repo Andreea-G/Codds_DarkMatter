@@ -10,7 +10,6 @@ import inspect
 from itertools import product
 from runprogram import *
 from collections import namedtuple
-from scipy.special import erfinv
 
 
 input_filename_list = {True: "input_DAMApaper",
@@ -64,7 +63,7 @@ class Input:
         self.FOX_METHOD = FoxBools(**FOX_METHOD)
 
         self.qKIMS_list = [0.05, 0.1]
-        self.qDAMANa_list = [0.4, 0.3]
+        self.qDAMANa_list = [0.3, 0.4]
         self.qDAMAI_list = [0.09, 0.06]
         self.qDAMANa_Rate_list = [0.4]
 
