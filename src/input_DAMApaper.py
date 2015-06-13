@@ -55,17 +55,17 @@ def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
     elif exper_name == "DAMA2010NaSmRebinned":
         num_steps = 60
         if quenching == 0.4:
-            mx_range_options = {(0, 1000.): (5, 15, num_steps),
+            mx_range_options = {(0, 1000.): (5, 25, num_steps),
 #            mx_range_options = {(0, 1000.): (8, 15, num_steps),
-                                (0, 0.): (6, 20, num_steps),
+                                (0, 0.): (6, 22, num_steps),
                                 (-30, 1000.): (2, 4, num_steps),
                                 (-30, 0.): (2, 3, num_steps),
                                 (-50, 1000.): (1.5, 2.5, num_steps),
                                 }
         else:
-            mx_range_options = {(0, 1000.): (6, 20, num_steps),
+            mx_range_options = {(0, 1000.): (6, 30, num_steps),
 #            mx_range_options = {(0, 1000.): (10, 20, num_steps),
-                                (0, 0.): (7, 30, num_steps),
+                                (0, 0.): (7, 22, num_steps),
                                 (-30, 1000.): (3, 5, num_steps),
                                 (-30, 0.): (2.5, 4, num_steps),
                                 (-50, 1000.): (2, 3.5, num_steps),
@@ -73,29 +73,29 @@ def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
     elif exper_name == "DAMA2010ISmRebinned":
         num_steps = 60
         if quenching == 0.09:
-            mx_range_options = {(0, 1000.): (25, 65, num_steps),
+            mx_range_options = {(0, 1000.): (30, 80, num_steps),
 #            mx_range_options = {(0, 1000.): (40, 65, num_steps),
-                                (0, 0.): (35, 90, num_steps),
-                                (-30, 1000.): (20, 50, num_steps),
-                                (-30, 0.): (30, 50, num_steps),
+                                (0, 0.): (22, 90, num_steps),
+                                (-30, 1000.): (20, 80, num_steps),
+                                (-30, 0.): (30, 100, num_steps),
                                 (-50, 1000.): (20, 40, num_steps),
-                                (50, 1000.): (30, 80, num_steps),
+                                (50, 1000.): (30, 100, num_steps),
                                 (50, 0.): (40, 100, num_steps),
-                                (100, 1000.): (42, 65, num_steps),
-                                (100, 0.): (50, 300, num_steps),
+                                (100, 1000.): (42, 80, num_steps),
+                                (100, 0.): (30, 300, num_steps),
 #                                (100, 0.): (42, 65, num_steps),
                                 }
         else:
-            mx_range_options = {(0, 1000.): (35, 90, num_steps),
+            mx_range_options = {(0, 1000.): (30, 100, num_steps),
 #            mx_range_options = {(0, 1000.): (55, 85, num_steps),
-                                (0, 0.): (40, 130, num_steps),
-                                (-30, 1000.): (30, 60, num_steps),
-                                (-30, 0.): (40, 70, num_steps),
+                                (0, 0.): (22, 130, num_steps),
+                                (-30, 1000.): (30, 100, num_steps),
+                                (-30, 0.): (40, 100, num_steps),
                                 (-50, 1000.): (30, 50, num_steps),
                                 (50, 1000.): (40, 100, num_steps),
                                 (50, 0.): (55, 100, num_steps),
-                                (100, 1000.): (50, 90, num_steps),
-                                (100, 0.): (100, 300, num_steps),
+                                (100, 1000.): (50, 100, num_steps),
+                                (100, 0.): (50, 500, num_steps),
 #                                (100, 0.): (50, 90, num_steps),
                                 }
     elif exper_name == "DAMA2010NaSmRebinned_TotRateLimit":
