@@ -10,7 +10,7 @@ from __future__ import print_function
 
 import numpy as np
 from interp import interp1d
-from globalfnc import ConfidenceLevel
+from globalfnc import ConfidenceLevel, chi_squared1
 pi = np.pi
 
 name = "PICASSO"
@@ -62,3 +62,4 @@ BinData = np.array([-6.027919, -0.317259, 1.586294, -0.190355, 0.,
 # BinError are rate errors
 BinError = np.array([7.170051, 1.77665, 9.073604, 9.200507, 1.269036,
                      1.649746, 1.77665, 4.63198])
+Expected_limit = BinData + np.sqrt(chi_squared1(ConfidenceLevel)) * BinError
