@@ -10,7 +10,6 @@ from __future__ import print_function
 
 import numpy as np
 from interp import interp1d
-from globalfnc import ConfidenceLevel
 pi = np.pi
 
 name = "KIMS2012"
