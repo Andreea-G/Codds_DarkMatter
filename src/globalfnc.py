@@ -238,6 +238,12 @@ FF_options = {'SI': FFSI_options,
               }
 
 
+def ERecoil_ratio(mT_1, mT_2, mx, quenching_1, quenching_2):
+    mu_1 = mT_1 * mx / (mT_1 + mx)
+    mu_2 = mT_2 * mx / (mT_2 + mx)
+    return mu_2**2 / mu_1**2 * mT_1 / mT_2 * quenching_2 / quenching_1
+
+
 def VMin(ER, mT, mx, delta):
     ''' Minimum velocity for a given recoil energy ER, target mass mT, DM mass mx,
     and mass split delta.

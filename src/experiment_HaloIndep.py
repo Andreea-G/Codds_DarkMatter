@@ -236,9 +236,7 @@ class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
         self.BinData = module.BinData
         self.BinError = module.BinError
         self.BinSize = module.BinSize
-        self.chiSquared = module.chiSquared[1]
-#        self.Expected_limit = (np.sqrt(self.chiSquared) * self.BinError + self.BinData) * \
-#            self.BinSize
+        self.chiSquared = chi_squared(self.BinData.size)
         self.Expected_limit = module.Expected_limit * self.BinSize
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor
@@ -248,7 +246,8 @@ class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
             np.array(list(map(lambda i, j:
                               self.IntegratedResponse(0, vmin, i, j, mx, fp, fn, delta),
                               self.BinEdges_left, self.BinEdges_right)))
-        result = np.min(self.Expected_limit / int_response)
+        result = [i for i in self.Expected_limit / int_response if i > 0]
+        result = np.min(result)
         if result > 0:
             result = np.log10(result)
         else:
@@ -274,6 +273,8 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
         super().__init__(expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.BinEdges = module.BinEdges
+        self.BinEdges_left = self.BinEdges[:-1]
+        self.BinEdges_right = self.BinEdges[1:]
         self.BinData = module.BinData
         self.BinError = module.BinError
         self.QuenchingFactorOfEee = module.QuenchingFactorOfEee
@@ -296,29 +297,35 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
     def _AverageOverNuclides(self, quantity):
         return np.sum(quantity * self.mass_fraction) / np.sum(self.mass_fraction)
 
-    def _Box(self, Eee1, Eee2, mT_avg, mx, fp, fn, delta, nsigma):
+    def _Box(self, Eee1, Eee2, mT_avg, mx, fp, fn, delta, nsigma, vmax):
+        print('Eee1 =', Eee1, ' Eee2 =', Eee2)
         E1 = Eee1 - nsigma * self.EnergyResolution(Eee1)
         E2 = Eee2 + nsigma * self.EnergyResolution(Eee2)
         ER1 = self._AverageOverNuclides(E1 / self.QuenchingFactorOfEee(E1))
         ER2 = self._AverageOverNuclides(E2 / self.QuenchingFactorOfEee(E2))
         (vmin1, vmin2) = self._VminRange(ER1, ER2, mT_avg, mx, delta)
-        int_resp = self.IntegratedResponse(vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta)
+        if vmax is not None:
+            vmin1 = min(vmin1, vmax)
+            vmin2 = min(vmin2, vmax)
+        int_resp = self.IntegratedResponse(0, vmax, Eee1, Eee2, mx, fp, fn, delta)
         vmin_center = (vmin1 + vmin2)/2
         vmin_error = (vmin2 - vmin1)/2
         return (int_resp, vmin_center, vmin_error)
 
-    def _Boxes(self, mx, fp, fn, delta, nsigma=1, processes=None):
+    def _Boxes(self, mx, fp, fn, delta, nsigma=1, vmax=1000, processes=None):
         mT_avg = np.sum(self.mT * self.mass_fraction) / np.sum(self.mass_fraction)
         print("mT_avg =", mT_avg)
+        print('vmax =', vmax)
         kwargs = ({'Eee1': Eee1, 'Eee2': Eee2, 'mT_avg': mT_avg,
                    'mx': mx, 'fp': fp, 'fn': fn, 'delta': delta,
-                   'nsigma': nsigma}
-                  for Eee1, Eee2 in zip(self.BinEdges[:-1], self.BinEdges[1:]))
+                   'nsigma': nsigma, 'vmax': vmax}
+                  for Eee1, Eee2 in zip(self.BinEdges_left, self.BinEdges_right))
         return np.array(par.parmap(self._Box, kwargs, processes))
 
     def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
                    output_file, nsigma=1, processes=None):
-        box_table = self._Boxes(mx, fp, fn, delta, nsigma=nsigma, processes=1)
+        box_table = self._Boxes(mx, fp, fn, delta, nsigma=nsigma,
+                                processes=processes)
         int_resp_list = box_table[:, 0]
         vmin_center_list = box_table[:, 1]
         vmin_error_list = box_table[:, 2]
@@ -339,9 +346,9 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
                    'Eee1': Eee1, 'Eee2': Eee2,
                    'mx': mx, 'fp': fp, 'fn': fn, 'delta': delta}
                   for vmin1, vmin2 in zip(vmin_list[:-1], vmin_list[1:])
-                  for Eee1, Eee2 in zip(self.BinEdges[:-1], self.BinEdges[1:]))
+                  for Eee1, Eee2 in zip(self.BinEdges_left, self.BinEdges_right))
         matr = [self._int_resp(**k) for k in kwargs]
-        matr = np.reshape(matr, (len(vmin_list)-1, len(self.BinEdges)-1))
+        matr = np.reshape(matr, (len(vmin_list)-1, len(self.BinEdges_left)))
         print('matrix =')
         print(matr)
         print(np.shape(matr))
@@ -364,7 +371,7 @@ class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
     def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
         expername = expername.split()
         super().__init__(expername[0], scattering_type, mPhi)
-        self.other = self.__class__.__bases__[1](expername[1], scattering_type, mPhi)
+        self.other = self.__class__.__bases__[0](expername[1], scattering_type, mPhi)
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor[0]
             self.other.QuenchingFactor = lambda e: quenching_factor[1]
@@ -372,3 +379,65 @@ class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
     def _int_resp(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
         return self.IntegratedResponse(vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta) \
             + self.other.IntegratedResponse(vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta)
+
+    def _Rebin(self, init_bin, mx):
+        self.BinEdges_left = [init_bin[0]]
+        self.BinEdges_right = [init_bin[1]]
+        ratio = ERecoil_ratio(self.mT, self.other.mT, mx,
+                              self.QuenchingFactor(0), self.other.QuenchingFactor(0))
+        ratio = round(ratio[0], 1)
+        print('ratio =', ratio)
+        while self.BinEdges_right[-1] * ratio < self.BinEdges[-1]:
+            self.BinEdges_left.append(self.BinEdges_left[-1] * ratio)
+            self.BinEdges_right.append(self.BinEdges_right[-1] * ratio)
+        self.other.BinEdges_left = self.BinEdges_left
+        self.other.BinEdges_right = self.BinEdges_right
+        print('BinEdges_left =', self.BinEdges_left)
+        print('BinEdges_right =', self.BinEdges_right)
+        self.BinData_rebinned = []
+        self.BinError_rebinned = []
+        for index in range(len(self.BinEdges_left)):
+            data = np.array([d for i, d in enumerate(self.BinData)
+                             if self.BinEdges[i] >= self.BinEdges_left[index] and
+                             self.BinEdges[i + 1] <= self.BinEdges_right[index]])
+            error = np.array([d for i, d in enumerate(self.BinError)
+                              if self.BinEdges[i] >= self.BinEdges_left[index] and
+                              self.BinEdges[i + 1] <= self.BinEdges_right[index]])
+            print('data =', data)
+            print('error =', error)
+            data_rebinned = sum(data/error**2) / sum(1/error**2)
+            error_rebinned = np.sqrt(sum(error**2))
+            self.BinData_rebinned.append(data_rebinned)
+            self.BinError_rebinned.append(error_rebinned)
+        print('BinData_rebinned =', self.BinData_rebinned)
+        print('BinError_rebinned =', self.BinError_rebinned)
+
+    def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
+                   output_file, nsigma=1, init_bin=[2, 4], processes=None):
+        self._Rebin(init_bin, mx)
+        box_table = self._Boxes(mx, fp, fn, delta, nsigma=nsigma, vmax=800,
+                                processes=processes)
+        box_table_other = self.other._Boxes(mx, fp, fn, delta, nsigma=nsigma,
+                                            vmax=800, processes=processes)
+        int_resp_list = box_table[:, 0]
+        int_resp_list_other = box_table_other[:, 0]
+        vmin_center_list = box_table[:, 1]
+        vmin_error_list = box_table[:, 2]
+        size = len(int_resp_list)
+        int_resp_matrix = np.vstack((np.hstack((np.zeros((size - 1, 1)),
+                                               np.diag(int_resp_list[1:]))),
+                                     np.zeros(size)))
+        int_resp_matrix += np.diag(int_resp_list_other)
+        print('int_resp_matrix =', int_resp_matrix)
+        int_resp_inverse = np.linalg.inv(int_resp_matrix)
+
+        eta_list = np.dot(int_resp_inverse, self.BinData_rebinned)
+        eta_error_list = np.sqrt(np.dot(int_resp_inverse ** 2,
+                                        np.array(self.BinError_rebinned) ** 2))
+        result = np.array([int_resp_list + int_resp_list_other,
+                           vmin_center_list, vmin_error_list,
+                           eta_list, eta_error_list])
+        print(result)
+        with open(output_file, 'ab') as f_handle:
+            np.savetxt(f_handle, result)
+        return result
