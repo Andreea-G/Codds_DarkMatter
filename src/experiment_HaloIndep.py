@@ -12,6 +12,7 @@ from experiment import *
 from experiment_HaloIndep_er import *
 import parallel_map as par
 from scipy.linalg import det, inv
+from scipy.optimize import brentq
 
 
 class Experiment_HaloIndep(Experiment):
@@ -91,7 +92,9 @@ class Experiment_HaloIndep(Experiment):
             result += integrate.quad(self.DifferentialResponse, Eee1, Eee2,
                                      args=(qER, const_factor),
                                      epsrel=PRECISSION, epsabs=0)[0]
-        return result
+        if result >= 0:
+            return result
+        return 0
 
     def Response_Dirac(self, vmin, Eee1, Eee2, mx, fp, fn, delta):
         ''' Response function integral d**2 R / (d Eee d ER) between measured energies
@@ -201,6 +204,7 @@ class PoissonExperiment_HaloIndep(Experiment_HaloIndep):
         self.Expected_limit = module.Expected_limit
 
     def _PoissonUpperBound(self, vmin, mx, fp, fn, delta):
+        print('vmin =', vmin)
         muT = self.mT * mx / (self.mT + mx)
         Eee_max = max(2e6 * muT**2 * (vmin/SpeedOfLight)**2 / self.mT)
         print("self.Ethreshold =", self.Ethreshold)
@@ -297,49 +301,114 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
     def _AverageOverNuclides(self, quantity):
         return np.sum(quantity * self.mass_fraction) / np.sum(self.mass_fraction)
 
-    def _Box(self, Eee1, Eee2, mT_avg, mx, fp, fn, delta, nsigma, vmax):
+    def _Box(self, Eee1, Eee2, mT_avg, mx, fp, fn, delta, vmax, output_file=None):
         print('Eee1 =', Eee1, ' Eee2 =', Eee2)
-        E1 = Eee1 - nsigma * self.EnergyResolution(Eee1)
-        E2 = Eee2 + nsigma * self.EnergyResolution(Eee2)
-        ER1 = self._AverageOverNuclides(E1 / self.QuenchingFactorOfEee(E1))
-        ER2 = self._AverageOverNuclides(E2 / self.QuenchingFactorOfEee(E2))
-        (vmin1, vmin2) = self._VminRange(ER1, ER2, mT_avg, mx, delta)
-        if vmax is not None:
-            vmin1 = min(vmin1, vmax)
-            vmin2 = min(vmin2, vmax)
-        int_resp = self.IntegratedResponse(0, vmax, Eee1, Eee2, mx, fp, fn, delta)
-        vmin_center = (vmin1 + vmin2)/2
-        vmin_error = (vmin2 - vmin1)/2
-        return (int_resp, vmin_center, vmin_error)
+        dvmin = 1
+        if delta <= 0:
+            vmin_list = np.linspace(0, vmax, (vmax + dvmin)/dvmin)
+            resp_list = [self.Response(vmin1, Eee1, Eee2, mx, fp, fn, delta)
+                         for vmin1 in vmin_list[:-1]] + [0.001]
+        else:
+            vdelta = min(VminDelta(self.mT, mx, delta))
+            print('vdelta =', vdelta)
+            vdelta = max(0, vdelta // dvmin * dvmin - dvmin)
+            vmin_list = np.linspace(vdelta, vmax, (vmax - vdelta + dvmin)/dvmin)
+            resp_list = [self.IntegratedResponse(vmin1, vmin2, Eee1, Eee2,
+                                                 mx, fp, fn, delta)/dvmin
+                         for vmin1, vmin2 in zip(vmin_list[:-1], vmin_list[1:])] + [0.001]
 
-    def _Boxes(self, mx, fp, fn, delta, nsigma=1, vmax=1000, processes=None):
+        plt.close()
+        plt.plot(vmin_list, resp_list, '-')
+        int_resp = sum(resp_list) * dvmin
+        index_center = np.argmax(resp_list)
+        vmin_center = vmin_list[index_center]
+        resp_max = resp_list[index_center]
+        resp_min = max(resp_list[0], resp_list[-1])
+
+        if output_file is not None:
+            output_file = output_file.replace('temp.dat', self.name + '_' + str(Eee1) +
+                                              '_' + str(Eee2) + '.dat')
+            print(output_file)
+            np.savetxt(output_file, np.transpose([vmin_list, np.array(resp_list)/int_resp]))
+
+        if index_center > 0:
+            int_resp_left = \
+                interpolate.interp1d(resp_list[index_center::-1],
+                                     dvmin * np.cumsum(resp_list[index_center::-1]))
+        else:
+            def int_resp_left(r): return 0
+        if index_center < len(resp_list) - 1:
+            int_resp_right = \
+                interpolate.interp1d(resp_list[index_center:],
+                                     dvmin * np.cumsum(resp_list[index_center:]))
+        else:
+            def int_resp_right(r): return 0
+
+        print('resp_max =', resp_max)
+        print('resp_min =', resp_min)
+        print('int_resp =', int_resp)
+        print('ConfidenceLevel =', ConfidenceLevel)
+
+        plt.show()
+
+        def integrated_response(r):
+            return int_resp_left(r) + int_resp_right(r) - resp_max -\
+                ConfidenceLevel * int_resp
+
+        print(integrated_response(resp_min * 1.1), integrated_response(resp_max * 0.9))
+
+        response_CL = brentq(integrated_response, resp_min * 1.1, resp_max * 0.9)
+        print('response_CL =', response_CL)
+        plt.plot(vmin_list, response_CL * np.ones_like(vmin_list), '-')
+
+        vmin_interp_left = interpolate.interp1d(resp_list[:index_center + 1],
+                                                vmin_list[:index_center + 1])
+        vmin_interp_right = interpolate.interp1d(resp_list[index_center:],
+                                                 vmin_list[index_center:])
+        vmin_error_left = - vmin_interp_left(response_CL) + vmin_center
+        vmin_error_right = vmin_interp_right(response_CL) - vmin_center
+
+#        print('vmin_list =', vmin_list)
+#        print('resp_list_left =', resp_list[:index_center + 1])
+#        print('resp_list_right =', resp_list[index_center:])
+
+        print('vmin_interp =', vmin_interp_left(response_CL), vmin_interp_right(response_CL))
+        print('vmin_center =', vmin_center)
+        print('vmin_error =', vmin_error_left, vmin_error_right)
+
+        os.system("say 'Plot'")
+        plt.show()
+
+        return (int_resp, vmin_center, vmin_error_left, vmin_error_right)
+
+    def _Boxes(self, mx, fp, fn, delta, vmax=1000, processes=None, output_file=None):
         mT_avg = np.sum(self.mT * self.mass_fraction) / np.sum(self.mass_fraction)
         print("mT_avg =", mT_avg)
         print('vmax =', vmax)
         kwargs = ({'Eee1': Eee1, 'Eee2': Eee2, 'mT_avg': mT_avg,
-                   'mx': mx, 'fp': fp, 'fn': fn, 'delta': delta,
-                   'nsigma': nsigma, 'vmax': vmax}
+                   'mx': mx, 'fp': fp, 'fn': fn, 'delta': delta, 'vmax': vmax,
+                   'output_file': output_file}
                   for Eee1, Eee2 in zip(self.BinEdges_left, self.BinEdges_right))
         return np.array(par.parmap(self._Box, kwargs, processes))
 
     def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
-                   output_file, nsigma=1, processes=None):
-        box_table = self._Boxes(mx, fp, fn, delta, nsigma=nsigma,
-                                processes=processes)
+                   output_file, processes=None):
+        box_table = self._Boxes(mx, fp, fn, delta, processes=processes)
         int_resp_list = box_table[:, 0]
         vmin_center_list = box_table[:, 1]
-        vmin_error_list = box_table[:, 2]
+        vmin_error_left_list = box_table[:, 2]
+        vmin_error_right_list = box_table[:, 3]
         eta_list = self.BinData / int_resp_list
         eta_error_list = self.BinError / int_resp_list
-        result = np.array([int_resp_list, vmin_center_list, vmin_error_list,
-                           eta_list, eta_error_list])
+        result = np.array([int_resp_list, vmin_center_list, vmin_error_left_list,
+                           vmin_error_right_list, eta_list, eta_error_list])
         print(result)
         with open(output_file, 'ab') as f_handle:
             np.savetxt(f_handle, result)
         return result
 
     def IntResponseMatrix(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
-                          output_file, nsigma=1, processes=None):
+                          output_file, processes=None):
         np.set_printoptions(threshold=np.nan)
         vmin_list = np.linspace(vmin_min, vmin_max, (vmin_max - vmin_min)/vmin_step + 1)
         kwargs = ({'vmin1': vmin1, 'vmin2': vmin2,
@@ -413,16 +482,17 @@ class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
         print('BinError_rebinned =', self.BinError_rebinned)
 
     def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
-                   output_file, nsigma=1, init_bin=[2, 4], processes=None):
+                   output_file, init_bin=[2, 4], processes=None):
         self._Rebin(init_bin, mx)
-        box_table = self._Boxes(mx, fp, fn, delta, nsigma=nsigma, vmax=800,
-                                processes=processes)
-        box_table_other = self.other._Boxes(mx, fp, fn, delta, nsigma=nsigma,
-                                            vmax=800, processes=processes)
+        box_table = self._Boxes(mx, fp, fn, delta, vmax=800, processes=processes,
+                                output_file=output_file)
+        box_table_other = self.other._Boxes(mx, fp, fn, delta, vmax=800,
+                                            processes=processes, output_file=output_file)
         int_resp_list = box_table[:, 0]
         int_resp_list_other = box_table_other[:, 0]
         vmin_center_list = box_table[:, 1]
-        vmin_error_list = box_table[:, 2]
+        vmin_error_left_list = box_table[:, 2]
+        vmin_error_right_list = box_table[:, 3]
         size = len(int_resp_list)
         int_resp_matrix = np.vstack((np.hstack((np.zeros((size - 1, 1)),
                                                np.diag(int_resp_list[1:]))),
@@ -435,7 +505,7 @@ class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
         eta_error_list = np.sqrt(np.dot(int_resp_inverse ** 2,
                                         np.array(self.BinError_rebinned) ** 2))
         result = np.array([int_resp_list + int_resp_list_other,
-                           vmin_center_list, vmin_error_list,
+                           vmin_center_list, vmin_error_left_list, vmin_error_right_list,
                            eta_list, eta_error_list])
         print(result)
         with open(output_file, 'ab') as f_handle:
