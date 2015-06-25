@@ -352,7 +352,6 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
         print('resp_max =', resp_max)
         print('resp_min =', resp_min)
         print('int_resp =', int_resp)
-        print('ConfidenceLevel =', ConfidenceLevel)
 
         def integrated_response(r):
             return int_resp_left(r) + int_resp_right(r) - resp_max -\
@@ -370,11 +369,6 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
                                                  vmin_list[index_center:])
         vmin_error_left = - vmin_interp_left(response_CL) + vmin_center
         vmin_error_right = vmin_interp_right(response_CL) - vmin_center
-
-#        print('vmin_list =', vmin_list)
-#        print('resp_list_left =', resp_list[:index_center + 1])
-#        print('resp_list_right =', resp_list[index_center:])
-
         print('vmin_edges =', VMin(Eee1/self.QuenchingFactor(Eee1), self.mT, mx, delta)[0],
               VMin(Eee2/self.QuenchingFactor(Eee2), self.mT, mx, delta)[0])
         print('vmin_interp =', vmin_interp_left(response_CL), vmin_interp_right(response_CL))
@@ -396,8 +390,21 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
                   for Eee1, Eee2 in zip(self.BinEdges_left, self.BinEdges_right))
         return np.array(par.parmap(self._Box, kwargs, processes))
 
+    def _Rebin(self, index=9):
+        self.BinEdges = np.append(self.BinEdges[:index + 1],  self.BinEdges[-1])
+        data, error = Rebin_data(self.BinData[index:], self.BinError[index:])
+        self.BinData = np.append(self.BinData[:index], data)
+        self.BinError = np.append(self.BinError[:index], error)
+        print('BinEdges =', self.BinEdges)
+        print('BinData =', self.BinData)
+        print('BinError =', self.BinError)
+        self.BinEdges_left = self.BinEdges[:-1]
+        self.BinEdges_right = self.BinEdges[1:]
+
     def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
-                   output_file, processes=None):
+                   output_file, rebin=True, processes=None):
+        if rebin:
+            self._Rebin()
         box_table = self._Boxes(mx, fp, fn, delta, processes=processes)
         int_resp_list = box_table[:, 0]
         vmin_center_list = box_table[:, 1]
@@ -454,20 +461,45 @@ class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
         return self.IntegratedResponse(vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta) \
             + self.other.IntegratedResponse(vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta)
 
-    def _Rebin(self, init_bin, mx):
+    def _Rebin(self, init_bin, vmax, mx):
+        # build the new self.BinEdges_left and self.BinEdges_right
         self.BinEdges_left = [init_bin[0]]
         self.BinEdges_right = [init_bin[1]]
         ratio = ERecoil_ratio(self.mT, self.other.mT, mx,
                               self.QuenchingFactor(0), self.other.QuenchingFactor(0))
         ratio = round(ratio[0], 1)
         print('ratio =', ratio)
-        while self.BinEdges_right[-1] * ratio < self.BinEdges[-1]:
+        vmin_left_edge = VMin(self.BinEdges_left[-1]/self.QuenchingFactor(0),
+                              self.mT[0], mx, 0)
+        while vmin_left_edge < vmax:
             self.BinEdges_left.append(self.BinEdges_left[-1] * ratio)
             self.BinEdges_right.append(self.BinEdges_right[-1] * ratio)
+            vmin_left_edge = VMin(self.BinEdges_left[-1]/self.QuenchingFactor(0),
+                                  self.mT[0], mx, 0)
         self.other.BinEdges_left = self.BinEdges_left
         self.other.BinEdges_right = self.BinEdges_right
         print('BinEdges_left =', self.BinEdges_left)
         print('BinEdges_right =', self.BinEdges_right)
+
+        if self.BinEdges_right[-1] > self.BinEdges[-1]:
+            # add fake bins at higher energies
+            num_rebinned_bins = 4  # bins used to average the data and error
+            index = len(self.BinData) - num_rebinned_bins
+            data, error = Rebin_data(self.BinData[index:], self.BinError[index:])
+            num_added_bins = round((self.BinEdges_right[-1] - self.BinEdges[-1]) /
+                                   (self.BinEdges[-1] - self.BinEdges[-2]))
+            added_edges = np.linspace(self.BinEdges[-1], self.BinEdges_right[-1],
+                                      num_added_bins + 1)
+            self.BinEdges = np.append(self.BinEdges, added_edges)
+            self.BinData = np.append(self.BinData,
+                                     [data/num_rebinned_bins] * num_added_bins)
+            self.BinError = np.append(self.BinError,
+                                      [error/np.sqrt(num_rebinned_bins)] * num_added_bins)
+            print('BinEdges =', self.BinEdges)
+            print('BinData =', self.BinData)
+            print('BinError =', self.BinError)
+
+        # combine multiple bins to fit the edges from self.BinEdges_left and _right
         self.BinData_rebinned = []
         self.BinError_rebinned = []
         for index in range(len(self.BinEdges_left)):
@@ -479,19 +511,20 @@ class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
                               self.BinEdges[i + 1] <= self.BinEdges_right[index]])
             print('data =', data)
             print('error =', error)
-            data_rebinned = sum(data/error**2) / sum(1/error**2)
-            error_rebinned = np.sqrt(sum(error**2))
+            data_rebinned, error_rebinned = Rebin_data(data, error)
             self.BinData_rebinned.append(data_rebinned)
             self.BinError_rebinned.append(error_rebinned)
         print('BinData_rebinned =', self.BinData_rebinned)
         print('BinError_rebinned =', self.BinError_rebinned)
 
     def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
-                   output_file, init_bin=[2, 4], processes=None):
-        self._Rebin(init_bin, mx)
-        box_table = self._Boxes(mx, fp, fn, delta, vmax=800, processes=processes,
+                   output_file, init_bin=[2, 4], vmax=800, processes=None):
+        if delta != 0:
+            raise ValueError('Delta has to be zero for DAMA combined analysis!')
+        self._Rebin(init_bin, vmax, mx)
+        box_table = self._Boxes(mx, fp, fn, delta, vmax=vmax, processes=processes,
                                 output_file=output_file)
-        box_table_other = self.other._Boxes(mx, fp, fn, delta, vmax=800,
+        box_table_other = self.other._Boxes(mx, fp, fn, delta, vmax=vmax,
                                             processes=processes, output_file=output_file)
         print('box_table =')
         print(repr(box_table))

@@ -355,6 +355,12 @@ def MaximumGapC0scaled(x, mu_over_x):
         return 1. - l.sum()
 
 
+def Rebin_data(data, error):
+    data_rebinned = len(data) * sum(data/error**2) / sum(1/error**2)
+    error_rebinned = np.sqrt(sum(error**2))
+    return data_rebinned, error_rebinned
+
+
 if __name__ == "__main__":
     vmin = np.linspace(1, 1000, 1000)
     mx = 1.3
