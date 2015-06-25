@@ -73,7 +73,7 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, kind=None, linewidth=3,
 
 def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
                 RUN_PROGRAM, MAKE_REGIONS, MAKE_PLOT, HALO_DEP, FOX_METHOD,
-                mx=None, mx_range=None, vmin_range=None,
+                mx=None, mx_range=None, vmin_range=None, initial_energy_bin=None,
                 vmin_FoxBand_range=None, logeta_FoxBand_percent_range=None,
                 steepness=None, logeta_guess=None,
                 vmin_index_list=None, logeta_index_range=None,
@@ -94,6 +94,8 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
             mx: DM mass, only give for halo-independent analysis
             mx_range: (mx_min, mx_max, num_steps) = DM mass range and number or steps, only for halo-dependent
             vmin_range: (vmin_min, vmin_max, vmin_step) = vmin range and step size, only for halo-independent
+            initial_energy_bin: tuple or list of 2 elements, containing the starting energy bin. Used for DAMA
+                combined analysis
             vmin_FoxBand_range: (vmin_Fox_min, vmin_Fox_max, vmin_Fox_numsteps) = vmin range and number of steps,
                 used for calculating the Fox band.
             logeta_FoxBand_percent_range: (logeta_Fox_percent_min, logeta_Fox_percent_max, logeta_Fox_numsteps)
@@ -175,7 +177,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
             if not np.any(FOX_METHOD):
                 upper_limit = \
                     exper.UpperLimit(mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
-                                     output_file)
+                                     output_file, initial_energy_bin=initial_energy_bin)
             else:
                 if FOX_METHOD.ResponseTables:
                     exper.ResponseTables(vmin_min, vmin_max, vmin_step, mx, fp, fn, delta,

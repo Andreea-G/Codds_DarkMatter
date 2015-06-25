@@ -402,7 +402,7 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
         self.BinEdges_right = self.BinEdges[1:]
 
     def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
-                   output_file, rebin=True, processes=None):
+                   output_file, rebin=True, processes=None, **unused_kwargs):
         if rebin:
             self._Rebin()
         box_table = self._Boxes(mx, fp, fn, delta, processes=processes)
@@ -461,10 +461,10 @@ class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
         return self.IntegratedResponse(vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta) \
             + self.other.IntegratedResponse(vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta)
 
-    def _Rebin(self, init_bin, vmax, mx):
+    def _Rebin(self, initial_energy_bin, vmax, mx):
         # build the new self.BinEdges_left and self.BinEdges_right
-        self.BinEdges_left = [init_bin[0]]
-        self.BinEdges_right = [init_bin[1]]
+        self.BinEdges_left = [initial_energy_bin[0]]
+        self.BinEdges_right = [initial_energy_bin[1]]
         ratio = ERecoil_ratio(self.mT, self.other.mT, mx,
                               self.QuenchingFactor(0), self.other.QuenchingFactor(0))
         ratio = round(ratio[0], 1)
@@ -518,10 +518,11 @@ class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
         print('BinError_rebinned =', self.BinError_rebinned)
 
     def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
-                   output_file, init_bin=[2, 4], vmax=800, processes=None):
+                   output_file, initial_energy_bin=[2, 4], vmax=800, processes=None,
+                   **unused_kwargs):
         if delta != 0:
             raise ValueError('Delta has to be zero for DAMA combined analysis!')
-        self._Rebin(init_bin, vmax, mx)
+        self._Rebin(initial_energy_bin, vmax, mx)
         box_table = self._Boxes(mx, fp, fn, delta, vmax=vmax, processes=processes,
                                 output_file=output_file)
         box_table_other = self.other._Boxes(mx, fp, fn, delta, vmax=vmax,
