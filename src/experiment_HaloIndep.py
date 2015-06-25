@@ -13,6 +13,7 @@ from experiment_HaloIndep_er import *
 import parallel_map as par
 from scipy.linalg import det, inv
 from scipy.optimize import brentq
+import os
 
 
 class Experiment_HaloIndep(Experiment):
@@ -302,6 +303,7 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
         return np.sum(quantity * self.mass_fraction) / np.sum(self.mass_fraction)
 
     def _Box(self, Eee1, Eee2, mT_avg, mx, fp, fn, delta, vmax, output_file=None):
+        print(self.name)
         print('Eee1 =', Eee1, ' Eee2 =', Eee2)
         dvmin = 1
         if delta <= 0:
@@ -330,6 +332,9 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
                                               '_' + str(Eee2) + '.dat')
             print(output_file)
             np.savetxt(output_file, np.transpose([vmin_list, np.array(resp_list)/int_resp]))
+            output_file = output_file.replace('.dat', '_notnorm.dat')
+            print(output_file)
+            np.savetxt(output_file, np.transpose([vmin_list, resp_list]))
 
         if index_center > 0:
             int_resp_left = \
@@ -348,8 +353,6 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
         print('resp_min =', resp_min)
         print('int_resp =', int_resp)
         print('ConfidenceLevel =', ConfidenceLevel)
-
-        plt.show()
 
         def integrated_response(r):
             return int_resp_left(r) + int_resp_right(r) - resp_max -\
@@ -372,6 +375,8 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
 #        print('resp_list_left =', resp_list[:index_center + 1])
 #        print('resp_list_right =', resp_list[index_center:])
 
+        print('vmin_edges =', VMin(Eee1/self.QuenchingFactor(Eee1), self.mT, mx, delta)[0],
+              VMin(Eee2/self.QuenchingFactor(Eee2), self.mT, mx, delta)[0])
         print('vmin_interp =', vmin_interp_left(response_CL), vmin_interp_right(response_CL))
         print('vmin_center =', vmin_center)
         print('vmin_error =', vmin_error_left, vmin_error_right)
@@ -488,14 +493,18 @@ class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
                                 output_file=output_file)
         box_table_other = self.other._Boxes(mx, fp, fn, delta, vmax=800,
                                             processes=processes, output_file=output_file)
+        print('box_table =')
+        print(repr(box_table))
+        print('box_table_other =')
+        print(repr(box_table_other))
         int_resp_list = box_table[:, 0]
         int_resp_list_other = box_table_other[:, 0]
-        vmin_center_list = box_table[:, 1]
-        vmin_error_left_list = box_table[:, 2]
-        vmin_error_right_list = box_table[:, 3]
+        vmin_center_list = box_table_other[:, 1]
+        vmin_error_left_list = box_table_other[:, 2]
+        vmin_error_right_list = box_table_other[:, 3]
         size = len(int_resp_list)
         int_resp_matrix = np.vstack((np.hstack((np.zeros((size - 1, 1)),
-                                               np.diag(int_resp_list[1:]))),
+                                               np.diag(int_resp_list[:-1]))),
                                      np.zeros(size)))
         int_resp_matrix += np.diag(int_resp_list_other)
         print('int_resp_matrix =', int_resp_matrix)
