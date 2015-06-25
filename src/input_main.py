@@ -12,7 +12,7 @@ from runprogram import *
 from collections import namedtuple
 
 
-input_filename_list = {True: "input_DAMApaper",
+input_filename_list = {True: "input_HaloDep",
                        False: "input_HaloIndep",
                        }
 
