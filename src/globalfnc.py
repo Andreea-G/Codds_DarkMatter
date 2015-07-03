@@ -356,7 +356,7 @@ def MaximumGapC0scaled(x, mu_over_x):
 
 
 def Rebin_data(data, error):
-    data_rebinned = len(data) * sum(data/error**2) / sum(1/error**2)
+    data_rebinned = sum(data)
     error_rebinned = np.sqrt(sum(error**2))
     return data_rebinned, error_rebinned
 
