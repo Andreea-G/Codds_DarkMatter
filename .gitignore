@@ -13,6 +13,7 @@ src/main3*
 src/main4*
 *.pyc
 *__pycache__*
+*.pdf
 
 ##########files to ignore from Andreea (with 2 "e"s unlike Andrea from The Walking Dead)
 .DS_Store
