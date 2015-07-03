@@ -63,7 +63,7 @@ class Input:
         self.FOX_METHOD = FoxBools(**FOX_METHOD)
 
         self.qKIMS_list = [0.05, 0.1]
-        self.qDAMANa_list = [0.3, 0.4]
+        self.qDAMANa_list = [0.4, 0.3]
         self.qDAMAI_list = [0.09, 0.06]
         self.qDAMANa_Rate_list = [0.4]
 
