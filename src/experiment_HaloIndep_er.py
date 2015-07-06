@@ -165,9 +165,16 @@ class Experiment_HaloIndep_ER(Experiment):
                 midpoints += [Eee1]
             if ERmin < Eee2 < ERmax:
                 midpoints += [Eee2]
+            if delta > 0:
+                E_delta = delta * mx / (self.mT + mx)
+                midpoints += [Ed for Ed in E_delta if ERmin < Ed < ERmax]
             if ERmin < ERmax:
+                midpoints = sorted(midpoints)
+                print('midpoints =', midpoints)
                 integr = integrate.quad(self.Response_Other, ERmin, ERmax,
                                         args=(Eee1, Eee2, ER1, ER2, sign,
-                                              mx, fp, fn, delta))
+                                              mx, fp, fn, delta),
+                                        points=midpoints, epsrel=PRECISSION, epsabs=0)
                 result += integr[0]
+        print('result =', result)
         return result
