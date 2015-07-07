@@ -292,12 +292,12 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta,
         exper.ImportOptimalLikelihood(output_file_no_extension)
         interp_kind = 'cubic'
 
-        exper.PlotSamplingTable(output_file_no_extension,
-                                plot_close=False, plot_show=False, plot_optimum=False)
+#        exper.PlotSamplingTable(output_file_no_extension,
+#                                plot_close=False, plot_show=False, plot_optimum=False)
         delta_logL = [chi_squared1(c) for c in confidence_levels]
         print("delta_logL =", delta_logL)
         for d_logL in delta_logL:
-            exper.ImportFoxBand(output_file_no_extension, d_logL)
+            exper.ImportFoxBand(output_file_no_extension, d_logL, extra_tail=extra_tail)
             Plot_Upper_Limit(exper_name, exper.vmin_logeta_band_low, HALO_DEP,
                              kind=interp_kind,
                              plot_dots=plot_dots, plot_close=False, plot_show=False)

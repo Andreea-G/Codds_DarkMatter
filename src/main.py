@@ -26,11 +26,11 @@ def main():
 #    FOX_METHOD['VminLogetaSamplingTable'] = T
 #    FOX_METHOD['LogLikelihoodList'] = T
 #    FOX_METHOD['FoxBand'] = T
-#    FOX_METHOD['FoxBandPlot'] = T
+    FOX_METHOD['FoxBandPlot'] = T
 
     HALO_DEP = F
     plot_dots = F
-    RUN_PROGRAM = T
+    RUN_PROGRAM = F
     MAKE_REGIONS = F
     MAKE_PLOT = F
 
@@ -38,10 +38,10 @@ def main():
                 RUN_PROGRAM=RUN_PROGRAM, MAKE_REGIONS=MAKE_REGIONS, FOX_METHOD=FOX_METHOD,
                 MAKE_PLOT=MAKE_PLOT, plot_dots=plot_dots)
 
-    inp.SetScattering_type(['SDAV'])
-    inp.SetInputList([14])
-    inp.SetExperList([1])
-    inp.OUTPUT_MAIN_DIR = "../Output2/"
+    inp.SetScattering_type(['SI'])
+    inp.SetInputList([0])
+    inp.SetExperList([17])
+    inp.OUTPUT_MAIN_DIR = "../OutputB/"
     inp.filename_tail_list = [""]
     inp.extra_tail = "_mix"
 #    inp.initial_energy_bin = [3, 6]
@@ -50,7 +50,7 @@ def main():
     try:
         plt.close()
         inp.RunProgram()
-        if MAKE_PLOT:
+        if MAKE_PLOT or FOX_METHOD.get('FoxBandPlot', F):
 #            plt.ylim([-32, -20])
 #            plt.ylim([-28, -13])
             plt.show()

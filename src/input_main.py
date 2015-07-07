@@ -114,6 +114,13 @@ class Input:
                 (self.mx, self.fn, self.delta, self.mPhi) \
                 in product(self.exper_list, self.scattering_type_list,
                            self.filename_tail_list, self.input_list):
+            if self.exper_name == "CDMSSi2012" and np.any(self.FOX_METHOD):
+                self.vmin_FoxBand_range = \
+                    module.Vmin_FoxBand_range(self.exper_name, self.mx,
+                                              self.delta, self.mPhi)
+                self.logeta_FoxBand_percent_range = module.logeta_FoxBand_percent_range
+                self.steepness = module.Steepness(self.exper_name, self.mx,
+                                                  self.delta, self.mPhi)
             for self.quenching in self.QuenchingList():
                 self.vmin_range = \
                     module.Vmin_range(self.exper_name.split()[0], self.mx,

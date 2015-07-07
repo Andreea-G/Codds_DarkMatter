@@ -1047,11 +1047,15 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             pass
         self.PlotOptimum(ylim_percentage=(1.2, 0.8), plot_close=F, plot_show=T)
 
-    def ImportFoxBand(self, output_file_tail, delta_logL):
-        file = output_file_tail + "_FoxBand_low_deltalogL_" + str(delta_logL) + ".dat"
+    def ImportFoxBand(self, output_file_tail, delta_logL, extra_tail=""):
+        delta_logL = round(delta_logL, 1)
+        file = output_file_tail + "_FoxBand_low_deltalogL_" + str(delta_logL) + \
+            extra_tail + ".dat"
+        print(file)
         with open(file, 'r') as f_handle:
             self.vmin_logeta_band_low = np.loadtxt(f_handle)
-        file = output_file_tail + "_FoxBand_up_deltalogL_" + str(delta_logL) + ".dat"
+        file = output_file_tail + "_FoxBand_up_deltalogL_" + str(delta_logL) + \
+            extra_tail + ".dat"
         with open(file, 'r') as f_handle:
             self.vmin_logeta_band_up = np.loadtxt(f_handle)
         return
