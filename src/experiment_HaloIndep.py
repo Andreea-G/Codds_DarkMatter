@@ -178,6 +178,10 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
                 result = result[0]
                 print("vmin = ", vmin_list[v_index], "   mu_over_x = ", mu_over_x)
                 print("xtable = ", xtable)
+                print("mu_over_x =", mu_over_x)
+                print("y_guess =", y_guess)
+                print("y =", y)
+                print("x_scaled =", x_scaled)
                 print("result = ", result)
                 to_print = np.log10(np.array([[mx, result]]))
                 with open(output_file, 'ab') as f_handle:
@@ -380,7 +384,7 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
 
         return (int_resp, vmin_center, vmin_error_left, vmin_error_right)
 
-    def _Boxes(self, mx, fp, fn, delta, vmax=1000, processes=None, output_file=None):
+    def _Boxes(self, mx, fp, fn, delta, vmax=2000, processes=None, output_file=None):
         mT_avg = np.sum(self.mT * self.mass_fraction) / np.sum(self.mass_fraction)
         print("mT_avg =", mT_avg)
         print('vmax =', vmax)
@@ -405,7 +409,7 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
                    output_file, rebin=True, processes=None, **unused_kwargs):
         if rebin:
             self._Rebin()
-        box_table = self._Boxes(mx, fp, fn, delta, processes=processes)
+        box_table = self._Boxes(mx, fp, fn, delta, vmax=vmin_max, processes=processes)
         int_resp_list = box_table[:, 0]
         vmin_center_list = box_table[:, 1]
         vmin_error_left_list = box_table[:, 2]
@@ -461,7 +465,7 @@ class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
         return self.IntegratedResponse(vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta) \
             + self.other.IntegratedResponse(vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta)
 
-    def _Rebin(self, initial_energy_bin, vmax, mx):
+    def _Rebin(self, initial_energy_bin, vmax, mx, num_rebinned_bins=19):
         # build the new self.BinEdges_left and self.BinEdges_right
         self.BinEdges_left = [initial_energy_bin[0]]
         self.BinEdges_right = [initial_energy_bin[1]]
@@ -471,11 +475,14 @@ class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
         print('ratio =', ratio)
         vmin_left_edge = VMin(self.BinEdges_left[-1]/self.QuenchingFactor(0),
                               self.mT[0], mx, 0)
+        print('vmax =', vmax)
+        print('vmin_left_edge =', vmin_left_edge)
         while vmin_left_edge < vmax:
             self.BinEdges_left.append(self.BinEdges_left[-1] * ratio)
             self.BinEdges_right.append(self.BinEdges_right[-1] * ratio)
             vmin_left_edge = VMin(self.BinEdges_left[-1]/self.QuenchingFactor(0),
                                   self.mT[0], mx, 0)
+            print('vmin_left_edge =', vmin_left_edge)
         self.other.BinEdges_left = self.BinEdges_left
         self.other.BinEdges_right = self.BinEdges_right
         print('BinEdges_left =', self.BinEdges_left)
@@ -483,7 +490,6 @@ class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
 
         if self.BinEdges_right[-1] > self.BinEdges[-1]:
             # add fake bins at higher energies
-            num_rebinned_bins = 4  # bins used to average the data and error
             index = len(self.BinData) - num_rebinned_bins
             data, error = Rebin_data(self.BinData[index:], self.BinError[index:])
             num_added_bins = round((self.BinEdges_right[-1] - self.BinEdges[-1]) /
@@ -518,14 +524,17 @@ class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
         print('BinError_rebinned =', self.BinError_rebinned)
 
     def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
-                   output_file, initial_energy_bin=[2, 4], vmax=800, processes=None,
+                   output_file, initial_energy_bin=[2, 4], vmax=None, processes=None,
                    **unused_kwargs):
         if delta != 0:
-            raise ValueError('Delta has to be zero for DAMA combined analysis!')
+            raise ValueError('delta has to be zero for DAMA halo-independent ' +
+                             'combined analysis!')
+        if vmax is None:
+            vmax = vmin_step
         self._Rebin(initial_energy_bin, vmax, mx)
-        box_table = self._Boxes(mx, fp, fn, delta, vmax=vmax, processes=processes,
+        box_table = self._Boxes(mx, fp, fn, delta, vmax=vmin_max, processes=processes,
                                 output_file=output_file)
-        box_table_other = self.other._Boxes(mx, fp, fn, delta, vmax=vmax,
+        box_table_other = self.other._Boxes(mx, fp, fn, delta, vmax=vmin_max,
                                             processes=processes, output_file=output_file)
         print('box_table =')
         print(repr(box_table))
