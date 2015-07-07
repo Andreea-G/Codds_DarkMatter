@@ -521,15 +521,29 @@ class DAMAExperiment(Experiment):
         super().__init__(expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
         self.BinEdges = module.BinEdges
-        self.BinData = self.Exposure * module.BinData
-        self.BinError = self.Exposure * module.BinError
+        self.BinData = module.BinData
+        self.BinError = module.BinError
+#        self._Rebin()
+        self.BinEdges_left = self.BinEdges[:-1]
+        self.BinEdges_right = self.BinEdges[1:]
+        self.BinData = self.Exposure * self.BinData
+        self.BinError = self.Exposure * self.BinError
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor
+
+    def _Rebin(self, index=9):
+        self.BinEdges = np.append(self.BinEdges[:index + 1],  self.BinEdges[-1])
+        data, error = Rebin_data(self.BinData[index:], self.BinError[index:])
+        self.BinData = np.append(self.BinData[:index], data)
+        self.BinError = np.append(self.BinError[:index], error)
+        print('BinEdges =', self.BinEdges)
+        print('BinData =', self.BinData)
+        print('BinError =', self.BinError)
 
     def _Predicted(self, mx, fp, fn, delta):
         return self.Exposure * conversion_factor / mx * \
             np.array([self.IntegratedResponseSHM(i, j, mx, fp, fn, delta)
-                      for i, j in zip(self.BinEdges[:-1], self.BinEdges[1:])])
+                      for i, j in zip(self.BinEdges_left, self.BinEdges_right)])
 
     def RegionSHM(self, mx, fp, fn, delta, output_file):
         predicted = self._Predicted(mx, fp, fn, delta)
@@ -635,16 +649,17 @@ class DAMAExperiment(Experiment):
             limit_high = limits[1]
         else:
             limit_low = limit_high = []
-
-        np.savetxt(output_file_lower, limit_low)
-        np.savetxt(output_file_upper, limit_high)
         return [np.array(limit_low), np.array(limit_high)]
 
     def Region(self, delta, CL, output_file, output_file_lower, output_file_upper,
                num_mx=1000, processes=None):
         self.mx_fit, self.logL_max, mx_list, log_likelihood_max = self.LogLMax(output_file)
-        return self.UpperLowerLists(CL, output_file, output_file_lower, output_file_upper,
-                                    num_mx=num_mx, processes=processes)
+        [limit_low, limit_high] = \
+            self.UpperLowerLists(CL, output_file, output_file_lower, output_file_upper,
+                                 num_mx=num_mx, processes=processes)
+        np.savetxt(output_file_lower, limit_low)
+        np.savetxt(output_file_upper, limit_high)
+        return
 
 
 class DAMAExperimentCombined(DAMAExperiment, Experiment):
@@ -666,7 +681,7 @@ class DAMAExperimentCombined(DAMAExperiment, Experiment):
         return self.Exposure * conversion_factor / mx * \
             np.array([self.IntegratedResponseSHM(i, j, mx, fp, fn, delta) +
                       self.other.IntegratedResponseSHM(i, j, mx, fp, fn, delta)
-                      for i, j in zip(self.BinEdges[:-1], self.BinEdges[1:])])
+                      for i, j in zip(self.BinEdges_left, self.BinEdges_right)])
 
     def _exchange(self, string, old, new):
         return string.replace(old, new).replace(new, old, 1)
@@ -699,9 +714,29 @@ class DAMAExperimentCombined(DAMAExperiment, Experiment):
         except:
             if plot:
                 plt.plot(self.mx_list, [self.logL_max] * len(self.mx_list), 'o')
+        finally:
+            if plot:
                 plt.show()
-        return self.UpperLowerLists(CL, output_file, output_file_lower, output_file_upper,
-                                    num_mx=num_mx, processes=processes)
+        [limit_low, limit_high] = \
+            self.UpperLowerLists(CL, output_file, output_file_lower, output_file_upper,
+                                 num_mx=num_mx, processes=processes)
+#        if len(limit_low) > 0:
+#            mx_separation = np.diff(limit_low[:, 0])
+#            break_index = np.argmax(mx_separation)
+#            if mx_separation[break_index] > 1.3 * np.average(mx_separation):
+#                print('mx break =', limit_low[break_index, 0],
+#                      limit_low[break_index + 1, 0])
+#                if output_file.find('Na') < output_file.find('I'):
+#                    limit_low = np.array(limit_low[:break_index + 1])
+#                    limit_high = np.array(limit_high[:break_index + 1])
+#                else:
+#                    limit_low = np.array(limit_low[break_index + 1:]),
+#                    limit_high = np.array(limit_high[break_index + 1:])
+#        print('limit_low, limit_high =')
+#        print(limit_low, limit_high)
+        np.savetxt(output_file_lower, limit_low)
+        np.savetxt(output_file_upper, limit_high)
+        return
 
 
 class DAMATotalRateExperiment(Experiment):
