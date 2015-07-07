@@ -28,23 +28,24 @@ def main():
 #    FOX_METHOD['FoxBand'] = T
 #    FOX_METHOD['FoxBandPlot'] = T
 
-    HALO_DEP = T
+    HALO_DEP = F
     plot_dots = F
-    RUN_PROGRAM = F
+    RUN_PROGRAM = T
     MAKE_REGIONS = F
-    MAKE_PLOT = T
+    MAKE_PLOT = F
 
     inp = Input(HALO_DEP, implemented_exper_list=implemented_exper_list,
                 RUN_PROGRAM=RUN_PROGRAM, MAKE_REGIONS=MAKE_REGIONS, FOX_METHOD=FOX_METHOD,
                 MAKE_PLOT=MAKE_PLOT, plot_dots=plot_dots)
 
-    inp.SetScattering_type(['SDPS'])
-    inp.SetExperList([14, 15])
-    inp.SetInputList(slice(0, 1))
-    inp.OUTPUT_MAIN_DIR = "../Output/"
+    inp.SetScattering_type(['SDAV'])
+    inp.SetInputList([14])
+    inp.SetExperList([1])
+    inp.OUTPUT_MAIN_DIR = "../Output2/"
     inp.filename_tail_list = [""]
     inp.extra_tail = "_mix"
-#    inp.confidence_levels.extend([confidence_level(s) for s in [3, 5, 7]] + [0.99])
+#    inp.initial_energy_bin = [3, 6]
+#    inp.confidence_levels.extend([confidence_level(s) for s in [3, 5, 7]])
 
     try:
         plt.close()
