@@ -363,7 +363,7 @@ class PoissonExperiment(Experiment):
             else np.array([0] * self.numT)
         Eee_max_list = [ERecoilBranch(vmax, mT, mx, delta, 1) if vmax > vd else 0
                         for mT, vd in zip(self.mT, vdelta)]
-        Eee_max_list = [ERecoilBranch(vmax, mT, mx, delta, -1) if vmax > vd else 1.e6
+        Eee_min_list = [ERecoilBranch(vmax, mT, mx, delta, -1) if vmax > vd else 1.e6
                         for mT, vd in zip(self.mT, vdelta)]
 
         Eee_max = np.max(Eee_max_list)
