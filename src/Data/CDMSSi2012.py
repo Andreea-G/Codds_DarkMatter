@@ -38,6 +38,9 @@ num_target_nuclides = target_nuclide_mass_list.size
 def QuenchingFactor(e):
     return np.ones_like(e)
 
+def QuenchingFactorOfEee(e):
+    return QuenchingFactor(e)  # since it's a constant function
+
 Ethreshold = 7.
 Emaximum = 100.
 ERmaximum = 100.
@@ -70,3 +73,9 @@ ERecoilList = np.array([8.2, 9.5, 12.3])
 
 mu_BKG_i = np.array([0.0185176, 0.0203303, 0.0217355])
 NBKG = 0.7
+
+BinEdges = np.array([7, 9, 11, 13])
+BinData = np.array([len([e for e in ERecoilList
+                         if e > BinEdges[k] and e < BinEdges[k+1]])
+                    for k in range(len(BinEdges) - 1)]) / Exposure
+BinError = np.sqrt(BinData/Exposure)
