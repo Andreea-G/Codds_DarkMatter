@@ -10,11 +10,11 @@ from globalfnc import VMin
 def Vmin_range(exper_name, mx, delta, mPhi=1000., quenching=None, FOX_METHOD=False):
     vmin_range_options = {}
     if exper_name == "CDMSSi2012" and FOX_METHOD:
-        vmin_step = vmin_min = 0.5
-        vmin_max = 2000
+        vmin_step = vmin_min = 1
+        vmin_max = 1000
     elif "LUX" in exper_name:
-        vmin_step = vmin_min = 5
-        vmin_max = 800
+        vmin_step = vmin_min = 1
+        vmin_max = 1000
         vmin_range_options = {(9., 0, 1000.): (450, vmin_max, vmin_step),
                               (3.5, -50, 1000.): (550, vmin_max, vmin_step),
                               (1.3, -200, 1000.): (750, vmin_max, vmin_step)
@@ -83,10 +83,11 @@ def Vmin_FoxBand_range(exper_name, mx, delta, mPhi=1000.):
 
 
 # input of the form (mx, fn, delta, mPhi)
-input_list = [(9., -0.8, 0., 1000.), (3.5, -0.8, -50, 1000.), (1.3, -0.8, -200, 1000),  # 0 - 2
-              (9., 1, 0, 1000.), (9., -0.7, 0, 1000.), (9, 0, 0, 1000),  # 3 - 5
-              (3.5, 1, -50, 1000.), (33., 0, 0, 1000), (47., 0, 0, 1000),  # 6 - 8
-              (7, 0, 0, 1000), (30.14, 0, 0, 1000), (47.35, 0, 0, 1000),  # 9 - 11, SDPS
-              (38, 0, 50, 1000.), (45, 0, 100, 1000),  # 12 - 13, SDPS
-              (40, 0, 50, 1000), (52, 0, 100, 1000), (80, 0, 100, 0)]  # 14 - 16, SDAV
+input_list = [(9., 1, 0., 1000.), (9., -0.8, 0., 1000.), (9., -0.7, 0., 1000.),  # 0 - 2
+              (3.5, 1, -50, 1000.), (3.5, -0.8, -50, 1000.), (3.5, -0.7, -50, 1000.),  # 3 - 5
+              (1.3, 1, -200, 1000), (1.3, -0.8, -200, 1000), (1.3, -0.7, -200, 1000),  # 6 - 8
+              (9., 0, 0., 1000.), (33., 0, 0, 1000), (47., 0, 0, 1000),  # 9 - 11
+              (7, 0, 0, 1000), (30.14, 0, 0, 1000), (47.35, 0, 0, 1000),  # 12 - 14, SDPS
+              (38, 0, 50, 1000.), (45, 0, 100, 1000),  # 15 - 16, SDPS
+              (40, 0, 50, 1000), (52, 0, 100, 1000), (80, 0, 100, 0)]  # 17 - 19, SDAV
 logeta_FoxBand_percent_range = (0.2, 0.2, 50)
