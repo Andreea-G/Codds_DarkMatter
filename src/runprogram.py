@@ -5,7 +5,7 @@ Created on Sat Dec  6 15:32:34 2014
 @author: Andreea
 """
 
-from experiment_FoxMethod_jump import *
+from experiment_HaloIndep_Band import *
 import matplotlib.pyplot as plt
 linestyles = ['-', '--', '-.', ':']
 

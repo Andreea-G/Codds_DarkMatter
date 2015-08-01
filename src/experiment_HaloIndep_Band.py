@@ -968,7 +968,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 plt.close()
                 plt.plot(x, y, 'o-')
                 plt.plot(x, (self.optimal_logL + 1) * np.ones_like(y))
-                plt.plot(x, (self.optimal_logL + 4) * np.ones_like(y))
+                plt.plot(x, (self.optimal_logL + 2.7) * np.ones_like(y))
                 plt.title("index = " + str(index) + ", v_min = " +
                           str(self.vmin_sampling_list[index]) + "km/s")
                 plt.xlim(x[0], x[-1])
@@ -1002,7 +1002,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             if error:
                 plt.close()
                 plt.plot(x, (self.optimal_logL + 1) * np.ones_like(y))
-                plt.plot(x, (self.optimal_logL + 4) * np.ones_like(y))
+                plt.plot(x, (self.optimal_logL + 2.7) * np.ones_like(y))
                 plt.title("index = " + str(index) + "; v_min = " +
                           str(self.vmin_sampling_list[index]) + "km/s")
                 plt.xlim(x[0], x[-1])
@@ -1026,6 +1026,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
 
         self.PlotBand()
 
+        delta_logL = round(delta_logL, 1)
         file = output_file_tail + "_FoxBand_low_deltalogL_" + str(delta_logL) + ".dat"
         print(file)
         np.savetxt(file, self.vmin_logeta_band_low)
