@@ -38,19 +38,19 @@ if False:   # alternative velocities; kept for reference
     vobs = v0bar + 12
     vesc = 544 - 3 * 39
 
-''' List of experiment names corresponding to each type of statistical analysis
+''' List of experiment names corresponding to each type of statistical analysis.
 '''
-MaximumGapLimit_exper = ["superCDMS",
+MaximumGapLimit_exper = ["SuperCDMS",
                          "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many",
                          "XENON10", "XENON100", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
 GaussianLimit_exper = ["KIMS2012", "PICASSO"]
-DAMARegion_exper = ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]
+BinnedSignal_exper = ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]
 DAMALimit_exper = ["DAMA2010NaSmRebinned_TotRateLimit"]
 Poisson_exper = ["SIMPLEModeStage2"]
-FoxMethod_exper = ["CDMSSi2012", "CDMSSiGeArtif", "CDMSSiArtif"]
+EHImethod_exper = ["CDMSSi2012", "CDMSSiGeArtif", "CDMSSiArtif"]
 
 
-''' Colors for plotting
+''' Colors for plotting.
 '''
 Color = {"superCDMS": 'peru',
          "LUX2013zero": 'magenta', "LUX2013one": 'magenta', "LUX2013three": 'magenta',
@@ -126,6 +126,18 @@ def FileNameTail(fp, fn, mPhi):
 
 def OutputDirectory(output_main_dir, scattering_type, mPhi, delta):
     ''' Gives the name of the output directory for the given input parameters.
+    Input:
+        output_main_dir: string, optional
+            Name of main output directory.
+        scattering_type: string
+            'SI' for spin-dependent, 'SDPS' for pseudo-scalar, 'SDAV' for axial-vector.
+        mPhi: float
+            Mass of mediator.
+        delta: float
+            DM mass split.
+    Returns:
+        out_dir: string
+            Full path of output directory.
     '''
     out_dir = output_main_dir
     if mPhi == 1000.:
@@ -142,6 +154,29 @@ def OutputDirectory(output_main_dir, scattering_type, mPhi, delta):
 def Output_file_name(exper_name, scattering_type, mPhi, mx, fp, fn, delta, HALO_DEP,
                      filename_tail, OUTPUT_MAIN_DIR, quenching):
     ''' Gives the name of the output file name for the given input parameters.
+    Input:
+        exper_name: string
+            Name of experiment.
+        scattering_type: string
+            'SI' for spin-dependent, 'SDPS' for pseudo-scalar, 'SDAV' for axial-vector.
+        mPhi: float
+            Mass of mediator.
+        mx: float
+            DM mass.
+        fp and fn: float
+            Couplings to proton and neutron.
+        delta: float
+            DM mass split.
+        confidence_levels: list
+            List of confidence levels.
+        HALO_DEP: bool
+            Whether the analysis is halo-dependent or halo-independent.
+        filename_tail: string, optional
+            Tag to be added to the file name.
+        OUTPUT_MAIN_DIR: string, optional
+            Name of main output directory.
+        quenching: float, optional
+            quenching factor, needed for experiments that can have multiple options.
     '''
     output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
     output_file_no_extension = "./" + output_dir + "UpperLimit_" + exper_name
@@ -194,9 +229,12 @@ def GPoisson(x, nu, sigma):
 def HelmFF(ER, A, mT):
     ''' Helm Form Factor. See http://arxiv.org/abs/hep-ph/0608035.
     Input:
-        ER: recoil energy
-        A: target mass number
-        mT: target nuclide mass
+        ER: float
+            Recoil energy.
+        A: int
+            Target mass number.
+        mT: float
+            Target nuclide mass.
     '''
     q = np.sqrt(2e-6 * mT * ER)
     s = 0.9
@@ -209,16 +247,20 @@ def HelmFF(ER, A, mT):
     x = np.abs(q * r1 * fermiGeV)
     y = q * s * fermiGeV
     f = np.array(list(map(lambda i: 3.0 * (np.sin(i) - i * np.cos(i))/i**3 if i > 5.e-8
-                 else 1. - i**2 * (-0.1 + i**2 * (1./200. + i**2 * (-1./15120. + i**2/1330560.))), x)))
+                 else 1. - i**2 * (-0.1 + i**2 *
+                                   (1./200. + i**2 * (-1./15120. + i**2/1330560.))), x)))
     return f**2 * np.exp(-y**2)
 
 
 def GaussianFFSD(ER, A, mT):
     ''' Gaussian Form Factor for spin-dependent interactions.
-    Inpput:
-        ER: recoil energy
-        A: target atomic mass
-        mT: target nuclide mass
+    Input:
+        ER: float
+            Recoil energy.
+        A: int
+            Target mass number.
+        mT: float
+            Target nuclide mass.
     '''
     q = np.sqrt(2e-6 * mT * ER)
     R = 0.92 * A**(1./3) + 2.68 - 0.78 * np.sqrt((A**(1./3) - 3.8)**2 + 0.2)
@@ -245,8 +287,18 @@ def ERecoil_ratio(mT_1, mT_2, mx, quenching_1, quenching_2):
 
 
 def VMin(ER, mT, mx, delta):
-    ''' Minimum velocity for a given recoil energy ER, target mass mT, DM mass mx,
-    and mass split delta.
+    ''' Minimum velocity for a given recoil energy.
+    Input:
+        ER: float
+            Recoil energy.
+        mT: float
+            Target nuclide mass.
+        mx: float
+            DM mass.
+        delta: float
+            DM mass split.
+    Returns:
+        vmin: float
     '''
     muT = mx * mT / (mx + mT)
     return SpeedOfLight * 1.e-3 / np.sqrt(2. * ER * mT) * abs(delta + ER * mT / muT)
@@ -261,11 +313,19 @@ def VminDelta(mT, mx, delta):
 def ERecoilBranch(vmin, mT, mx, delta, sign):
     ''' Recoil energy for given vmin.
     Input:
-        vmin: minimum DM velocity vmin
-        mT: target mass
-        mx: DM mass
-        delta: mass split
-        sign: +1 or -1, corresponding to the upper and lower branch, respectively.
+        vmin: float
+            Minimum DM velocity vmin.
+            Target nuclide mass.
+        mT: float
+            Target nuclide mass.
+        mx: float
+            DM mass.
+        delta: float
+            DM mass split.
+        sign: +1 or -1
+            Corresponds to the upper and lower branch, respectively.
+    Returns:
+        ER: float
     '''
     muT = mx * mT / (mx + mT)
     return 1.e6 * muT**2 / (2.*mT) * \
@@ -276,11 +336,20 @@ def ERecoilBranch(vmin, mT, mx, delta, sign):
 def dERecoildVmin(vmin, mT, mx, delta, sign):
     ''' Derivative of recoil energy ER with respect to velocity vmin
     Input:
-        vmin: minimum DM velocity vmin
-        mT: target mass
-        mx: DM mass
-        delta: mass split
-        sign: +1 or -1, corresponding to the upper and lower branch, respectively.
+        Input:
+        vmin: float
+            Minimum DM velocity vmin.
+            Target nuclide mass.
+        mT: float
+            Target nuclide mass.
+        mx: float
+            DM mass.
+        delta: float
+            DM mass split.
+        sign: +1 or -1
+            Corresponds to the upper and lower branch, respectively.
+    Returns:
+        d ER/d vmin: float
     '''
     muT = mx * mT / (mx + mT)
     sqrt_factor = np.sqrt(1. - 2.*delta / (muT * vmin**2) * SpeedOfLight**2 * 1.e-6)
@@ -291,10 +360,16 @@ def eta0Maxwellian(vmin, vobs, v0bar, vesc):
     ''' Velocity integral eta0 in a Standard Halo Model with Maxwellian velocity
     distribution.
     Input:
-        vmin: minumum DM velocity
-        vobs: observed velocity
-        v0bar: velocity dispersion
-        vesc: excape velocity
+        vmin: float
+            Minumum DM velocity.
+        vobs: float
+            Observed velocity.
+        v0bar: float
+            Velocity dispersion.
+        vesc: float
+            Excape velocity.
+    Returns:
+        eta0: float
     '''
     x = vmin/v0bar
     y = vobs/v0bar
@@ -318,11 +393,13 @@ def eta1Maxwellian(vmin, vobs, v0bar, vesc):
     eta1 = d eta0 / d vobs * delta_v.
         delta_v = v_Earth * cos(gamma) where the velocity of the Earth is
     v_Earth = 30 km/s and is inclined at an angle of gamma = 60 deg wrt the galactic plane.
+    Returns:
+        eta1: float
     '''
     x = vmin/v0bar
     y = vobs/v0bar
     z = vesc/v0bar
-    delta_v = 15.   # 30 * cos(60 * pi / 180)
+    delta_v = 15.  # 30 * cos(60 * pi / 180)
     erfz = erf(z)
     sqrt_pi = np.sqrt(pi)
     exp_z_sq = np.exp(-z**2)
@@ -340,9 +417,12 @@ def eta1Maxwellian(vmin, vobs, v0bar, vesc):
 
 def MaximumGapC0scaled(x, mu_over_x):
     ''' Scaled probability C0 of the maximum gap size being smaller than a particular
-    value of x, where x is the size of the maximum gap in the random experiment
-    and mu is the total expected number of events.
-    Based on Maximum Gap Method (Eq 2 of PHYSICAL REVIEW D 66, 032005, 2002)
+    value of x. Based on Maximum Gap Method (Eq 2 of PHYSICAL REVIEW D 66, 032005, 2002).
+    Input:
+        x: float
+            The size of the maximum gap in the random experiment.
+        mu_over_x: float
+            mu/x, where mu is the total expected number of events.
     '''
     if mu_over_x < 1.:
         return 1.
@@ -356,6 +436,13 @@ def MaximumGapC0scaled(x, mu_over_x):
 
 
 def Rebin_data(data, error):
+    ''' Rebins the data from multiple bins into a single bin.
+    Input:
+        data, error: ndarray
+            Lists containing the data and error from each bin.
+    Returns:
+        data_rebinned, error_rebinned: float
+    '''
     data_rebinned = sum(data)
     error_rebinned = np.sqrt(sum(error**2))
     return data_rebinned, error_rebinned
@@ -368,9 +455,6 @@ if __name__ == "__main__":
     mT = np.array([65.134, 66.995, 67.9278, 68.8571, 70.7203])
     ER_plus = np.array([ERecoilBranch(vmin, mT_i, mx, delta, 1) for mT_i in mT])
     ER_minus = np.array([ERecoilBranch(vmin, mT_i, mx, delta, -1) for mT_i in mT])
-#    print("vmin =", vmin)
-#    print("ER_plus =", ER_plus)
-#    print("ER_minus =", ER_minus)
     import matplotlib.pyplot as plt
     plt.close()
     for ER in ER_plus:
@@ -382,6 +466,4 @@ if __name__ == "__main__":
     ER = np.linspace(2, 6, 100)
     plt.plot(490 * np.ones_like(ER), ER)
     plt.plot(495 * np.ones_like(ER), ER)
-#    plt.xlim([450, 550])
-#    plt.ylim([2, 5])
     plt.show()

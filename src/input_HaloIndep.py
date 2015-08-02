@@ -47,20 +47,17 @@ def Vmin_range(exper_name, mx, delta, mPhi=1000., quenching=None, FOX_METHOD=Fal
 
 
 def Steepness(exper_name, mx, delta, mPhi=1000.):
-    # defaults are
-    # (steepness_vmin, steepness_vmin_center, steepness_logeta) = (1.5, 2.5, 1)
     if exper_name != "CDMSSi2012":
         return None
     steepness_options = {(9., 0, 1000.): (1., 2.5, 1),
                          (3.5, -50, 1000.): (0.2, 1, 1),
                          (1.3, -200, 1000.): (0.1, 0.6, 1),
                          }
-    return steepness_options[(mx, delta, mPhi)]
+    default = (1.5, 2.5, 1)
+    return steepness_options.get((mx, delta, mPhi), default)
 
 
 def Logeta_guess(exper_name, mx, delta, mPhi=1000.):
-    # defaults are
-    # (steepness_vmin, steepness_vmin_center, steepness_logeta) = (1.5, 2.5, 1)
     if exper_name != "CDMSSi2012":
         return None
     logeta_options = {(9., 0, 1000.): -21,
@@ -70,9 +67,7 @@ def Logeta_guess(exper_name, mx, delta, mPhi=1000.):
     return logeta_options[(mx, delta, mPhi)]
 
 
-def Vmin_FoxBand_range(exper_name, mx, delta, mPhi=1000.):
-    # defaults are
-    # (steepness_vmin, steepness_vmin_center, steepness_logeta) = (1.5, 2.5, 1)
+def Vmin_EHIBand_range(exper_name, mx, delta, mPhi=1000.):
     if exper_name != "CDMSSi2012":
         return None
     options = {(9., 0, 1000.): (0, 1000, 100),
@@ -90,4 +85,4 @@ input_list = [(9., 1, 0., 1000.), (9., -0.8, 0., 1000.), (9., -0.7, 0., 1000.), 
               (7, 0, 0, 1000), (30.14, 0, 0, 1000), (47.35, 0, 0, 1000),  # 12 - 14, SDPS
               (38, 0, 50, 1000.), (45, 0, 100, 1000),  # 15 - 16, SDPS
               (40, 0, 50, 1000), (52, 0, 100, 1000), (80, 0, 100, 0)]  # 17 - 19, SDAV
-logeta_FoxBand_percent_range = (0.2, 0.2, 50)
+logeta_EHIBand_percent_range = (0.2, 0.2, 50)

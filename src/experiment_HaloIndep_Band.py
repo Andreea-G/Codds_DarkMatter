@@ -12,7 +12,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from experiment_HaloIndep import *
 import interp_uniform as unif
-#from interp import interp1d
+# from interp import interp1d
 from scipy import interpolate
 from scipy.optimize import brentq, minimize
 from basinhopping import *
@@ -30,9 +30,9 @@ ALLOW_MOVE = T
 class ConstraintsFunction(object):
     ''' Class to implement the constraints function that will be passed as an argunent
     to the minimization routines.
-        Input:
-            args: Arguments needed for calculating the constraints:
-                vminStar, logetaStar, vminStar_index
+    Input:
+        args: Arguments needed for calculating the constraints:
+            vminStar, logetaStar, vminStar_index
     '''
     def __init__(self, *args):
         self.vminStar = args[0]
@@ -41,12 +41,13 @@ class ConstraintsFunction(object):
         self.vmin_max = 2000
 
     def __call__(self, x, close=True):
-        ''' Input:
-                x: ndarray
-            Returns:
-                constraints: ndarray
-                    Constraints vector, where each value must be >= 0 for the
-                    constraint to be specified. Contains:
+        '''
+        Input:
+            x: ndarray
+        Returns:
+            constraints: ndarray
+                Constraints vector, where each value must be >= 0 for the
+                constraint to be specified. Contains:
              0 -  8: bounds: 3 * (x.size/2) constraints = 9 for x.size/2 = 3
              9 - 12: sorted array: 2 * (x.size/2 - 1) constraints = 4 for x.size/2 = 3
             13 - 15: vminStar_index: x.size/2 constraints = 3 for x.size/2 = 3
@@ -68,22 +69,23 @@ class ConstraintsFunction(object):
         return constraints
 
 
-class Experiment_FoxMethod(Experiment_HaloIndep):
-    ''' Class implementing a generalized version of the method from arXiv:1403.6830.
-        Calculates the best fit region for unbinned halo-independent analysis.
-    Parameters:
+class Experiment_EHI(Experiment_HaloIndep):
+    ''' Class implementing the extended maximum likelihood halo-independent (EHI)
+    method to obtain the confidence band for experiments with potential signals and
+    unbinned data (arXiv:1507.03902).
+    Input:
         expername: string
             The name of the experiment.
         scattering_type: string
             The type of scattering. Can be
                 - 'SI' (spin-independent)
-                - 'SDAV' (spin-independent, axial-vector)
-                - 'SDPS' (spin-independent, pseudo-scalar)
+                - 'SDAV' (spin-dependent, axial-vector)
+                - 'SDPS' (spin-dependent, pseudo-scalar)
         mPhi: float, optional
             The mass of the mediator.
         method: str, optional
             Type of minimization solver to be passed as a parameter to the minimization
-                routine. Can be 'SLSQP' or 'COBYLA'
+                routine. Can be 'SLSQP' or 'COBYLA'.
     '''
     def __init__(self, expername, scattering_type, mPhi=mPhiRef, method='SLSQP'):
         super().__init__(expername, scattering_type, mPhi)
@@ -93,36 +95,39 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.NBKG = module.NBKG
         self.method = method
 
-    def VMinSortedList(self, mx, fp, fn, delta):
-        ''' The list of vmin corresponsing to measured recoil energies,
-        sorted in increasing order.
-            Will be useful as starting guesses.
+    def _VMinSortedList(self, mx, fp, fn, delta):
+        ''' Computes the list of vmin corresponsing to measured recoil energies,
+        sorted in increasing order. Will be useful as starting guesses.
         '''
         self.vmin_sorted_list = np.sort(VMin(self.ERecoilList, self.mT[0], mx, delta))
         return
 
-    def ResponseTables(self, vmin_min, vmin_max, vmin_step, mx, fp, fn, delta, output_file_tail):
+    def ResponseTables(self, vmin_min, vmin_max, vmin_step, mx, fp, fn, delta,
+                       output_file_tail):
         ''' Computes response tables
             - self.diff_response_tab is a table of [vmin, DifferentialResponse(Eee_i)]
         pairs for each vmin in the range [vminmin, vminmax], corresponding to measured
         recoil energies Eee_i. It is a 3D matrix where
                 axis = 0 has dimension self.ERecoilList.size()
-                axis = 1 has dimension vmin_list.size() + 1 (where +1 is because we
+                axis = 1 has dimension vmin_list.size() + 1 (where + 1 is because we
                     prepend zeros for vmin = 0)
-                axis = 2 has dimension 2 for the pairs of [vmin, diff_response]
+                axis = 2 has dimension 2 for the pairs of [vmin, diff_response].
             - self.response_tab is a table of [vmin, Response] pairs for each vmin
         in the range [vminmin, vminmax], corresponding to DifferentialResponse
         integrated over the full energy range. It is a 2D matrix where
                 axis = 1 has dimension vmin_list.size() + 1 (where +1 is because we
                     prepend zeros for vmin = 0)
-                axis = 2 has dimension 2 for the pairs of [vmin, diff_response]
+                axis = 2 has dimension 2 for the pairs of [vmin, diff_response].
         Input:
-            vmin range and vmin step size
-            mx, fp, fn, delta
-            output_file_tail since the results for self.vmin_sorted_list,
-                self.diff_response_tab and self.response_tab are each written to files.
+            vmin_min, vmin_max, vmin_step: float
+                Vmin range and vmin step size.
+            mx, fp, fn, delta: float
+            output_file_tail: string
+                Tag to be added to the file name since the results for
+                self.vmin_sorted_list, self.diff_response_tab and self.response_tab
+                are each written to files.
         '''
-        self.VMinSortedList(mx, fp, fn, delta)
+        self._VMinSortedList(mx, fp, fn, delta)
         file = output_file_tail + "_VminSortedList.dat"
         print(file)
         np.savetxt(file, self.vmin_sorted_list)
@@ -131,7 +136,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             branches = [1]
         else:
             branches = [1, -1]
-        self.vmin_linspace = np.linspace(vmin_min, vmin_max, (vmin_max - vmin_min)/vmin_step + 1)
+        self.vmin_linspace = np.linspace(vmin_min, vmin_max,
+                                         (vmin_max - vmin_min)/vmin_step + 1)
         self.diff_response_tab = np.zeros((self.ERecoilList.size, 1))
         self.response_tab = np.zeros(1)
         self.curly_H_tab = np.zeros((self.ERecoilList.size, 1))
@@ -139,7 +145,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         xi = 0
         vmin_prev = 0
         for vmin in self.vmin_linspace:
-            print("vmin = ", vmin)
+            print("vmin =", vmin)
             diff_resp_list = np.zeros((1, len(self.ERecoilList)))
             resp = 0
             curly_H = np.zeros((1, len(self.ERecoilList)))
@@ -185,18 +191,34 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         os.system("say Finished response tables.")
         return
 
-    def PlotTable(self, interpolation, dimension=0, xlim=None, ylim=None,
+    def PlotTable(self, func, dimension=0, xlim=None, ylim=None,
                   title=None, plot_close=True, plot_show=True, show_zero_axis=False):
+        ''' Plots response tables.
+        Input:
+            func: callable
+                Function or list of functions of v that should be plotted.
+            dimension: int
+                0 (if there's only one function) or
+                1 (if there are a list of functions).
+            xlim, ylim: float
+                Axis limits for the plots.
+            title: string
+                Plot title.
+            plot_close, plot_show: bool
+                Whether to call plt.close() before and plt.show() after.
+            show_zero_axis: bool
+                Whether to show a horizontal line at zero.
+        '''
         if plot_close:
             plt.close()
         if dimension == 0:
             # only one function
-            plt.plot(self.vmin_linspace, np.array([interpolation(v)
+            plt.plot(self.vmin_linspace, np.array([func(v)
                      for v in self.vmin_linspace]))
         elif dimension == 1:
             # list of interpolated functions for each energy in self.ERecoilList
             for i in range(self.ERecoilList.size):
-                plt.plot(self.vmin_linspace, np.array([interpolation[i](v)
+                plt.plot(self.vmin_linspace, np.array([func[i](v)
                          for v in self.vmin_linspace]))
         else:
             print("Wrong dimension")
@@ -213,6 +235,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             plt.show()
 
     def ImportResponseTables(self, output_file_tail, plot=True):
+        ''' Imports the data for the response tables from files.
+        '''
         file = output_file_tail + "_VminSortedList.dat"
         with open(file, 'r') as f_handle:
             self.vmin_sorted_list = np.loadtxt(f_handle)
@@ -256,8 +280,17 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                                         epsrel=PRECISSION, epsabs=0)[0]
                         for a in range(vmin_list.size - 1)])
 
-    def MinusLogLikelihood(self, vars_list, vminStar=None, logetaStar=None,
-                           vminStar_index=None):
+    def _MinusLogLikelihood(self, vars_list, vminStar=None, logetaStar=None,
+                            vminStar_index=None):
+        ''' Compute -log(L)
+        Input:
+            vars_list: ndarray
+                List of variables [vmin_1, ..., vmin_No, log(eta_1), ..., log(eta_No)]
+            vminStar, logetaStar: float, optional
+                Values of fixed vmin^* and log(eta)^*.
+        Returns:
+            -log(L): float
+        '''
         if vminStar is None:
             vmin_list_w0 = vars_list[: vars_list.size/2]
             logeta_list = vars_list[vars_list.size/2:]
@@ -279,37 +312,63 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             raise ValueError
         return result
 
-    def _MinusLogLikelihood(self, vars_list, constr_func=None, vminStar=None,
-                            logetaStar=None, vminStar_index=None):
+    def MinusLogLikelihood(self, vars_list, constr_func=None, vminStar=None,
+                           logetaStar=None, vminStar_index=None):
+        ''' Computes -log(L) and tests whether constraints are satisfied.
+        Input:
+            vars_list: ndarray
+                List of variables [vmin_1, ..., vmin_No, log(eta_1), ..., log(eta_No)].
+            constr_func: callable, optional
+                Ffunction of vars_list giving an array of values each corresponding to
+                a constraint. If the values are > 0 the constraints are satisfied.
+            vminStar, logetaStar: float, optional
+                Values of fixed vmin^* and log(eta)^*.
+            vminStar_index: int, optional
+                Index corresponding to the position of vminStar in the array of vmin
+                steps.
+        Returns:
+            -log(L) if all constraints are valid, and the result of an artificial
+                function that grows with the invalid constraints if not all constraints
+                are valid.
+        '''
         constraints = constr_func(vars_list)
         constr_not_valid = constraints < 0
         if DEBUG_FULL:
-            print("*** vars_list = ", repr(vars_list))
+            print("*** vars_list =", repr(vars_list))
         if DEBUG_FULL:
-            print("vminStar = ", vminStar)
-            print("logetaStar = ", logetaStar)
-            print("constraints = ", repr(constraints))
-            print("constr_not_valid = ", repr(constr_not_valid))
+            print("vminStar =", vminStar)
+            print("logetaStar =", logetaStar)
+            print("constraints =", repr(constraints))
+            print("constr_not_valid =", repr(constr_not_valid))
         try:
-            return self.MinusLogLikelihood(vars_list, vminStar=vminStar,
-                                           logetaStar=logetaStar,
-                                           vminStar_index=vminStar_index)
+            return self._MinusLogLikelihood(vars_list, vminStar=vminStar,
+                                            logetaStar=logetaStar,
+                                            vminStar_index=vminStar_index)
         except:
             if np.any(constr_not_valid):
                 constr_list = constraints[constr_not_valid]
                 if DEBUG_FULL:
                     print("Constraints not valid!!")
-                    print("constr sum = ", -constr_list.sum())
+                    print("constr sum =", -constr_list.sum())
                 return min(max(-constr_list.sum(), 0.001) * 1e6, 1e6)
             else:
                 print("Error!!")
                 raise
 
-    def OptimalLikelihood(self, output_file_tail, logeta_guess=-24):
+    def OptimalLikelihood(self, output_file_tail, logeta_guess):
+        ''' Finds the best-fit piecewise constant eta function corresponding to the
+        minimum MinusLogLikelihood, and prints the results to file (value of the minimum
+        MinusLogLikelihood and the corresponding values of vmin, logeta steps.
+        Input:
+            output_file_tail: string
+                Tag to be added to the file name.
+            logeta_guess: float
+                Guess for the value of log(eta) in the minimization procedure.
+        '''
         self.ImportResponseTables(output_file_tail, plot=False)
         vars_guess = np.append(self.vmin_sorted_list,
                                logeta_guess * np.ones(self.vmin_sorted_list.size))
-        print("vars_guess = ", vars_guess)
+        print("vars_guess =", vars_guess)
         vmin_max = self.vmin_linspace[-1]
 
         def constr_func(x, vmin_max=vmin_max):
@@ -324,24 +383,24 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             is_not_close[:3 * (x.size/2)] = T
             constr = np.where(is_not_close, constraints, np.abs(constraints))
             if DEBUG:
-                print("***constr = ", repr(constr))
-                print("tf = ", repr(constr < 0))
+                print("***constr =", repr(constr))
+                print("tf =", repr(constr < 0))
             return constr
         constr = ({'type': 'ineq', 'fun': constr_func})
 
         np.random.seed(0)
         if USE_BASINHOPPING:
             minimizer_kwargs = {"constraints": constr, "args": (constr_func,)}
-            optimum_log_likelihood = basinhopping(self._MinusLogLikelihood, vars_guess,
+            optimum_log_likelihood = basinhopping(self.MinusLogLikelihood, vars_guess,
                                                   minimizer_kwargs=minimizer_kwargs,
                                                   niter=30, stepsize=0.1)
         else:
-            optimum_log_likelihood = minimize(self._MinusLogLikelihood, vars_guess,
+            optimum_log_likelihood = minimize(self.MinusLogLikelihood, vars_guess,
                                               args=(constr_func,), constraints=constr)
 
         print(optimum_log_likelihood)
-        print("MinusLogLikelihood = ", self.MinusLogLikelihood(optimum_log_likelihood.x))
-        print("vars_guess = ", repr(vars_guess))
+        print("MinusLogLikelihood =", self._MinusLogLikelihood(optimum_log_likelihood.x))
+        print("vars_guess =", repr(vars_guess))
         file = output_file_tail + "_GloballyOptimalLikelihood.dat"
         print(file)
         np.savetxt(file, np.append([optimum_log_likelihood.fun],
@@ -350,6 +409,14 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         return
 
     def ImportOptimalLikelihood(self, output_file_tail, plot=False):
+        ''' Import the minumum -log(L) and the locations of the steps in the best-fit
+        logeta function.
+        Input:
+            output_file_tail: string
+                Tag to be added to the file name.
+            plot: bool, optional
+                Whether to plot response tables.
+        '''
         self.ImportResponseTables(output_file_tail, plot=False)
         file = output_file_tail + "_GloballyOptimalLikelihood.dat"
         with open(file, 'r') as f_handle:
@@ -357,10 +424,10 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.optimal_logL = optimal_result[0]
         self.optimal_vmin = optimal_result[1: optimal_result.size/2 + 1]
         self.optimal_logeta = optimal_result[optimal_result.size/2 + 1:]
-        print("optimal result = ", optimal_result)
+        print("optimal result =", optimal_result)
 
         if plot:
-            self.MinusLogLikelihood(optimal_result[1:])  # to get self.gamma_i
+            self._MinusLogLikelihood(optimal_result[1:])  # to get self.gamma_i
             self.xi_interp = unif.interp1d(self.vmin_linspace, self.xi_tab)
             self.h_sum_tab = np.sum([self.curly_H_tab[i] / self.gamma_i[i]
                                      for i in range(self.optimal_vmin.size)], axis=0)
@@ -384,9 +451,11 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                            title='q', show_zero_axis=True)
         return
 
-    def PlotStepFunction(self, vmin_list, logeta_list,
-                         xlim_percentage=(0., 1.1), ylim_percentage=(1.01, 0.99),
-                         plot_close=True, plot_show=True, mark='o', color=None):
+    def _PlotStepFunction(self, vmin_list, logeta_list,
+                          xlim_percentage=(0., 1.1), ylim_percentage=(1.01, 0.99),
+                          plot_close=True, plot_show=True, mark='o', color=None):
+        ''' Plots a step-like function, given the location of the steps.
+        '''
         if plot_close:
             plt.close()
         print(vmin_list)
@@ -408,29 +477,45 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
 
     def PlotOptimum(self, xlim_percentage=(0., 1.1), ylim_percentage=(1.01, 0.99),
                     plot_close=True, plot_show=True):
-        self.PlotStepFunction(self.optimal_vmin, self.optimal_logeta,
-                              xlim_percentage=xlim_percentage, ylim_percentage=ylim_percentage,
-                              plot_close=plot_close, plot_show=plot_show)
+        ''' Plots the best-fit eta(vmin) step function.
+        '''
+        self._PlotStepFunction(self.optimal_vmin, self.optimal_logeta,
+                               xlim_percentage=xlim_percentage,
+                               ylim_percentage=ylim_percentage,
+                               plot_close=plot_close, plot_show=plot_show)
         return
 
     def PlotConstrainedOptimum(self, vminStar, logetaStar, vminStar_index,
                                xlim_percentage=(0., 1.1), ylim_percentage=(1.01, 0.99),
                                plot_close=True, plot_show=True):
-        self.PlotStepFunction(self.optimal_vmin, self.optimal_logeta,
-                              plot_close=plot_close, plot_show=False)
+        ''' Plots the eta(vmin) function given the location of vminStar and logetaStar.
+        '''
+        self._PlotStepFunction(self.optimal_vmin, self.optimal_logeta,
+                               plot_close=plot_close, plot_show=False)
         x = np.insert(self.constr_optimal_vmin, vminStar_index, vminStar)
         y = np.insert(self.constr_optimal_logeta, vminStar_index, logetaStar)
-        self.PlotStepFunction(x, y,
-                              xlim_percentage=xlim_percentage,
-                              ylim_percentage=ylim_percentage,
-                              plot_close=False, plot_show=False, mark='x', color='k')
+        self._PlotStepFunction(x, y,
+                               xlim_percentage=xlim_percentage,
+                               ylim_percentage=ylim_percentage,
+                               plot_close=False, plot_show=False, mark='x', color='k')
         plt.plot(vminStar, logetaStar, '*')
         if plot_show:
             plt.show()
         return
 
-    def _ConstrainedOptimalLikelihood(self, vminStar, logetaStar, vminStar_index,
-                                      plot=False):
+    def _ConstrainedOptimalLikelihood(self, vminStar, logetaStar, vminStar_index):
+        ''' Finds the constrained minimum MinusLogLikelihood for given vminStar,
+        logetaStar and vminStar_index.
+        Input:
+            vminStar, logetaStar: float
+                Location of the constrained step.
+            vminStar_index: int
+                Index of vminStar in the list of vmin steps of the constrained optimum
+                logeta function.
+        Returns:
+            constr_optimal_logl: float
+                The constrained minimum MinusLogLikelihood
+        '''
         if DEBUG:
             print("~~~~~ vminStar_index =", vminStar_index)
         vmin_guess_left = np.array([self.optimal_vmin[ind]
@@ -506,13 +591,13 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             try:
                 if USE_BASINHOPPING:
                     constr_optimum_log_likelihood = \
-                        basinhopping(self._MinusLogLikelihood, vars_guess,
+                        basinhopping(self.MinusLogLikelihood, vars_guess,
                                      minimizer_kwargs=minimizer_kwargs, niter=5,
                                      take_step=take_step, adapt_kwargs=adapt_kwargs,
                                      stepsize=0.2)
                 else:
                     constr_optimum_log_likelihood = \
-                        minimize(self._MinusLogLikelihood, vars_guess,
+                        minimize(self.MinusLogLikelihood, vars_guess,
                                  args=args, constraints=constr, method=self.method)
                 constraints = constr_func(constr_optimum_log_likelihood.x)
                 is_not_close = np.logical_not(np.isclose(constraints,
@@ -532,11 +617,9 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 minimizer_kwargs = {"constraints": constr, "args": args}
 
             if DEBUG and sol_not_found:
-                print(attempts, " attempts left! ####################################" +
+                print(attempts, "attempts left! ####################################" +
                       "################################################################")
-#                os.system("say Error");
-#                os.system("say " + str(attempts) + " attempts left")
-                print("sol_not_found = ", sol_not_found)
+                print("sol_not_found =", sol_not_found)
         if sol_not_found:
             if DEBUG:
                 print("ValueError: sol not found")
@@ -544,18 +627,29 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
 
         if DEBUG:
             print(constr_optimum_log_likelihood)
-            print("kwargs = ", constr_optimum_log_likelihood.minimizer.kwargs)
-            print("args = ", constr_optimum_log_likelihood.minimizer.kwargs['args'])
-            print("optimum_logL = ", self.optimal_logL)
-            print("constraints = ", repr(constraints))
-            print("constr_not_valid = ", repr(constr_not_valid))
-            print("vars_guess = ", repr(vars_guess))
-            print("optimum_logL = ", self.optimal_logL)
-            print("vminStar_index = ", vminStar_index)
+            print("kwargs =", constr_optimum_log_likelihood.minimizer.kwargs)
+            print("args =", constr_optimum_log_likelihood.minimizer.kwargs['args'])
+            print("optimum_logL =", self.optimal_logL)
+            print("constraints=", repr(constraints))
+            print("constr_not_valid =", repr(constr_not_valid))
+            print("vars_guess =", repr(vars_guess))
+            print("optimum_logL =", self.optimal_logL)
+            print("vminStar_index =", vminStar_index)
 
         return constr_optimum_log_likelihood
 
-    def ConstrainedOptimalLikelihood(self, vminStar, logetaStar, plot=False):
+    def ConstrainedOptimalLikelihood(self, vminStar, logetaStar):
+        ''' Finds the constrained minimum MinusLogLikelihood for given vminStar,
+        logetaStar. Finds the minimum for all vminStar_index, and picks the best one.
+        Input:
+            vminStar, logetaStar: float
+                Location of constrained step.
+            plot: bool, optional
+                Whether to plot the constrained piecewice-constant logeta function.
+        Returns:
+            constr_optimal_logl: float
+                The constrained minimum MinusLogLikelihood
+        '''
         vminStar_index = 0
         while vminStar_index < self.optimal_vmin.size and \
                 vminStar > self.optimal_vmin[vminStar_index]:
@@ -563,8 +657,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
 
         try:
             constr_optimum_log_likelihood = \
-                self._ConstrainedOptimalLikelihood(vminStar, logetaStar, vminStar_index,
-                                                   plot=plot)
+                self._ConstrainedOptimalLikelihood(vminStar, logetaStar, vminStar_index)
         except ValueError:
             optim_logL = 10**6
             pass
@@ -578,14 +671,13 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             try:
                 index -= 1
                 new_optimum = \
-                    self._ConstrainedOptimalLikelihood(vminStar, logetaStar, index,
-                                                       plot=plot)
+                    self._ConstrainedOptimalLikelihood(vminStar, logetaStar, index)
             except ValueError:
                 pass
             else:
                 if new_optimum.fun < optim_logL:
                     os.system("say Moved left")
-                    print("Moved left, index is now ", index)
+                    print("Moved left, index is now", index)
                     print("############################################################" +
                           "############################################################")
                     vminStar_index = index
@@ -596,13 +688,13 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             try:
                 index += 1
                 new_optimum = self._ConstrainedOptimalLikelihood(vminStar, logetaStar,
-                                                                 index, plot=plot)
+                                                                 index)
             except ValueError:
                 pass
             else:
                 if new_optimum.fun < optim_logL:
                     os.system("say Moved right")
-                    print("Moved right, index is now ", index)
+                    print("Moved right, index is now", index)
                     print("############################################################" +
                           "############################################################")
                     vminStar_index = index
@@ -616,20 +708,18 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
 
         self.constr_optimal_vmin = vars_result[: vars_result.size/2]
         self.constr_optimal_logeta = vars_result[vars_result.size/2:]
-#        print(self.constr_optimal_vmin)
-#        print(self.constr_optimal_logeta)
 
         if plot:
-            print("vminStar = ", vminStar)
-            print("logetaStar = ", logetaStar)
-            print("vminStar_index = ", vminStar_index)
+            print("vminStar =", vminStar)
+            print("logetaStar =", logetaStar)
+            print("vminStar_index =", vminStar_index)
             try:
-                print("original: ", original_optimum)
+                print("original:", original_optimum)
             except:
                 print("Original failed.")
                 pass
             try:
-                print("new: ", constr_optimum_log_likelihood)
+                print("new:", constr_optimum_log_likelihood)
                 print(constr_optimum_log_likelihood.minimizer.kwargs['args'])
             except:
                 print("All attepts failed.")
@@ -644,13 +734,13 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                                                          np.zeros_like(constraints)))
                 constr_not_valid = np.logical_and(constraints < 0, is_not_close)
                 sol_not_found = np.any(constr_not_valid)
-                print("random vminStar = ", vminStar_rand)
-                print("random logetaStar = ", logetaStar_rand)
-                print("x = ", constr_optimum_log_likelihood.x)
-                print("constraints = ", constraints)
-                print("is_not_close = ", is_not_close)
-                print("constr_not_valid = ", constr_not_valid)
-                print("sol_not_found = ", sol_not_found)
+                print("random vminStar =", vminStar_rand)
+                print("random logetaStar =", logetaStar_rand)
+                print("x =", constr_optimum_log_likelihood.x)
+                print("constraints =", constraints)
+                print("is_not_close =", is_not_close)
+                print("constr_not_valid =", constr_not_valid)
+                print("sol_not_found =", sol_not_found)
             except:
                 print("Error")
                 pass
@@ -662,6 +752,28 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
 
     def VminSamplingList(self, output_file_tail, vmin_min, vmin_max, vmin_num_steps,
                          steepness_vmin=1.5, steepness_vmin_center=2.5, plot=False):
+        ''' Finds a non-linear way to sample the vmin range, such that more points are
+        sampled near the location of the steps of the best-fit logeta function, and
+        fewer in between. This is done by building a function of vmin that is steeper
+        near the steps and flatter elsewhere, and the steeper this function the more
+        samplings are done in this region.
+        Input:
+            output_file_tail: string
+                Tag to be added to the file name.
+            vmin_min, vmin_max: float
+                Range in vmin where the sampling should be made.
+            vmin_num_steps: int
+                Number of samples in vmin (approximate, the final number of steps is
+                not exact, due to taking floor() in some places.
+            steepness_vmin: float, optional
+                Parameter related to the steepness of this function to the left of the
+                leftmost step and to the right of the rightmost step.
+            steepness_vmin_center: float, optional
+                Similar parameter, but for the steepness in between the leftmost step
+                and the rightmost step.
+            plot: bool, optional
+                Whether to plot intermediate results such as the sampling function.
+        '''
         self.ImportOptimalLikelihood(output_file_tail)
         xmin = vmin_min
         xmax = vmin_max
@@ -676,7 +788,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         x0_list = self.optimal_vmin
         numx0 = x0_list.size
 
-        print("x0 = ", x0_list)
+        print("x0 =", x0_list)
 
         def UnitStep(x): return (np.sign(x) + 1) / 2
 
@@ -712,8 +824,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         x_turns = np.sort(np.append(x_turns_max, x_turns_min))
         x_turns = np.append(np.insert(x_turns, 0, xmin), [xmax])
         y_turns = g_total(x_turns)
-        print("x_turns = ", x_turns)
-        print("y_turns = ", y_turns)
+        print("x_turns =", x_turns)
+        print("y_turns =", y_turns)
 
         def g_inverse(y, x1, x2):
             return brentq(lambda x: g_total(x) - y, x1, x2)
@@ -723,10 +835,10 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
 
         y_diff = np.diff(y_turns)
         y_diff_sum = np.abs(y_diff).sum()
-        print("y_diff = ", y_diff)
+        print("y_diff =", y_diff)
         num_steps = np.array([max(1, np.floor(x_num_steps * np.abs(yd)/y_diff_sum))
                               for yd in y_diff])
-        print("num_steps = ", num_steps)
+        print("num_steps =", num_steps)
         y_list = np.array([np.linspace(y_turns[i], y_turns[i+1], num_steps[i])
                            for i in range(num_steps.size)])
         x_list = np.array([g_inverse_list(y_list[i], x_turns[i], x_turns[i+1])
@@ -752,6 +864,14 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         return
 
     def OptimumStepFunction(self, vmin):
+        ''' Best-fit logeta as a function of vmin for the optimal log(L).
+        Input:
+            vmin: float
+                Value of vmin for which to evaluate logeta.
+        Returns:
+            logeta: float
+                log(eta(vmin)) for the best-fit piecewise constant function.
+        '''
         index = 0
         while index < self.optimal_vmin.size and vmin > self.optimal_vmin[index]:
             index += 1
@@ -759,9 +879,29 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             return self.optimal_logeta[-1]*10
         return self.optimal_logeta[index]
 
-    def VminLogetaSamplingTable(self, output_file_tail,
-                                logeta_percent_minus, logeta_percent_plus, logeta_num_steps,
+    def VminLogetaSamplingTable(self, output_file_tail, logeta_percent_minus,
+                                logeta_percent_plus, logeta_num_steps,
                                 linear_sampling=True, steepness_logeta=1, plot=False):
+        ''' Finds a non-linear way to sample both the vmin and logeta range, such that
+        more points are sampled near the location of the steps of the best-fit logeta
+        function, and fewer in between. This uses the sampling in vmin done by
+        VminSamplingList, and computes a non-linear sampling in logeta in a similar way
+        (by building a function of logeta that is steeper near the steps and flatter
+        elsewhere, and the steeper this function the more samplings are done in this
+        region).
+        Input:
+            output_file_tail: string
+                Tag to be added to the file name.
+            logeta_percent_minus, logeta_percent_plus: float
+                Range in logeta where the sampling should be made, given as percentage
+                in the negative and positive direction of the best-fit logeta.
+            logeta_num_steps: int
+                Number of samples in logeta.
+            steepness_logeta: float, optional
+                Parameter related to the steepness of this sampling function in logeta.
+            plot: bool, optional
+                Whether to plot intermediate results such as the sampling function.
+        '''
         print(self.optimal_vmin)
         print(self.optimal_logeta)
 
@@ -808,14 +948,15 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         self.vmin_logeta_sampling_table = np.array(self.vmin_logeta_sampling_table)
 
         if plot:
-            self.PlotSamplingTable(output_file_tail, plot_close=True)
+            self.PlotSamplingTable(plot_close=True)
         return
 
-    def PlotSamplingTable(self, output_file_tail, plot_close=False, plot_show=True,
-                          plot_optimum=True):
+    def PlotSamplingTable(self, plot_close=False, plot_show=True, plot_optimum=True):
+        ''' Plots the sampling points in the vmin-logeta plane.
+        '''
         if plot_close:
             plt.close()
-        print("sampling_size = ", self.vmin_logeta_sampling_table.shape)
+        print("sampling_size =", self.vmin_logeta_sampling_table.shape)
         for tab in self.vmin_logeta_sampling_table:
             plt.plot(tab[:, 0], tab[:, 1], 'o')
         if plot_optimum:
@@ -831,19 +972,18 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         the index for each logetaStar. Each file corresponds to a different index i.
             Here only one file is written for a specific vminStar.
         Input:
-            - kwargs containing a dictionary of the form:
-                {'index': index, 'output_file_tail': output_file_tail,
-                'logeta_index_range': logeta_index_range}
-                where:
-                    index is the index of vminStar
-                    output_file_tail is part of the file name
-                        where the table will be printed
-                    logeta_index_range is a tuple (index0, index1) between which
-                        logetaStar will be considered. If ths is None, then the whole
-                        list of logetaStar is used.
+            index: int
+                Index of vminStar.
+            output_file_tail: string
+                Tag to be added to the file name.
+            logeta_index_range: tuple
+                A touple (index0, index1) between which logetaStar will be considered.
+                If this is None, then the whole list of logetaStar is used.
+            extra_tail: string
+                Additional tail to be added to filenames.
         '''
-        print("index = ", index)
-        print("output_file_tail = ", output_file_tail)
+        print('index =', index)
+        print('output_file_tail =', output_file_tail)
         vminStar = self.vmin_logeta_sampling_table[index, 0, 0]
         logetaStar_list = self.vmin_logeta_sampling_table[index, :, 1]
         plot = False
@@ -851,7 +991,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             logetaStar_list = \
                 logetaStar_list[logeta_index_range[0]: logeta_index_range[1]]
             plot = True
-        print("vminStar = ", vminStar)
+        print("vminStar =", vminStar)
         table = np.empty((0, 2))
         for logetaStar in logetaStar_list:
             try:
@@ -862,11 +1002,11 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 os.system("say Error")
                 pass
             else:
-                print("index = ", index, "; ", "vminStar = ", vminStar,
-                      "; logetaStar = ", logetaStar, "; constr_opt = ", constr_opt)
+                print("index =", index, "; vminStar =", vminStar,
+                      "; logetaStar =", logetaStar, "; constr_opt =", constr_opt)
                 table = np.append(table, [[logetaStar, constr_opt]], axis=0)
 #                table = np.append(table, [logetaStar])
-        print("vminStar = ", vminStar, "; table = ", table)
+        print("vminStar =", vminStar, "; table =", table)
         if True:
             temp_file = output_file_tail + "_" + str(index) + \
                 "_LogetaStarLogLikelihoodList" + extra_tail + ".dat"
@@ -879,14 +1019,18 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         ''' Loops thorugh the list of all vminStar and calls GetLikelihoodTable,
         which will print the likelihood tables to files.
         Input:
-            - output_file_tail: part of the files name
-            - processes: number of processes for parallel programming
-            - vmin_index_list: optional, list of indices in vminStar_list for which we
-                calculate the minimum likelihood. If not given, the whole list of
-                vminStars is used.
-            - logeta_index_range is a tuple (index0, index1) between which
-                logetaStar will be considered. If not given, then the whole
-                list of logetaStar is used.
+            output_file_tail: string
+                Tag to be added to the file name.
+            extra_tail: string, optional
+                Additional tail to be added to filenames.
+            processes: int, optional
+                Number of processes for parallel programming.
+            vmin_index_list: ndarray, optional
+                List of indices in vminStar_list for which we calculate the optimal
+                likelihood. If not given, the whole list of vminStars is used.
+            logeta_index_range: tuple, optional
+                Atuple (index0, index1) between which logetaStar will be considered.
+                If not given, then the whole list of logetaStar is used.
         '''
         if vmin_index_list is None:
             vmin_index_list = range(0, self.vmin_logeta_sampling_table.shape[0])
@@ -896,8 +1040,8 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             except TypeError:
                 vmin_index_list = range(vmin_index_list,
                                         self.vmin_logeta_sampling_table.shape[0])
-        print("vmin_index_list = ", vmin_index_list)
-        print("logeta_index_range = ", logeta_index_range)
+        print("vmin_index_list =", vmin_index_list)
+        print("logeta_index_range =", logeta_index_range)
         kwargs = ({'index': index,
                    'output_file_tail': output_file_tail,
                    'logeta_index_range': logeta_index_range,
@@ -913,17 +1057,33 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             return -constr_list.sum() * 10**2
         return logL_interp(vars_list)
 
-    def FoxBand(self, output_file_tail, delta_logL, interpolation_order, extra_tail="",
-                multiplot=True, plot=True):
-        print("self.vmin_sampling_list = ", self.vmin_sampling_list)
+    def ConfidenceBand(self, output_file_tail, delta_logL, interpolation_order,
+                       extra_tail="", multiplot=True):
+        ''' Compute the confidence band.
+        Input:
+            output_file_tail: string
+                Tag to be added to the file name.
+            delta_logL: float
+                Target difference between the constrained minimum and the
+                unconstrained global minimum of MinusLogLikelihood.
+            interpolation_order: int
+                interpolation order for the interpolated constrained minimum of
+                MinusLogLikelihood as a function of logeta, for a fixed vmin.
+            extra_tail: string, optional
+                Additional tail to be added to filenames.
+            multiplot: bool, optional
+                Whether to plot log(L) as a function of logeta for each vmin, and the
+                horizontal line corresponding to a given delta_logL.
+        '''
+        print("self.vmin_sampling_list =", self.vmin_sampling_list)
         self.vmin_logeta_band_low = []
         self.vmin_logeta_band_up = []
         vmin_last_step = self.optimal_vmin[-1]
         if multiplot:
             plt.close()
         for index in range(self.vmin_sampling_list.size):
-            print("index = ", index)
-            print("vmin = ", self.vmin_sampling_list[index])
+            print("index =", index)
+            print("vmin =", self.vmin_sampling_list[index])
             logeta_optim = self.OptimumStepFunction(min(self.vmin_sampling_list[index],
                                                         vmin_last_step))
             file = output_file_tail + "_" + str(index) + \
@@ -960,16 +1120,16 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 print("ValueError at logeta_minimLogL")
                 logeta_minimLogL = logeta_optim
                 pass
-            print("logeta_minimLogL = ", logeta_minimLogL)
+            print("logeta_minimLogL =", logeta_minimLogL)
 
-            print("x = ", x)
-            print("y = ", y)
+            print("x =", x)
+            print("y =", y)
             if multiplot:
                 plt.close()
                 plt.plot(x, y, 'o-')
                 plt.plot(x, (self.optimal_logL + 1) * np.ones_like(y))
                 plt.plot(x, (self.optimal_logL + 2.7) * np.ones_like(y))
-                plt.title("index = " + str(index) + ", v_min = " +
+                plt.title("index =" + str(index) + ", v_min =" +
                           str(self.vmin_sampling_list[index]) + "km/s")
                 plt.xlim(x[0], x[-1])
                 plt.ylim(-5, 20)
@@ -1003,7 +1163,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
                 plt.close()
                 plt.plot(x, (self.optimal_logL + 1) * np.ones_like(y))
                 plt.plot(x, (self.optimal_logL + 2.7) * np.ones_like(y))
-                plt.title("index = " + str(index) + "; v_min = " +
+                plt.title("index =" + str(index) + "; v_min =" +
                           str(self.vmin_sampling_list[index]) + "km/s")
                 plt.xlim(x[0], x[-1])
                 plt.ylim([-5, 20])
@@ -1024,7 +1184,7 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
         print("lower band: ", self.vmin_logeta_band_low)
         print("upper band: ", self.vmin_logeta_band_up)
 
-        self.PlotBand()
+        self.PlotConfidenceBand()
 
         delta_logL = round(delta_logL, 1)
         file = output_file_tail + "_FoxBand_low_deltalogL_" + str(delta_logL) + ".dat"
@@ -1036,7 +1196,9 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
 
         return
 
-    def PlotBand(self):
+    def PlotConfidenceBand(self):
+        ''' Plot the confidence band and the best-fit function.
+        '''
         plt.close()
         try:
             plt.plot(self.vmin_logeta_band_low[:, 0], self.vmin_logeta_band_low[:, 1], 'o-')
@@ -1048,7 +1210,17 @@ class Experiment_FoxMethod(Experiment_HaloIndep):
             pass
         self.PlotOptimum(ylim_percentage=(1.2, 0.8), plot_close=F, plot_show=T)
 
-    def ImportFoxBand(self, output_file_tail, delta_logL, extra_tail=""):
+    def ImportConfidenceBand(self, output_file_tail, delta_logL, extra_tail=""):
+        ''' Import the confidence band from file.
+        Input:
+            output_file_tail: string
+                Tag to be added to the file name.
+            delta_logL: float
+                Target difference between the constrained minimum and the
+                unconstrained global minimum of MinusLogLikelihood.
+            extra_tail: string, optional
+                Additional tail to be added to filenames.
+        '''
         delta_logL = round(delta_logL, 1)
         file = output_file_tail + "_FoxBand_low_deltalogL_" + str(delta_logL) + \
             extra_tail + ".dat"
