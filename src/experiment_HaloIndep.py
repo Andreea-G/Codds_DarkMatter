@@ -17,34 +17,36 @@ import os
 
 
 class Experiment_HaloIndep(Experiment):
-    ''' This is the base class that implements the halo-independent analysis
-    common to all experiments.
-    Parameters:
-        expername: string
-            The name of the experiment.
+    ''' Base class that implements the halo-independent analysis common to all
+    experiments, using vmin as independent variable in the integration.
+    Input:
+        exper_name: string
+            Name of experiment.
         scattering_type: string
-            The type of scattering. Can be
+            Type of scattering. Can be
                 - 'SI' (spin-independent)
                 - 'SDAV' (spin-independent, axial-vector)
                 - 'SDPS' (spin-independent, pseudo-scalar)
         mPhi: float, optional
-            The mass of the mediator.
+            The mass of the mediator. If not given, it corresponds to contact interaction.
     '''
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef):
-        Experiment.__init__(self, expername, scattering_type, mPhi)
+    def __init__(self, exper_name, scattering_type, mPhi=mPhiRef):
+        Experiment.__init__(self, exper_name, scattering_type, mPhi)
         if self.energy_resolution_type == "Dirac":
-            self.Response = self.Response_Dirac
+            self.Response = self._Response_Dirac
         else:
-            self.Response = self.Response_Other
+            self.Response = self._Response_Finite
 
     def DifferentialResponse(self, Eee, qER, const_factor):
         ''' Differential response function d**2 R / (d Eee d ER)
             NOT including the velocity integral eta0
-            Input:
-                Eee: measured energy (electron equivalent)
-                qER: q * ER for quenching factor q and recoil energy ER
-                const_factor: factors entering the differential response that do not
-                    depend on Eee
+        Input:
+            Eee: float or ndarray
+                Measured energy (electron equivalent).
+            qER: float or ndarray
+                q * ER for quenching factor q and recoil energy ER.
+            const_factor: ndarray
+                Factors entering the differential response that do not depend on Eee.
         '''
         self.count_diffresponse_calls += 1
         r_list = const_factor * self.Efficiency(Eee) * \
@@ -55,8 +57,8 @@ class Experiment_HaloIndep(Experiment):
     def ConstFactor(self, vmin, mx, fp, fn, delta, sign):
         ''' Collects the factors that don't depend on the measured energy Eee,
         so they only need to be computed once in Response function.
-            Returns:
-                a touple of ER, qER and const_factor
+        Returns:
+            (ER, qER, const_factor): tuple
         '''
         ER = ERecoilBranch(vmin, self.mT, mx, delta, sign)
         q = self.QuenchingFactor(ER)
@@ -76,10 +78,10 @@ class Experiment_HaloIndep(Experiment):
         (ER, qER, const_factor) = self.ConstFactor(vmin, mx, fp, fn, delta, sign)
         return self.DifferentialResponse(Eee, qER, const_factor)
 
-    def Response_Other(self, vmin, Eee1, Eee2, mx, fp, fn, delta):
+    def _Response_Finite(self, vmin, Eee1, Eee2, mx, fp, fn, delta):
         ''' Response function integral d**2 R / (d Eee d ER) between measured energies
         Eee1 and Eee2.
-        NOT including eta0.
+            NOT including eta0.
             For any finite resolution function (i.e. other than Dirac Delta).
         '''
         self.count_response_calls += 1
@@ -97,10 +99,10 @@ class Experiment_HaloIndep(Experiment):
             return result
         return 0
 
-    def Response_Dirac(self, vmin, Eee1, Eee2, mx, fp, fn, delta):
+    def _Response_Dirac(self, vmin, Eee1, Eee2, mx, fp, fn, delta):
         ''' Response function integral d**2 R / (d Eee d ER) between measured energies
-        Eee1 and Eee2,
-        NOT including eta0.
+        Eee1 and Eee2.
+            NOT including eta0.
             For Dirac Delta resolution function.
         '''
         self.count_response_calls += 1
@@ -117,7 +119,8 @@ class Experiment_HaloIndep(Experiment):
             efficiencyEee = self.Efficiency(Eee1, qER)
 #            efficiencyER = self.Efficiency_ER(qER)
             efficiencyER = np.array(list(map(self.Efficiency_ER, qER)))
-            r_list = kilogram/SpeedOfLight**2 * self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
+            r_list = kilogram/SpeedOfLight**2 * \
+                self.CrossSectionFactors(ER, mx, fp, fn, delta) * \
                 np.abs(dERecoildVmin(vmin, self.mT, mx, delta, sign)) * \
                 efficiencyEee * efficiencyER * integrated_delta
             r_list_sum += r_list.sum()
@@ -126,7 +129,7 @@ class Experiment_HaloIndep(Experiment):
     def IntegratedResponse(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
         ''' Integrated Response Function between measured energies Eee1 and Eee2,
         and all recoil energies ER.
-        NOT including eta0.
+            NOT including eta0.
             For any finite resolution function (i.e. other than Dirac Delta).
         '''
         midpoints = []
@@ -137,9 +140,21 @@ class Experiment_HaloIndep(Experiment):
 
 
 class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        super().__init__(expername, scattering_type, mPhi)
-        module = import_file(INPUT_DIR + expername + ".py")
+    ''' Class for experiments using the Maximum Gap Method.
+    Input:
+        exper_name: string
+            Name of experiment.
+        scattering_type: string
+            Type of scattering.
+        mPhi: float, optional
+            Mass of the mediator.
+        quenching_factor: float, optional
+            Quenching factor. If not given, the default used is specified in the data
+            modules.
+    '''
+    def __init__(self, exper_name, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        super().__init__(exper_name, scattering_type, mPhi)
+        module = import_file(INPUT_DIR + exper_name + ".py")
         self.ERecoilList = module.ERecoilList
         self.ElistMaxGap = np.append(np.insert(
             np.array(list(filter(lambda x: self.Ethreshold < x < self.Emaximum,
@@ -203,9 +218,21 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
 
 
 class PoissonExperiment_HaloIndep(Experiment_HaloIndep):
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        super().__init__(expername, scattering_type, mPhi)
-        module = import_file(INPUT_DIR + expername + ".py")
+    ''' Class for experiments with Poisson analysis.
+    Input:
+        exper_name: string
+            Name of experiment.
+        scattering_type: string
+            Type of scattering.
+        mPhi: float, optional
+            Mass of the mediator.
+        quenching_factor: float, optional
+            Quenching factor. If not given, the default used is specified in the data
+            modules.
+    '''
+    def __init__(self, exper_name, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        super().__init__(exper_name, scattering_type, mPhi)
+        module = import_file(INPUT_DIR + exper_name + ".py")
         self.Expected_limit = module.Expected_limit
 
     def _PoissonUpperBound(self, vmin, mx, fp, fn, delta):
@@ -237,9 +264,21 @@ class PoissonExperiment_HaloIndep(Experiment_HaloIndep):
 
 
 class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        super().__init__(expername, scattering_type, mPhi)
-        module = import_file(INPUT_DIR + expername + ".py")
+    ''' Class for experiments with Gaussian analysis.
+    Input:
+        exper_name: string
+            Name of experiment.
+        scattering_type: string
+            Type of scattering.
+        mPhi: float, optional
+            Mass of the mediator.
+        quenching_factor: float, optional
+            Quenching factor. If not given, the default used is specified in the data
+            modules.
+    '''
+    def __init__(self, exper_name, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        super().__init__(exper_name, scattering_type, mPhi)
+        module = import_file(INPUT_DIR + exper_name + ".py")
         self.BinEdges_left = module.BinEdges_left
         self.BinEdges_right = module.BinEdges_right
         self.BinData = module.BinData
@@ -278,9 +317,22 @@ class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
 
 
 class Crosses_HaloIndep(Experiment_HaloIndep):
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        super().__init__(expername, scattering_type, mPhi)
-        module = import_file(INPUT_DIR + expername + ".py")
+    ''' Class for finding the crosses for experients with potential signal and
+    binned data.
+    Input:
+        exper_name: string
+            Name of experiment.
+        scattering_type: string
+            Type of scattering.
+        mPhi: float, optional
+            Mass of the mediator.
+        quenching_factor: float, optional
+            Quenching factor. If not given, the default used is specified in the data
+            modules.
+    '''
+    def __init__(self, exper_name, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        super().__init__(exper_name, scattering_type, mPhi)
+        module = import_file(INPUT_DIR + exper_name + ".py")
         self.BinEdges = module.BinEdges
         self.BinEdges_left = self.BinEdges[:-1]
         self.BinEdges_right = self.BinEdges[1:]
@@ -335,7 +387,8 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
             output_file = output_file.replace('temp.dat', self.name + '_' + str(Eee1) +
                                               '_' + str(Eee2) + '.dat')
             print(output_file)
-            np.savetxt(output_file, np.transpose([vmin_list, np.array(resp_list)/int_resp]))
+            np.savetxt(output_file,
+                       np.transpose([vmin_list, np.array(resp_list)/int_resp]))
             output_file = output_file.replace('.dat', '_notnorm.dat')
             print(output_file)
             np.savetxt(output_file, np.transpose([vmin_list, resp_list]))
@@ -373,9 +426,11 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
                                                  vmin_list[index_center:])
         vmin_error_left = - vmin_interp_left(response_CL) + vmin_center
         vmin_error_right = vmin_interp_right(response_CL) - vmin_center
-        print('vmin_edges =', VMin(Eee1/self.QuenchingFactor(Eee1), self.mT, mx, delta)[0],
+        print('vmin_edges =',
+              VMin(Eee1/self.QuenchingFactor(Eee1), self.mT, mx, delta)[0],
               VMin(Eee2/self.QuenchingFactor(Eee2), self.mT, mx, delta)[0])
-        print('vmin_interp =', vmin_interp_left(response_CL), vmin_interp_right(response_CL))
+        print('vmin_interp =', vmin_interp_left(response_CL),
+              vmin_interp_right(response_CL))
         print('vmin_center =', vmin_center)
         print('vmin_error =', vmin_error_left, vmin_error_right)
 
@@ -447,16 +502,16 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
 
 
 class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
-    ''' This is the class for finding the best-fit regions for the DAMA experiment
+    ''' Class for finding the best-fit regions for the DAMA experiment
     when considering the combined analysis of Na and I.
     Constructor:
         A list or tuple of 2 experiment names must be given, and, if not None, then
     a list or tuple of 2 quenching_factors, one for Na and one for I.
     '''
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        expername = expername.split()
-        super().__init__(expername[0], scattering_type, mPhi)
-        self.other = self.__class__.__bases__[0](expername[1], scattering_type, mPhi)
+    def __init__(self, exper_name, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        exper_name = exper_name.split()
+        super().__init__(exper_name[0], scattering_type, mPhi)
+        self.other = self.__class__.__bases__[0](exper_name[1], scattering_type, mPhi)
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor[0]
             self.other.QuenchingFactor = lambda e: quenching_factor[1]

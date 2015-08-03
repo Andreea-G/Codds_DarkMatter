@@ -19,23 +19,23 @@ INPUT_DIR = "Data/"
 
 
 class Experiment:
-    ''' This is the base class that implements the core of the algorithm,
-    common to all experiments and data analyses.
-    Parameters:
-        expername: string
-            The name of the experiment.
+    ''' Base class that implements the core of the algorithm, common to all experiments
+    and data analyses.
+    Input:
+        exper_name: string
+            Name of experiment.
         scattering_type: string
             The type of scattering. Can be
                 - 'SI' (spin-independent)
                 - 'SDAV' (spin-independent, axial-vector)
                 - 'SDPS' (spin-independent, pseudo-scalar)
         mPhi: float, optional
-            The mass of the mediator.
+            Mass of the mediator. If not given, it corresponds to contact interaction.
     '''
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef):
+    def __init__(self, exper_name, scattering_type, mPhi=mPhiRef):
         # Import the data from Python module
-        module = import_file(INPUT_DIR + expername + ".py")
-        self.name = expername
+        module = import_file(INPUT_DIR + exper_name + ".py")
+        self.name = exper_name
         self.scattering_type = scattering_type
         self.energy_resolution_type = module.energy_resolution_type
         self.EnergyResolution = module.EnergyResolution
@@ -93,24 +93,24 @@ class Experiment:
         self.FF = FF_options[self.scattering_type][module.FF[scattering_type]]
         # tests if it's been implemented in Haxton paper
         self.ffelemQ = FFElementQ(self.Z)
-        if ((self.ffelemQ == 1).all()):
+        if (self.ffelemQ == 1).all():
             print("Haxton")
-            self.CrossSectionFactors_SDAV = self.CrossSectionFactors_SDAV_Haxton
-            self.CrossSectionFactors_SDPS = self.CrossSectionFactors_SDPS_Haxton
+            self._CrossSectionFactors_SDAV = self._CrossSectionFactors_SDAV_Haxton
+            self._CrossSectionFactors_SDPS = self._CrossSectionFactors_SDPS_Haxton
         else:
             print("mixed")
-            self.CrossSectionFactors_SDAV = self.CrossSectionFactors_SDAV_Mixed
-            self.CrossSectionFactors_SDPS = self.CrossSectionFactors_SDPS_Mixed
+            self._CrossSectionFactors_SDAV = self._CrossSectionFactors_SDAV_Mixed
+            self._CrossSectionFactors_SDPS = self._CrossSectionFactors_SDPS_Mixed
 
-        CrossSectionFactors_options = {'SI': self.CrossSectionFactors_SI,
-                                       'SDPS': self.CrossSectionFactors_SDPS,
-                                       'SDAV': self.CrossSectionFactors_SDAV,
+        CrossSectionFactors_options = {'SI': self._CrossSectionFactors_SI,
+                                       'SDPS': self._CrossSectionFactors_SDPS,
+                                       'SDAV': self._CrossSectionFactors_SDAV,
                                        }
         self.CrossSectionFactors = CrossSectionFactors_options[self.scattering_type]
         if self.energy_resolution_type == "Dirac":
-            self.IntegratedResponseSHM = self.IntegratedResponseSHM_Dirac
+            self.IntegratedResponseSHM = self._IntegratedResponseSHM_Dirac
         else:
-            self.IntegratedResponseSHM = self.IntegratedResponseSHM_Other
+            self.IntegratedResponseSHM = self._IntegratedResponseSHM_Finite
 
         self.QuenchingFactor = module.QuenchingFactor
         self.Efficiency = module.Efficiency
@@ -128,16 +128,19 @@ class Experiment:
         self._cross_sec_factors_SDPS = (SpeedOfLight/v0bar)**4 * \
             self.mass_fraction * self.mT**2
 
-    def FormFactor(self, ER):
+    def _FormFactor(self, ER):
         ''' Form factor including spin-dependence for the spin-dependent interaction, when
         the Haxton FF is not used.
-            Input:
-                ER: Recoil energy
+        Input:
+            ER: float or ndarray
+                Recoil energy.
+        Returns:
+            result: ndarray
         '''
         result = (4./3. * (4. * pi)/(2 * self.J + 1.)) * self.FF(ER, self.A, self.mT)
         return result
 
-    def CrossSectionFactors_SI(self, ER, mx, fp, fn, delta):
+    def _CrossSectionFactors_SI(self, ER, mx, fp, fn, delta):
         ''' Factors specific to the cross-section for the spin-independent interaction.
             Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
         '''
@@ -149,9 +152,10 @@ class Experiment:
     def _FFPSnormlalized(self, ER, N1, N2):
         ''' Form factors for the PS interaction.
         See Eq. 2.19 of arXiv:1502.07682 and Appendix A.3. of arXiv:1203.3542.
-            Input:
-                ER: Recoil energy
-                N1, N2: 0 or 1 for proton or neutron respectively.
+        Input:
+            ER: float or ndarray
+                Recoil energy.
+            N1, N2: 0 or 1 for proton or neutron respectively.
         '''
         y = ER * self._y_over_ER
         l = np.empty(self.numT)
@@ -162,9 +166,10 @@ class Experiment:
     def _FFAVnormlalized(self, ER, N1, N2):
         ''' Form factors for the AV interaction.
         See Eq. 2.18 of arXiv:1502.07682 and Appendix A.3. of arXiv:1203.3542.
-            Input:
-                ER: Recoil energy
-                N1, N2: 0 or 1 for proton or neutron respectively.
+        Input:
+            ER: float or ndarray
+                Recoil energy.
+            N1, N2: 0 or 1 for proton or neutron respectively.
         '''
         y = ER * self._y_over_ER
         l = np.empty(self.numT)
@@ -173,7 +178,7 @@ class Experiment:
                            self._FFSigmaPJ_function_list[i, N1, N2](y[i]))
         return l * np.exp(-2. * y)
 
-    def CrossSectionFactors_SDPS_Haxton(self, ER, mx, fp, fn, delta):
+    def _CrossSectionFactors_SDPS_Haxton(self, ER, mx, fp, fn, delta):
         ''' Factors specific to the cross-section for the spin-dependent pseudo-scalar
         interaction, with Haxton form factors.
             Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
@@ -182,10 +187,11 @@ class Experiment:
         return 1.e-12 * ER**2 * 3./(8. * mu_p**6) * \
             mPhiRef**4 / (4. * self.mT**2 * (ER + self.mPhi**2 / 2 / self.mT)**2) * \
             self._cross_sec_factors_SDPS * \
-            (self._FFPSnormlalized(ER, 0, 0) + 2 * fn/fp * self._FFPSnormlalized(ER, 0, 1) +
+            (self._FFPSnormlalized(ER, 0, 0) +
+                2 * fn/fp * self._FFPSnormlalized(ER, 0, 1) +
                 (fn/fp)**2 * self._FFPSnormlalized(ER, 1, 1))
 
-    def CrossSectionFactors_SDPS_Mixed(self, ER, mx, fp, fn, delta):
+    def _CrossSectionFactors_SDPS_Mixed(self, ER, mx, fp, fn, delta):
         ''' Factors specific to the cross-section for the spin-dependent pseudo-scalar
         interaction, with mixed form factors (some target elements from Haxton,
         and some not).
@@ -199,9 +205,9 @@ class Experiment:
                              2 * fn/fp * self._FFPSnormlalized(ER, 0, 1) +
                              (fn/fp)**2 * self._FFPSnormlalized(ER, 1, 1)) +
              (1 - self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 *
-             self.FormFactor(ER))
+             self._FormFactor(ER))
 
-    def CrossSectionFactors_SDAV_Haxton(self, ER, mx, fp, fn, delta):
+    def _CrossSectionFactors_SDAV_Haxton(self, ER, mx, fp, fn, delta):
         ''' Factors specific to the cross-section for the spin-dependent axial-vector
         interaction, with Haxton form factors.
             Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
@@ -213,7 +219,7 @@ class Experiment:
              2 * fn/fp * self._FFAVnormlalized(ER, 0, 1) +
              (fn/fp)**2 * self._FFAVnormlalized(ER, 1, 1))
 
-    def CrossSectionFactors_SDAV_Mixed(self, ER, mx, fp, fn, delta):
+    def _CrossSectionFactors_SDAV_Mixed(self, ER, mx, fp, fn, delta):
         ''' Factors specific to the cross-section for the spin-dependent axial-vector
         interaction, with mixed form factors (some target elements from Haxton,
         and some not).
@@ -226,30 +232,34 @@ class Experiment:
                              2 * fn/fp * self._FFAVnormlalized(ER, 0, 1) +
                              (fn/fp)**2 * self._FFAVnormlalized(ER, 1, 1)) +
              (1-self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 *
-             self.FormFactor(ER))
+             self._FormFactor(ER))
 
     def Resolution(self, Eee, qER):
         ''' Energy resolution G(Eee, ER).
-            Input:
-                Eee: measured energy (electron equivalent)
-                qER: q * ER for quenching factor q and recoil energy ER
+        Input:
+            Eee: float or ndarray
+                Measured energy (electron equivalent).
+            qER: float or ndarray
+                q * ER for quenching factor q and recoil energy ER.
         '''
         return self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
 
     def DifferentialResponseSHM(self, Eee, qER, const_factor):
         ''' Differential response function d**2 R / (d Eee d ER)
-            Input:
-                Eee: measured energy (electron equivalent)
-                qER: q * ER for quenching factor q and recoil energy ER
-                const_factor: factors entering the differential response that do not
-                    depend on Eee
+        Input:
+            Eee: float or ndarray
+                Measured energy (electron equivalent).
+            qER: float or ndarray
+                q * ER for quenching factor q and recoil energy ER.
+            const_factor: ndarray
+                Factors entering the differential response that do not depend on Eee.
         '''
         self.count_diffresponse_calls += 1
         r_list = const_factor * self.Efficiency(Eee) * \
             self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
         return r_list.sum()
 
-    def ResponseSHM_Other(self, ER, Eee1, Eee2, mx, fp, fn, delta):
+    def _ResponseSHM_Finite(self, ER, Eee1, Eee2, mx, fp, fn, delta):
         ''' Response function: integral over d**2 R / (d Eee d ER) between
         measured energies Eee1 and Eee2, as a function of recoil energy ER.
             For any finite resolution function (i.e. other than Dirac Delta).
@@ -265,7 +275,7 @@ class Experiment:
                                 args=(qER, const_factor), epsrel=PRECISSION, epsabs=0)[0]
         return result
 
-    def ResponseSHM_Dirac(self, ER, Eee1, Eee2, mx, fp, fn, delta):
+    def _ResponseSHM_Dirac(self, ER, Eee1, Eee2, mx, fp, fn, delta):
         ''' Response function: integral over d**2 R / (d Eee d ER) between
         measured energies Eee1 and Eee2, as a function of recoil energy ER.
             For Dirac Delta resolution function.
@@ -282,7 +292,7 @@ class Experiment:
         r_list_sum = r_list.sum()
         return r_list_sum
 
-    def IntegratedResponseSHM_Other(self, Eee1, Eee2, mx, fp, fn, delta):
+    def _IntegratedResponseSHM_Finite(self, Eee1, Eee2, mx, fp, fn, delta):
         ''' Integrated Response Function between measured energies Eee1 and Eee2,
         and all of recoil energies ER.
             For any finite resolution function (i.e. other than Dirac Delta).
@@ -302,17 +312,18 @@ class Experiment:
         if ER_minus < Eee2 < ER_plus:
             midpoints += [Eee2]
         if ER_minus < ER_plus:
-            integr = integrate.quad(self.ResponseSHM_Other, ER_minus, ER_plus,
+            integr = integrate.quad(self._ResponseSHM_Finite, ER_minus, ER_plus,
                                     args=(Eee1, Eee2, mx, fp, fn, delta),
                                     points=midpoints, epsrel=PRECISSION, epsabs=0)
 #            integr = integrate.dblquad(self.DifferentialResponseSHM, ER_minus, ER_plus, \
-#                lambda Eee: Eee1, lambda Eee: Eee2, \
-#                args=(mx, fp, fn, delta), epsrel = PRECISSION, epsabs = 0)
+#                                       lambda Eee: Eee1, lambda Eee: Eee2, \
+#                                       args=(mx, fp, fn, delta), epsrel = PRECISSION,
+#                                       epsabs = 0)
             return integr[0]
         else:
             return 0.
 
-    def IntegratedResponseSHM_Dirac(self, Eee1, Eee2, mx, fp, fn, delta):
+    def _IntegratedResponseSHM_Dirac(self, Eee1, Eee2, mx, fp, fn, delta):
         ''' Integrated Response Function between measured energies Eee1 and Eee2,
         and all recoil energies ER.
             For Dirac Delta resolution function.
@@ -328,7 +339,7 @@ class Experiment:
         ER_plus = min(min(np.max(ER_plus_list), self.ERmaximum), Eee2)
         ER_minus = max(np.min(ER_minus_list), Eee1)
         if ER_minus < ER_plus:
-            integr = integrate.quad(self.ResponseSHM_Dirac, ER_minus, ER_plus,
+            integr = integrate.quad(self._ResponseSHM_Dirac, ER_minus, ER_plus,
                                     args=(Eee1, Eee2, mx, fp, fn, delta))
             return integr[0]
         else:
@@ -336,24 +347,21 @@ class Experiment:
 
 
 class PoissonExperiment(Experiment):
-    ''' This is the class for experiments with Poisson analysis
-    Parameters:
-        expername: string
-            The name of the experiment.
+    ''' Class for experiments with Poisson analysis.
+    Input:
+        exper_name: string
+            Name of experiment.
         scattering_type: string
-            The type of scattering. Can be
-                - 'SI' (spin-independent)
-                - 'SDAV' (spin-independent, axial-vector)
-                - 'SDPS' (spin-independent, pseudo-scalar)
+            Type of scattering.
         mPhi: float, optional
-            The mass of the mediator.
+            Mass of the mediator.
         quenching_factor: float, optional
-            Quenching factor. If not given, the default is used specified in the data
+            Quenching factor. If not given, the default used is specified in the data
             modules.
     '''
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        super().__init__(expername, scattering_type, mPhi)
-        module = import_file(INPUT_DIR + expername + ".py")
+    def __init__(self, exper_name, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        super().__init__(exper_name, scattering_type, mPhi)
+        module = import_file(INPUT_DIR + exper_name + ".py")
         self.Expected_limit = module.Expected_limit
 
     def _PoissonUpperBoundSHM(self, mx, fp, fn, delta):
@@ -380,16 +388,21 @@ class PoissonExperiment(Experiment):
     def UpperLimit(self, fp, fn, delta, mx_min, mx_max, num_steps, output_file,
                    processes=None):
         ''' Computes the upper limit in cross-section as a function of DM mass mx.
-            Input:
-                fp, fn: couplings to proton and neutron
-                delta: DM mass split
-                mx_min, mx_max, num_steps: range and number of steps in the DM mass
-                output_file: string, name of output file where the result will be
-                    printed
-            Returns:
-                upperlimit: a table with the first row giving the base-10 log of the
-                    DM mass, and the second row giving the base-10 log of the upper
-                    limit in cross-section.
+        Input:
+            fp, fn: float
+                Couplings to proton and neutron.
+            delta: float
+                DM mass split.
+            mx_min, mx_max: float
+                Minimum and maximum DM mass.
+            num_steps: int
+                Number of steps in the range of DM mass values.
+            output_file: string
+                Name of output file where the result will be printed.
+        Returns:
+            upperlimit: ndarray
+                Table with the first row giving the base-10 log of the DM mass, and
+                the second row giving the base-10 log of the upper limit in cross-section.
         '''
         mx_list = np.logspace(np.log10(mx_min), np.log10(mx_max), num_steps)
         kwargs = ({'mx': mx,
@@ -409,11 +422,21 @@ class PoissonExperiment(Experiment):
 
 
 class GaussianExperiment(Experiment):
-    ''' This is the class for experiments with Gaussian analysis.
+    ''' Class for experiments with Gaussian analysis.
+    Input:
+        exper_name: string
+            Name of experiment.
+        scattering_type: string
+            Type of scattering.
+        mPhi: float, optional
+            Mass of the mediator.
+        quenching_factor: float, optional
+            Quenching factor. If not given, the default used is specified in the data
+            modules.
     '''
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        super().__init__(expername, scattering_type, mPhi)
-        module = import_file(INPUT_DIR + expername + ".py")
+    def __init__(self, exper_name, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        super().__init__(exper_name, scattering_type, mPhi)
+        module = import_file(INPUT_DIR + exper_name + ".py")
         self.BinEdges_left = module.BinEdges_left
         self.BinEdges_right = module.BinEdges_right
         self.BinData = module.BinData
@@ -460,11 +483,21 @@ class GaussianExperiment(Experiment):
 
 
 class MaxGapExperiment(Experiment):
-    ''' This is the class for experiments using the Maximum Gap Method.
+    ''' Class for experiments using the Maximum Gap Method.
+    Input:
+        exper_name: string
+            Name of experiment.
+        scattering_type: string
+            Type of scattering.
+        mPhi: float, optional
+            Mass of the mediator.
+        quenching_factor: float, optional
+            Quenching factor. If not given, the default used is specified in the data
+            modules.
     '''
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        super().__init__(expername, scattering_type, mPhi)
-        module = import_file(INPUT_DIR + expername + ".py")
+    def __init__(self, exper_name, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        super().__init__(exper_name, scattering_type, mPhi)
+        module = import_file(INPUT_DIR + exper_name + ".py")
         self.ERecoilList = module.ERecoilList
         self.ElistMaxGap = \
             np.append(np.insert(np.array(list(filter(lambda x:
@@ -515,11 +548,21 @@ class MaxGapExperiment(Experiment):
 
 
 class DAMAExperiment(Experiment):
-    ''' This is the class for finding the best-fit regions for the DAMA experiment.
+    ''' Class for finding the best-fit regions for the DAMA experiment.
+    Input:
+        exper_name: string
+            Name of experiment.
+        scattering_type: string
+            Type of scattering.
+        mPhi: float, optional
+            Mass of the mediator.
+        quenching_factor: float, optional
+            Quenching factor. If not given, the default used is specified in the data
+            modules.
     '''
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        super().__init__(expername, scattering_type, mPhi)
-        module = import_file(INPUT_DIR + expername + ".py")
+    def __init__(self, exper_name, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        super().__init__(exper_name, scattering_type, mPhi)
+        module = import_file(INPUT_DIR + exper_name + ".py")
         self.BinEdges = module.BinEdges
         self.BinData = module.BinData
         self.BinError = module.BinError
@@ -641,8 +684,8 @@ class DAMAExperiment(Experiment):
                    'err': error[index]
                    }
                   for index in range(len(mx_list)))
-        limits = [l for l in par.parmap(self._UpperLowerLists, kwargs, processes=processes,
-                                        verbose=False) if l]
+        limits = [l for l in par.parmap(self._UpperLowerLists, kwargs,
+                                        processes=processes, verbose=False) if l]
         if limits:
             limits = np.transpose(limits, axes=(1, 0, 2))
             limit_low = limits[0]
@@ -653,7 +696,8 @@ class DAMAExperiment(Experiment):
 
     def Region(self, delta, CL, output_file, output_file_lower, output_file_upper,
                num_mx=1000, processes=None):
-        self.mx_fit, self.logL_max, mx_list, log_likelihood_max = self.LogLMax(output_file)
+        self.mx_fit, self.logL_max, mx_list, log_likelihood_max = \
+            self.LogLMax(output_file)
         [limit_low, limit_high] = \
             self.UpperLowerLists(CL, output_file, output_file_lower, output_file_upper,
                                  num_mx=num_mx, processes=processes)
@@ -663,16 +707,26 @@ class DAMAExperiment(Experiment):
 
 
 class DAMAExperimentCombined(DAMAExperiment, Experiment):
-    ''' This is the class for finding the best-fit regions for the DAMA experiment
+    ''' Class for finding the best-fit regions for the DAMA experiment
     when considering the combined analysis of Na and I.
     Constructor:
-        A list or tuple of 2 experiment names must be given, and, if not None, then
-    a list or tuple of 2 quenching_factors, one for Na and one for I.
+    Input:
+        exper_name: string
+            Name of experiments. Must contain the list of 2 experiment names separated by
+            space.
+        scattering_type: string
+            Type of scattering.
+        mPhi: float, optional
+            Mass of the mediator.
+        quenching_factor: tuple, optional
+            Quenching factor. If not given, the default used is specified in the data
+            modules. If given, then a list or tuple of 2 quenching_factors, one for Na
+            and one for I.
     '''
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        expername = expername.split()
-        super().__init__(expername[0], scattering_type, mPhi)
-        self.other = self.__class__.__bases__[1](expername[1], scattering_type, mPhi)
+    def __init__(self, exper_name, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        exper_name = exper_name.split()
+        super().__init__(exper_name[0], scattering_type, mPhi)
+        self.other = self.__class__.__bases__[1](exper_name[1], scattering_type, mPhi)
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor[0]
             self.other.QuenchingFactor = lambda e: quenching_factor[1]
@@ -695,7 +749,8 @@ class DAMAExperimentCombined(DAMAExperiment, Experiment):
         flipped_file = self._exchange(output_file, old, new)
         flipped_file = self._exchange(flipped_file, str(self.other.QuenchingFactor(0)),
                                       str(self.QuenchingFactor(0)))
-        self.mx_fit, self.logL_max, self.mx_list, self.log_likelihood_max = self.LogLMax(output_file)
+        self.mx_fit, self.logL_max, self.mx_list, self.log_likelihood_max = \
+            self.LogLMax(output_file)
         if plot:
             plt.close()
             plt.plot(self.mx_list, self.log_likelihood_max, 'r')
@@ -740,11 +795,21 @@ class DAMAExperimentCombined(DAMAExperiment, Experiment):
 
 
 class DAMATotalRateExperiment(Experiment):
-    ''' This is the class for finding the upper limit due to DAMA total rate.
+    ''' Class for finding the upper limit due to DAMA total rate.
+    Input:
+        exper_name: string
+            Name of experiment.
+        scattering_type: string
+            Type of scattering.
+        mPhi: float, optional
+            Mass of the mediator.
+        quenching_factor: float, optional
+            Quenching factor. If not given, the default used is specified in the data
+            modules.
     '''
-    def __init__(self, expername, scattering_type, mPhi=mPhiRef, quenching_factor=None):
-        super().__init__(expername, scattering_type, mPhi)
-        module = import_file(INPUT_DIR + expername + ".py")
+    def __init__(self, exper_name, scattering_type, mPhi=mPhiRef, quenching_factor=None):
+        super().__init__(exper_name, scattering_type, mPhi)
+        module = import_file(INPUT_DIR + exper_name + ".py")
         self.BinEdges = module.BinEdges
         self.BinData = self.Exposure * module.BinData  # unitless
         if quenching_factor is not None:
