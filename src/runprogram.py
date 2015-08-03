@@ -7,6 +7,7 @@ Created on Sat Dec  6 15:32:34 2014
 
 from experiment_HaloIndep_Band import *
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FixedLocator, ScalarFormatter, FuncFormatter
 linestyles = ['-', '--', '-.', ':']
 
 
@@ -43,16 +44,45 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, kind=None, linewidth=3,
     if plot_close:
         plt.close()
 
+    # set aspect ratio
+    plt.rcParams["figure.figsize"][1] = plt.rcParams["figure.figsize"][0]
+
+    # set axis labels, depending on whether it is for halo-dependent or not
+    if HALO_DEP:
+        plt.xlabel('$m$ [GeV]')
+        plt.ylabel(r'$\sigma_p$ [cm$^2$]')
+        plt.axes().set_xscale('log')
+        plt.axes().xaxis.set_major_formatter(ScalarFormatter())
+    else:
+        plt.minorticks_on()
+        plt.xlabel('$v_{min}$ [km/s]')
+        plt.ylabel(r'$\eta$ $\rho$ $\sigma_p / m$ $[$days$^{-1}]$')
+
+    # set major ticks on yaxis
+    def major_formatter(x, pos):
+        return "$10^{{{0}}}$".format(int(x))
+
+    plt.axes().yaxis.set_major_formatter(FuncFormatter(major_formatter))
+
+    # set minor ticks on yaxis
+    minor_ticks = [np.log10(i) for i in range(2, 10)]
+    minor_ticks = [i + j for i in minor_ticks for j in range(-100, 0)]
+    plt.axes().yaxis.set_minor_locator(FixedLocator(minor_ticks))
+
     # make a list of the x and y coordinates of the plots, and plot them
     if upper_limit.size == 0:   # nothing to plot
         print("upper_limit is empty!")
     elif upper_limit.ndim == 1:  # only one point, so no interpolation
         x = [upper_limit[0]]
         y = [upper_limit[1]]
+        if HALO_DEP:
+            x = [10**x[0]]
         plt.plot(x, y, "o")
     else:   # more than one point, so decide on the interpolation order and plot
         x = upper_limit[:, 0]
         y = upper_limit[:, 1]
+        if HALO_DEP:
+            x = 10**x
         num_points = x.size
         if num_points == 2 or kind == "linear":
             interp_kind = "linear"
@@ -66,14 +96,6 @@ def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, kind=None, linewidth=3,
             plt.plot(x, y, "o")
         plt.plot(x1, interp(x1), linestyle=linestyle,
                  linewidth=linewidth, color=Color[exper_name.split()[0]])
-
-    # set axis labels, depending on whether it is for halo-dependent or not
-    if HALO_DEP is True:
-        plt.xlabel('log$_{10}(m$ [GeV]$)$')
-        plt.ylabel(r'log$_{10}(\sigma)$')
-    else:
-        plt.xlabel('$v_{min}$ [km/s]')
-        plt.ylabel(r'$\eta$ $\rho$ $\sigma / m$ $[$days$^{-1}]$')
 
     # show plot
     if plot_show:
@@ -223,30 +245,30 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, confidence_lev
                                            output_file)
         else:
             (vmin_min, vmin_max, vmin_step) = vmin_range
-            if not np.any(EHI_METHIOD):
+            if not np.any(EHI_METHOD):
                 upper_limit = \
                     exper.UpperLimit(mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
                                      output_file, initial_energy_bin=initial_energy_bin)
             else:
-                if EHI_METHIOD.ResponseTables:
+                if EHI_METHOD.ResponseTables:
                     exper.ResponseTables(vmin_min, vmin_max, vmin_step, mx, fp, fn, delta,
                                          output_file_no_extension)
-                if EHI_METHIOD.OptimalLikelihood:
+                if EHI_METHOD.OptimalLikelihood:
                     exper.OptimalLikelihood(output_file_no_extension, logeta_guess)
-                if EHI_METHIOD.ImportOptimalLikelihood:
+                if EHI_METHOD.ImportOptimalLikelihood:
                     exper.ImportResponseTables(output_file_no_extension, plot=True)
                     exper.ImportOptimalLikelihood(output_file_no_extension, plot=True)
                     exper.PlotOptimum()
-                if EHI_METHIOD.ConstrainedOptimalLikelihood:
+                if EHI_METHOD.ConstrainedOptimalLikelihood:
                     # Tests for delta = 0:
                     (vminStar, logetaStar) = (500, -25)
                     # Tests for delta = -50:
 #                    (vminStar, logetaStar) = (185.572266287, -19.16840262)
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     exper.ConstrainedOptimalLikelihood(vminStar, logetaStar, plot=True)
-                if np.any(EHI_METHIOD[4:]):
-                    if EHI_METHIOD._fields[4] != 'VminLogetaSamplingTable':
-                        raise AttributeError("EHI_METHIOD's attribute is not as expected.")
+                if np.any(EHI_METHOD[4:]):
+                    if EHI_METHOD._fields[4] != 'VminLogetaSamplingTable':
+                        raise AttributeError("EHI_METHOD's attribute is not as expected.")
                     (vmin_Band_min, vmin_Band_max, vmin_Band_numsteps) = \
                         vmin_EHIBand_range
                     (logeta_percent_minus, logeta_percent_plus, logeta_num_steps) = \
@@ -260,24 +282,24 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, confidence_lev
                                                vmin_Band_min, vmin_Band_max,
                                                vmin_Band_numsteps,
                                                steepness_vmin, steepness_vmin_center,
-                                               plot=not np.any(EHI_METHIOD[5:]))
+                                               plot=not np.any(EHI_METHOD[5:]))
                         exper.VminLogetaSamplingTable(output_file_no_extension,
                                                       logeta_percent_minus,
                                                       logeta_percent_plus,
                                                       logeta_num_steps, steepness_logeta,
-                                                      plot=not np.any(EHI_METHIOD[5:]))
+                                                      plot=not np.any(EHI_METHOD[5:]))
                     else:
                         print("Steepness: Default")
                         exper.VminSamplingList(output_file_no_extension,
                                                vmin_Band_min, vmin_Band_max,
                                                vmin_Band_numsteps,
-                                               plot=not np.any(EHI_METHIOD[5:]))
+                                               plot=not np.any(EHI_METHOD[5:]))
                         exper.VminLogetaSamplingTable(output_file_no_extension,
                                                       logeta_percent_minus,
                                                       logeta_percent_plus,
                                                       logeta_num_steps,
-                                                      plot=not np.any(EHI_METHIOD[5:]))
-                if EHI_METHIOD.LogLikelihoodList:
+                                                      plot=not np.any(EHI_METHOD[5:]))
+                if EHI_METHOD.LogLikelihoodList:
                     print("vmin_EHIBand_range =", vmin_Band_min, vmin_Band_max,
                           vmin_Band_numsteps)
                     print("logeta_EHIBand_percent_range =", logeta_percent_minus,
@@ -286,7 +308,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, confidence_lev
                                             extra_tail=extra_tail,
                                             vmin_index_list=vmin_index_list,
                                             logeta_index_range=logeta_index_range)
-                if EHI_METHIOD.ConfidenceBand:
+                if EHI_METHOD.ConfidenceBand:
                     exper.ImportOptimalLikelihood(output_file_no_extension)
                     interpolation_order = 2
                     delta_logL = [chi_squared1(c) for c in confidence_levels]
@@ -296,7 +318,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, confidence_lev
                                              interpolation_order, extra_tail=extra_tail,
                                              multiplot=multiplot)
 
-        if HALO_DEP or not np.any(EHI_METHIOD):
+        if HALO_DEP or not np.any(EHI_METHOD):
             print("upper_limit = ", upper_limit)
             print("diff response calls = ", exper.count_diffresponse_calls)
             print("response calls = ", exper.count_response_calls)
@@ -315,7 +337,7 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, confidence_lev
             exper.Region(delta, CL, output_file, output_file_lower, output_file_upper)
 
     # produce plot
-    if MAKE_PLOT and not np.any(EHI_METHIOD[:-1]):
+    if MAKE_PLOT and not np.any(EHI_METHOD[:-1]):
         if exper_name.split()[0] in BinnedSignal_exper:
             for CL in confidence_levels:
                 if hasattr(Plot_Upper_Limit, 'count'):
@@ -334,12 +356,12 @@ def run_program(exper_name, scattering_type, mPhi, fp, fn, delta, confidence_lev
         else:
             output_file = output_file_no_extension + ".dat"
             upper_limit = np.loadtxt(output_file)
-            print("upper_limit = ", upper_limit)
+            # print("upper_limit = ", upper_limit)
             Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP,
                              plot_dots=plot_dots, plot_close=False, plot_show=False)
 
     # make band plot
-    if EHI_METHIOD.ConfidenceBandPlot and exper_name == "CDMSSi2012":
+    if EHI_METHOD.ConfidenceBandPlot and exper_name == "CDMSSi2012":
         output_file = output_file_no_extension + ".dat"
         exper.ImportOptimalLikelihood(output_file_no_extension)
         interp_kind = 'cubic'
