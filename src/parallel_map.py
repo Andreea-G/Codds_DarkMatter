@@ -26,10 +26,19 @@ def parmap(f, X, processes=multiprocessing.cpu_count(), verbose=True):
     ''' Used instead of Pool.map function for parallel programming.
         Works with lambdas and with member functions of classes.
     Input:
-        f: callable, function to be called
-        X: iterable. Apply f to each element in X, collecting the results in a list
-            which is returned
-        processes: optional, number of processes running at one time
+        f: callable
+            Function to be called.
+        X: iterable
+            Apply f to each element in X, collecting the results in a list
+            which is returned.
+        processes: int, optional
+            Number of processes running at one time. If not given, it is set to
+            the cpu_count of the computer.
+        verbose: bool, optional
+            If true, it prints the process # when it starts.
+    Returns:
+        res: list
+            List of f(x) for each x in X.
     '''
     if processes is None:
         processes = multiprocessing.cpu_count()
