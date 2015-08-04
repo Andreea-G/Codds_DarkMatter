@@ -52,11 +52,12 @@ EHImethod_exper = ["CDMSSi2012", "CDMSSiGeArtif", "CDMSSiArtif"]
 
 ''' Colors for plotting.
 '''
-Color = {"superCDMS": 'peru',
+Color = {"SuperCDMS": 'peru',
          "LUX2013zero": 'magenta', "LUX2013one": 'magenta', "LUX2013three": 'magenta',
          "LUX2013five": 'magenta', "LUX2013many": 'magenta',
          "XENON10": 'orange', "XENON100": 'royalblue',
          "CDMSlite2013CoGeNTQ": 'cyan', "CDMSSi2012": 'red',
+         "CDMSSi2012_EHI": 'firebrick',
          "KIMS2012": 'purple', "PICASSO": 'darkturquoise',
          "DAMA2010NaSmRebinned_TotRateLimit": 'green',
          "DAMA2010NaSmRebinned": 'green',

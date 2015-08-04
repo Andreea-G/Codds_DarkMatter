@@ -453,19 +453,21 @@ class Experiment_EHI(Experiment_HaloIndep):
 
     def _PlotStepFunction(self, vmin_list, logeta_list,
                           xlim_percentage=(0., 1.1), ylim_percentage=(1.01, 0.99),
-                          plot_close=True, plot_show=True, mark='o', color=None):
+                          mark='o', color=None, linewidth=1,
+                          plot_close=True, plot_show=True):
         ''' Plots a step-like function, given the location of the steps.
         '''
         if plot_close:
             plt.close()
         print(vmin_list)
         print(logeta_list)
-        x = np.insert(vmin_list, 0, 0)
-        y = np.insert(logeta_list, 0, logeta_list[0])
-        plt.step(x, y)
+        x = np.append(np.insert(vmin_list, 0, 0), vmin_list[-1] + 0.1)
+        y = np.append(np.insert(logeta_list, 0, logeta_list[0]), -80)
         if color is not None:
+            plt.step(x, y, color=color, linewidth=linewidth)
             plt.plot(x, y, mark, color=color)
         else:
+            plt.step(x, y, linewidth=linewidth)
             plt.plot(x, y, mark)
 #        plt.xlim([vmin_list[0] * xlim_percentage[0], vmin_list[-1] * xlim_percentage[1]])
         plt.xlim([0, 1000])
@@ -476,12 +478,14 @@ class Experiment_EHI(Experiment_HaloIndep):
         return
 
     def PlotOptimum(self, xlim_percentage=(0., 1.1), ylim_percentage=(1.01, 0.99),
+                    color='red', linewidth=1,
                     plot_close=True, plot_show=True):
         ''' Plots the best-fit eta(vmin) step function.
         '''
         self._PlotStepFunction(self.optimal_vmin, self.optimal_logeta,
                                xlim_percentage=xlim_percentage,
                                ylim_percentage=ylim_percentage,
+                               color=color, linewidth=linewidth,
                                plot_close=plot_close, plot_show=plot_show)
         return
 

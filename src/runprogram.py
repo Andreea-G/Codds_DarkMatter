@@ -6,100 +6,135 @@ Created on Sat Dec  6 15:32:34 2014
 """
 
 from experiment_HaloIndep_Band import *
+from collections import defaultdict
+from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, ScalarFormatter, FuncFormatter
 linestyles = ['-', '--', '-.', ':']
 
 
-def Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP, kind=None, linewidth=3,
-                     plot_dots=True, plot_close=True, plot_show=True):
-    ''' Make plots for the upper limits.
+class PlotData:
+    ''' Class to plot the data.
     Input:
         exper_name: string
             Name of experiment.
-        upper_limit: list of lists
-            List of x and y coordinates for points representing the upper limit.
         HALO_DEP: bool
             Whether the analysis is halo-dependent or halo-independent.
-        kind: string, optional
-            The interpolation kind: 'linear', 'quadratic' or 'cubic'.
-        linewidth: float, optional
-            Width of the plotted line.
-        plot_dots: bool, optional
-            Whether the plot should show the data points or just the interpolation.
         plot_close: bool, optional
             Whether the plot should be cleared and started from scratch, or new limits
             should be added to a previous plot.
-        plot_show: bool, optional
-            Whether the plot should be shown or not.
     '''
-    if not hasattr(Plot_Upper_Limit, "count"):
-        Plot_Upper_Limit.count = {}
-    if exper_name not in Plot_Upper_Limit.count:
-        Plot_Upper_Limit.count[exper_name] = -1
-    Plot_Upper_Limit.count[exper_name] += 1
-    linestyle = linestyles[Plot_Upper_Limit.count[exper_name] % len(linestyles)]
+    count = defaultdict(lambda: -1)
 
-    from scipy.interpolate import interp1d
-    if plot_close:
-        plt.close()
+    def __init__(self, exper_name, HALO_DEP, plot_close=True):
+        self.exper_name = exper_name
+        self.HALO_DEP = HALO_DEP
 
-    # set aspect ratio
-    plt.rcParams["figure.figsize"][1] = plt.rcParams["figure.figsize"][0]
+        if plot_close:
+            plt.close()
 
-    # set axis labels, depending on whether it is for halo-dependent or not
-    if HALO_DEP:
-        plt.xlabel('$m$ [GeV]')
-        plt.ylabel(r'$\sigma_p$ [cm$^2$]')
-        plt.axes().set_xscale('log')
-        plt.axes().xaxis.set_major_formatter(ScalarFormatter())
-    else:
-        plt.minorticks_on()
-        plt.xlabel('$v_{min}$ [km/s]')
-        plt.ylabel(r'$\eta$ $\rho$ $\sigma_p / m$ $[$days$^{-1}]$')
+        # set aspect ratio
+        plt.rcParams["figure.figsize"][1] = plt.rcParams["figure.figsize"][0]
 
-    # set major ticks on yaxis
-    def major_formatter(x, pos):
-        return "$10^{{{0}}}$".format(int(x))
+        self.set_axes_labels()
+        self.set_ticks()
 
-    plt.axes().yaxis.set_major_formatter(FuncFormatter(major_formatter))
-
-    # set minor ticks on yaxis
-    minor_ticks = [np.log10(i) for i in range(2, 10)]
-    minor_ticks = [i + j for i in minor_ticks for j in range(-100, 0)]
-    plt.axes().yaxis.set_minor_locator(FixedLocator(minor_ticks))
-
-    # make a list of the x and y coordinates of the plots, and plot them
-    if upper_limit.size == 0:   # nothing to plot
-        print("upper_limit is empty!")
-    elif upper_limit.ndim == 1:  # only one point, so no interpolation
-        x = [upper_limit[0]]
-        y = [upper_limit[1]]
-        if HALO_DEP:
-            x = [10**x[0]]
-        plt.plot(x, y, "o")
-    else:   # more than one point, so decide on the interpolation order and plot
-        x = upper_limit[:, 0]
-        y = upper_limit[:, 1]
-        if HALO_DEP:
-            x = 10**x
-        num_points = x.size
-        if num_points == 2 or kind == "linear":
-            interp_kind = "linear"
-        elif num_points == 3 or kind == "quadratic":
-            interp_kind = "quadratic"
+    def set_axes_labels(self):
+        ''' Set axis labels, depending on whether it is for halo-dependent or not.
+        '''
+        if self.HALO_DEP:
+            plt.xlabel('$m$ [GeV]')
+            plt.ylabel(r'$\sigma_p$ [cm$^2$]')
+            plt.axes().set_xscale('log')
+            plt.axes().xaxis.set_major_formatter(ScalarFormatter())
         else:
-            interp_kind = "cubic"
-        interp = interp1d(x, y, kind=interp_kind)
-        x1 = np.linspace(x[0], x[-1], 1000)
-        if plot_dots:
-            plt.plot(x, y, "o")
-        plt.plot(x1, interp(x1), linestyle=linestyle,
-                 linewidth=linewidth, color=Color[exper_name.split()[0]])
+            plt.minorticks_on()
+            plt.xlabel('$v_{min}$ [km/s]')
+            plt.ylabel(r'$\eta$ $\rho$ $\sigma_p / m$ $[$days$^{-1}]$')
 
-    # show plot
-    if plot_show:
-        plt.show()
+    def set_ticks(self):
+        # set major ticks on yaxis
+        def major_formatter(x, pos):
+            return "$10^{{{0}}}$".format(int(x))
+
+        plt.axes().yaxis.set_major_formatter(FuncFormatter(major_formatter))
+
+        # set minor ticks on yaxis
+        minor_ticks = [np.log10(i) for i in range(2, 10)]
+        minor_ticks = [i + j for i in minor_ticks for j in range(-100, 0)]
+        plt.axes().yaxis.set_minor_locator(FixedLocator(minor_ticks))
+
+    def plot_limits(self, upper_limit, kind, linewidth, linestyle, plot_dots):
+        ''' Make a list of the x and y coordinates of the plots, and plot them.
+        '''
+        if upper_limit.size == 0:   # nothing to plot
+            print("upper_limit is empty!")
+            return None, None
+        elif upper_limit.ndim == 1:  # only one point, so no interpolation
+            if self.HALO_DEP:
+                x = [10**upper_limit[0]]
+            else:
+                x = [upper_limit[0]]
+            y = [upper_limit[1]]
+            plt.plot(x, y, "o")
+            return x, y
+        else:   # more than one point, so decide on the interpolation order and plot
+            if self.HALO_DEP:
+                x = 10**upper_limit[:, 0]
+            else:
+                x = upper_limit[:, 0]
+            y = upper_limit[:, 1]
+            num_points = x.size
+            if num_points == 2 or kind == "linear":
+                interp_kind = "linear"
+            elif num_points == 3 or kind == "quadratic":
+                interp_kind = "quadratic"
+            else:
+                interp_kind = "cubic"
+            interp = interp1d(x, y, kind=interp_kind)
+            x1 = np.linspace(x[0], x[-1], 1000)
+            if plot_dots:
+                plt.plot(x, y, "o")
+            plt.plot(x1, interp(x1), linestyle=linestyle,
+                     linewidth=linewidth, color=Color[self.exper_name.split()[0]])
+            return x1, interp(x1)
+
+    def __call__(self, upper_limit, lower_limit=None, kind=None, linewidth=3,
+                 fill=True, alpha=0.4, plot_dots=True, plot_show=True):
+        ''' Make plots for the upper limits.
+        Input:
+            upper_limit: list of lists
+                List of x and y coordinates for points representing the upper limit.
+            lower_limit: list of lists, optional
+                List of x and y coordinates for points representing the lower limit.
+            kind: string, optional
+                The interpolation kind: 'linear', 'quadratic' or 'cubic'.
+            linewidth: float, optional
+                Width of the plotted line.
+            fill: bool, optional
+                If there is a lower_limit, fill between the upper and lower limit.
+            plot_dots: bool, optional
+                Whether the plot should show the data points or just the interpolation.
+            plot_show: bool, optional
+                Whether the plot should be shown or not.
+        '''
+        PlotData.count[self.exper_name] += 1
+        linestyle = linestyles[PlotData.count[self.exper_name] % len(linestyles)]
+
+        if lower_limit is not None and fill:
+            linewidth = 1
+
+        x_upper, y_upper = self.plot_limits(upper_limit, kind, linewidth, linestyle,
+                                            plot_dots)
+        if lower_limit is not None:
+            x_lower, y_lower = self.plot_limits(lower_limit, kind, linewidth, linestyle,
+                                                plot_dots)
+            if fill:
+                plt.fill_between(x_lower, y_lower, y_upper,
+                                 color=Color[self.exper_name.split()[0]], alpha=alpha)
+
+        # if plot_show:
+            # plt.show()
 
 
 class RunProgram:
@@ -270,49 +305,61 @@ class RunProgram:
                               output_file_upper)
 
     def plot_limits(self, exper_name, confidence_levels, HALO_DEP, plot_dots):
+        plot_limits = PlotData(exper_name, HALO_DEP, plot_close=False)
         if exper_name.split()[0] in BinnedSignal_exper:
-            for CL in confidence_levels:
-                if hasattr(Plot_Upper_Limit, 'count'):
-                    Plot_Upper_Limit.count[exper_name] = -1
+            PlotData.count[exper_name] = -1
+            for index, CL in enumerate(confidence_levels):
                 output_file_regions = self.output_file_no_extension + \
                     "_" + str(round(sigma_dev(CL), 2)) + "sigma"
                 output_file_lower = output_file_regions + "_lower_limit.dat"
                 output_file_upper = output_file_regions + "_upper_limit.dat"
                 lower_limit = np.loadtxt(output_file_lower)
                 upper_limit = np.loadtxt(output_file_upper)
-                Plot_Upper_Limit(exper_name, lower_limit, HALO_DEP,
-                                 plot_dots=plot_dots, plot_close=False, plot_show=False)
-                Plot_Upper_Limit.count[exper_name] -= 1
-                Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP,
-                                 plot_dots=plot_dots, plot_close=False, plot_show=False)
+                plot_limits(upper_limit, lower_limit=lower_limit, fill=(index < 2),
+                            plot_dots=plot_dots, plot_show=False)
+                if index < 2:
+                    PlotData.count[exper_name] -= 1
         else:
             output_file = self.output_file_no_extension + ".dat"
             upper_limit = np.loadtxt(output_file)
             # print("upper_limit = ", upper_limit)
-            Plot_Upper_Limit(exper_name, upper_limit, HALO_DEP,
-                             plot_dots=plot_dots, plot_close=False, plot_show=False)
+            plot_limits(upper_limit, plot_dots=plot_dots, plot_show=False)
 
     def plot_EHI_band(self, exper_name, confidence_levels, HALO_DEP, extra_tail,
                       plot_dots):
         output_file = self.output_file_no_extension + ".dat"
         self.exper.ImportOptimalLikelihood(self.output_file_no_extension)
-        interp_kind = 'cubic'
+        interp_kind = 'linear'
+        plot_limits = PlotData(exper_name, HALO_DEP, plot_close=False)
 
 #        self.exper.PlotSamplingTable(self.output_file_no_extension,
 #                                plot_close=False, plot_show=False, plot_optimum=False)
         delta_logL = [chi_squared1(c) for c in confidence_levels]
         print("delta_logL =", delta_logL)
         for d_logL in delta_logL:
+            PlotData.count[exper_name] = -1
             self.exper.ImportConfidenceBand(self.output_file_no_extension, d_logL,
                                             extra_tail=extra_tail)
-            Plot_Upper_Limit(exper_name, self.exper.vmin_logeta_band_low, HALO_DEP,
-                             kind=interp_kind,
-                             plot_dots=plot_dots, plot_close=False, plot_show=False)
-            Plot_Upper_Limit(exper_name, self.exper.vmin_logeta_band_up, HALO_DEP,
-                             kind=interp_kind,
-                             plot_dots=plot_dots, plot_close=False, plot_show=False)
-        self.exper.PlotOptimum(ylim_percentage=(1.2, 0.8), plot_close=False,
-                               plot_show=False)
+            first_vmin_low = self.exper.vmin_logeta_band_low[0, 0]
+            first_vmin_up = self.exper.vmin_logeta_band_up[0, 0]
+            last_eta_up = self.exper.vmin_logeta_band_up[-1, 1]
+            self.exper.vmin_logeta_band_up = \
+                np.vstack(([[first_vmin_low, -10], [first_vmin_up - 5, -10]],
+                           self.exper.vmin_logeta_band_up,
+                           [[1000, last_eta_up]]))
+            last_vmin_low = self.exper.vmin_logeta_band_low[-1, 0]
+            last_vmin_up = self.exper.vmin_logeta_band_up[-1, 0]
+            self.exper.vmin_logeta_band_low = \
+                np.vstack((self.exper.vmin_logeta_band_low,
+                           [[last_vmin_low + 5, -40], [last_vmin_up, -40]]))
+            print(self.exper.vmin_logeta_band_up)
+            plot_limits(self.exper.vmin_logeta_band_up,
+                        lower_limit=self.exper.vmin_logeta_band_low, kind=interp_kind,
+                        fill=True, alpha=0.2, plot_dots=plot_dots, plot_show=False)
+
+        self.exper.PlotOptimum(ylim_percentage=(1.2, 0.8),
+                               color=Color[exper_name + '_EHI'],
+                               linewidth=3, plot_close=False,  plot_show=False)
 
     def __call__(self, exper_name, scattering_type, mPhi, fp, fn, delta,
                  confidence_levels,

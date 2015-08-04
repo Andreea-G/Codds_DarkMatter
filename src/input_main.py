@@ -105,6 +105,7 @@ class Input:
             self.confidence_levels = []
         if sigma_dev_list is not None:
             self.confidence_levels.extend([confidence_level(s) for s in sigma_dev_list])
+        self.confidence_levels.sort()
 
     def SetExperList(self, exper_indices):
         self.exper_list = self.implemented_exper_list[exper_indices]
