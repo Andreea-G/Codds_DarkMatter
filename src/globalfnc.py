@@ -48,7 +48,7 @@ BinnedSignal_exper = ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]
 DAMALimit_exper = ["DAMA2010NaSmRebinned_TotRateLimit"]
 Poisson_exper = ["SIMPLEModeStage2"]
 EHImethod_exper = ["CDMSSi2012", "CDMSSiGeArtif", "CDMSSiArtif"]
-
+SHM_line = ["SHM_eta0", "SHM_eta1"]
 
 ''' Colors for plotting.
 '''
@@ -62,13 +62,18 @@ Color = {"SuperCDMS": 'peru',
          "DAMA2010NaSmRebinned_TotRateLimit": 'green',
          "DAMA2010NaSmRebinned": 'green',
          "DAMA2010ISmRebinned": 'green',
-         "SIMPLEModeStage2": 'saddlebrown'
+         "SIMPLEModeStage2": 'saddlebrown',
+         "SHM_eta0": 'gray', "SHM_eta1": 'gray'
          }
-
+''' Linestyles get cicled through for each experiment name.
+'''
 linestyles = ['-', '--', '-.', ':']
-dashes_LUX = {"LUX2013zero": (3, 4), "LUX2013one": (8, 4, 3, 4, 3, 4),
-              "LUX2013three": (8, 4, 3, 4), "LUX2013five": (8, 4), "LUX2013many": None}
-
+''' For some experiments the linestyles are fixed and customized, passed as dashes.
+'''
+line_dashes = {"LUX2013zero": (3, 4), "LUX2013one": (8, 4, 3, 4, 3, 4),
+               "LUX2013three": (8, 4, 3, 4), "LUX2013five": (8, 4), "LUX2013many": (8, 0),
+               "SHM_eta0": (8, 4), "SHM_eta1": (3, 4)
+               }
 
 
 def confidence_level(sigma):

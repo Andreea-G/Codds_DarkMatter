@@ -618,3 +618,28 @@ class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
         with open(output_file, 'ab') as f_handle:
             np.savetxt(f_handle, result)
         return result
+
+class Standard_Halo_Model:
+    def __init__(self, exper_name, log_sigma_p):
+        self.name = exper_name
+        self.log_sigma_p = log_sigma_p
+
+    def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
+                   output_file, **unused_kwargs):
+        if "eta0" in self.name:
+            eta = eta0Maxwellian
+        else:
+            eta = eta1Maxwellian
+        vmin_list = np.linspace(vmin_min, vmin_max, (vmin_max - vmin_min)/vmin_step + 1)
+        # print('vmin_list =', vmin_list)
+        eta_list = eta(vmin_list, vobs, v0bar, vesc)
+        eta_list = np.array([i if i > 0 else np.inf for i in eta_list])
+        # print('eta_list =', eta_list)
+        log_eta_list = self.log_sigma_p + np.log10(conversion_factor / mx * eta_list)
+        # print('log_eta_list =', log_eta_list)
+        result = np.transpose([vmin_list, log_eta_list])
+        result = result[result[:, 1] != np.inf]
+        print(result)
+        with open(output_file, 'ab') as f_handle:
+            np.savetxt(f_handle, result)
+        return result

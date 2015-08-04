@@ -39,10 +39,7 @@ class PlotData:
         self.set_ticks()
 
     def get_linestyle(self):
-        if 'LUX' in self.exper_name:
-            dashes = dashes_LUX[self.exper_name]
-        else:
-            dashes = None
+        dashes = line_dashes.get(self.exper_name, None)
         PlotData.count[self.exper_name] += 1
         linestyle = linestyles[PlotData.count[self.exper_name] % len(linestyles)]
         return linestyle, dashes
@@ -104,8 +101,8 @@ class PlotData:
             if plot_dots:
                 plt.plot(x, y, "o")
             if dashes is not None:
-                plt.plot(x1, interp(x1), linestyle=linestyle,  linewidth=linewidth,
-                         dashes=dashes, color=Color[self.exper_name.split()[0]])
+                plt.plot(x1, interp(x1), dashes=dashes, linewidth=linewidth,
+                         color=Color[self.exper_name.split()[0]])
             else:
                 plt.plot(x1, interp(x1), linestyle=linestyle,  linewidth=linewidth,
                          color=Color[self.exper_name.split()[0]])
@@ -152,7 +149,7 @@ class RunProgram:
     ''' Class implementing the main run of the program.
     '''
     def init_experiment(self, exper_name, scattering_type, mPhi, delta, HALO_DEP,
-                        EHI_METHOD, quenching):
+                        EHI_METHOD, log_sigma_p, quenching):
         '''Select which experiment class we must use, depending on what statistical
         analysis we need, and initialize the experiment.
         '''
@@ -189,6 +186,8 @@ class RunProgram:
                 class_name = Crosses_HaloIndep
             elif exper_name.split()[0] in BinnedSignal_exper:
                 class_name = Crosses_HaloIndep_Combined
+            elif exper_name in SHM_line:
+                class_name = Standard_Halo_Model
             else:
                 print("NotImplementedError: This experiment was not implemented!")
                 return
@@ -196,7 +195,10 @@ class RunProgram:
             if delta > 0:
                 class_name.__bases__ = (Experiment_HaloIndep_ER,)
 
-        self.exper = class_name(exper_name, scattering_type, mPhi, quenching)
+        if exper_name in SHM_line:
+            self.exper = class_name(exper_name, log_sigma_p)
+        else:
+            self.exper = class_name(exper_name, scattering_type, mPhi, quenching)
 
     def compute_data(self, mx, fp, fn, delta, mx_range, vmin_range, initial_energy_bin,
                      logeta_guess, HALO_DEP, EHI_METHOD, vmin_EHIBand_range,
@@ -296,8 +298,8 @@ class RunProgram:
 
         if HALO_DEP or not np.any(EHI_METHOD):
             print("upper_limit = ", upper_limit)
-            print("diff response calls = ", self.exper.count_diffresponse_calls)
-            print("response calls = ", self.exper.count_response_calls)
+            # print("diff response calls = ", self.exper.count_diffresponse_calls)
+            # print("response calls = ", self.exper.count_response_calls)
             output_file = self.output_file_no_extension + ".dat"
             print(output_file)  # write to file
             np.savetxt(output_file, upper_limit)
@@ -378,7 +380,7 @@ class RunProgram:
                  mx=None, mx_range=None, vmin_range=None, initial_energy_bin=None,
                  vmin_EHIBand_range=None, logeta_EHIBand_percent_range=None,
                  steepness=None, logeta_guess=None,
-                 vmin_index_list=None, logeta_index_range=None,
+                 vmin_index_list=None, logeta_index_range=None, log_sigma_p=None,
                  OUTPUT_MAIN_DIR="Output/", filename_tail="", extra_tail="",
                  plot_dots=True, quenching=None):
         ''' Main run of the program.
@@ -445,6 +447,9 @@ class RunProgram:
                 A tuple (index0, index1) between which logetaStar will be considered.
                 If not given, then the whole list of logetaStar is used. Only for EHI
                 method.
+            log_sigma_p: float, optional
+                Log base 10 of the total reference cross-section to a single proton.
+                Only for halo-independent SHM lines.
             OUTPUT_MAIN_DIR: string, optional
                 Name of main output directory.
             filename_tail: string, optional
@@ -458,7 +463,7 @@ class RunProgram:
         '''
         # initialize the experiment class
         self.init_experiment(exper_name, scattering_type, mPhi, delta, HALO_DEP,
-                             EHI_METHOD, quenching)
+                             EHI_METHOD, log_sigma_p, quenching)
 
         # get the file name specific to the parameters used for this run
         self.output_file_no_extension = \
