@@ -174,6 +174,7 @@ class Input:
                 if len(self.quenching) == 1:
                     self.quenching = self.quenching[0]
                 kwargs = self._GetKwargs()
+                run_program = RunProgram()
                 run_program(**kwargs)
         return
 
@@ -197,6 +198,7 @@ class Input:
                 if len(self.quenching) == 1:
                     self.quenching = self.quenching[0]
                 kwargs = self._GetKwargs()
+                run_program = RunProgram()
                 try:
                     run_program(**kwargs)
                 except FileNotFoundError as file_error:
