@@ -10,7 +10,6 @@ from collections import defaultdict
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, ScalarFormatter, FuncFormatter
-linestyles = ['-', '--', '-.', ':']
 
 
 class PlotData:
@@ -39,6 +38,15 @@ class PlotData:
         self.set_axes_labels()
         self.set_ticks()
 
+    def get_linestyle(self):
+        if 'LUX' in self.exper_name:
+            dashes = dashes_LUX[self.exper_name]
+        else:
+            dashes = None
+        PlotData.count[self.exper_name] += 1
+        linestyle = linestyles[PlotData.count[self.exper_name] % len(linestyles)]
+        return linestyle, dashes
+
     def set_axes_labels(self):
         ''' Set axis labels, depending on whether it is for halo-dependent or not.
         '''
@@ -64,7 +72,7 @@ class PlotData:
         minor_ticks = [i + j for i in minor_ticks for j in range(-100, 0)]
         plt.axes().yaxis.set_minor_locator(FixedLocator(minor_ticks))
 
-    def plot_limits(self, upper_limit, kind, linewidth, linestyle, plot_dots):
+    def plot_limits(self, upper_limit, kind, linewidth, linestyle, dashes, plot_dots):
         ''' Make a list of the x and y coordinates of the plots, and plot them.
         '''
         if upper_limit.size == 0:   # nothing to plot
@@ -95,8 +103,12 @@ class PlotData:
             x1 = np.linspace(x[0], x[-1], 1000)
             if plot_dots:
                 plt.plot(x, y, "o")
-            plt.plot(x1, interp(x1), linestyle=linestyle,
-                     linewidth=linewidth, color=Color[self.exper_name.split()[0]])
+            if dashes is not None:
+                plt.plot(x1, interp(x1), linestyle=linestyle,  linewidth=linewidth,
+                         dashes=dashes, color=Color[self.exper_name.split()[0]])
+            else:
+                plt.plot(x1, interp(x1), linestyle=linestyle,  linewidth=linewidth,
+                         color=Color[self.exper_name.split()[0]])
             return x1, interp(x1)
 
     def __call__(self, upper_limit, lower_limit=None, kind=None, linewidth=3,
@@ -118,23 +130,22 @@ class PlotData:
             plot_show: bool, optional
                 Whether the plot should be shown or not.
         '''
-        PlotData.count[self.exper_name] += 1
-        linestyle = linestyles[PlotData.count[self.exper_name] % len(linestyles)]
+        linestyle, dashes = self.get_linestyle()
 
         if lower_limit is not None and fill:
-            linewidth = 1
+            linewidth = 0
 
         x_upper, y_upper = self.plot_limits(upper_limit, kind, linewidth, linestyle,
-                                            plot_dots)
+                                            dashes, plot_dots)
         if lower_limit is not None:
             x_lower, y_lower = self.plot_limits(lower_limit, kind, linewidth, linestyle,
-                                                plot_dots)
+                                                dashes, plot_dots)
             if fill:
                 plt.fill_between(x_lower, y_lower, y_upper,
                                  color=Color[self.exper_name.split()[0]], alpha=alpha)
 
-        # if plot_show:
-            # plt.show()
+        if plot_show:
+            plt.show()
 
 
 class RunProgram:
@@ -352,7 +363,7 @@ class RunProgram:
             self.exper.vmin_logeta_band_low = \
                 np.vstack((self.exper.vmin_logeta_band_low,
                            [[last_vmin_low + 5, -40], [last_vmin_up, -40]]))
-            print(self.exper.vmin_logeta_band_up)
+
             plot_limits(self.exper.vmin_logeta_band_up,
                         lower_limit=self.exper.vmin_logeta_band_low, kind=interp_kind,
                         fill=True, alpha=0.2, plot_dots=plot_dots, plot_show=False)

@@ -65,6 +65,11 @@ Color = {"SuperCDMS": 'peru',
          "SIMPLEModeStage2": 'saddlebrown'
          }
 
+linestyles = ['-', '--', '-.', ':']
+dashes_LUX = {"LUX2013zero": (3, 4), "LUX2013one": (8, 4, 3, 4, 3, 4),
+              "LUX2013three": (8, 4, 3, 4), "LUX2013five": (8, 4), "LUX2013many": None}
+
+
 
 def confidence_level(sigma):
     return erf(sigma/np.sqrt(2))
