@@ -453,7 +453,7 @@ class Experiment_EHI(Experiment_HaloIndep):
 
     def _PlotStepFunction(self, vmin_list, logeta_list,
                           xlim_percentage=(0., 1.1), ylim_percentage=(1.01, 0.99),
-                          mark='o', color=None, linewidth=1,
+                          mark=None, color=None, linewidth=1,
                           plot_close=True, plot_show=True):
         ''' Plots a step-like function, given the location of the steps.
         '''
@@ -465,10 +465,12 @@ class Experiment_EHI(Experiment_HaloIndep):
         y = np.append(np.insert(logeta_list, 0, logeta_list[0]), -80)
         if color is not None:
             plt.step(x, y, color=color, linewidth=linewidth)
-            plt.plot(x, y, mark, color=color)
+            if mark is not None:
+                plt.plot(x, y, mark, color=color)
         else:
             plt.step(x, y, linewidth=linewidth)
-            plt.plot(x, y, mark)
+            if mark is not None:
+                plt.plot(x, y, mark)
 #        plt.xlim([vmin_list[0] * xlim_percentage[0], vmin_list[-1] * xlim_percentage[1]])
         plt.xlim([0, 1000])
         plt.ylim([max(logeta_list[-1] * ylim_percentage[0], -60),
