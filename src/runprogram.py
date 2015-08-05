@@ -10,6 +10,7 @@ from collections import defaultdict
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, ScalarFormatter, FuncFormatter
+from matplotlib import rc, rcParams
 
 
 class PlotData:
@@ -24,10 +25,12 @@ class PlotData:
             should be added to a previous plot.
     '''
     count = defaultdict(lambda: -1)
+    exper_plotted = set()
 
     def __init__(self, exper_name, HALO_DEP, plot_close=True):
         self.exper_name = exper_name
         self.HALO_DEP = HALO_DEP
+        PlotData.exper_plotted.add(self.exper_name)
 
         if plot_close:
             plt.close()
@@ -38,23 +41,71 @@ class PlotData:
         self.set_axes_labels()
         self.set_ticks()
 
+    @staticmethod
+    def make_legend(HALO_DEP, scattering_type, mPhi, fp, fn, delta, mx=None,
+                    log_sigma_p=None, fontsize=13):
+        # parameters
+        legends = []
+        if HALO_DEP:
+            legends.extend(["SHM",
+                            "$v_\circ$ = " + str(vobs) + " km/s",
+                            "$v_0$ = " + str(v0bar) + " km/s",
+                            "$v_{esc}$ = " + str(vesc) + " km/s",
+                            ""])
+        if mPhi == mPhiRef:
+            legends.append(r"Contact")
+        else:
+            legends.append(r"${m_\phi = " + str(mPhi) + r"}$ MeV")
+        legends.append(r"${\delta = " + str(delta) + r"}$ keV")
+        if mx is not None:
+            legends.append(r"${m = " + str(mx) + r"}$ GeV")
+        if scattering_type == "SI":
+            legends.append(r"${f_n/f_p = " + str(fn/fp) + r"}$")
+        else:
+            legends.append(r"${a_n/a_p = " + str(fn/fp) + r"}$")
+
+        legend_param = plt.legend(legends, loc=1, frameon=False,
+                                  prop={'size': fontsize},
+                                  handlelength=0, handletextpad=0)
+        for item in legend_param.legendHandles:
+            item.set_visible(False)
+
+        # experiments
+        legends = [name for name in legend_names
+                   if np.any([exp in PlotData.exper_plotted
+                              for exp in legend_names[name]])]
+        colors = [Color[legend_names[name][0]] for name in legends]
+        if log_sigma_p is not None:
+            legends = [name if "SHM" not in name
+                       else name.replace("-40", str(log_sigma_p))
+                       for name in legends]
+        legend_exper = plt.legend(legends, loc=3, frameon=False,
+                                  prop={'size': fontsize},
+                                  handlelength=0, handletextpad=0)
+        for text, color in zip(legend_exper.get_texts(), colors):
+            plt.setp(text, color=color)
+        for item in legend_exper.legendHandles:
+            item.set_visible(False)
+        plt.gca().add_artist(legend_param)
+
     def get_linestyle(self):
         dashes = line_dashes.get(self.exper_name, None)
         PlotData.count[self.exper_name] += 1
         linestyle = linestyles[PlotData.count[self.exper_name] % len(linestyles)]
         return linestyle, dashes
 
-    def set_axes_labels(self):
+    def set_axes_labels(self, fontsize=20):
         ''' Set axis labels, depending on whether it is for halo-dependent or not.
         '''
+        rc('font', family='serif', size=fontsize)
         if self.HALO_DEP:
-            plt.xlabel('$m$ [GeV]')
+            plt.xlabel(r'$m$ [GeV]')
             plt.ylabel(r'$\sigma_p$ [cm$^2$]')
             plt.axes().set_xscale('log')
             plt.axes().xaxis.set_major_formatter(ScalarFormatter())
         else:
             plt.minorticks_on()
-            plt.xlabel('$v_{min}$ [km/s]')
+            plt.xlabel(r'$v_\mathrm{min}$ [km/s]')
             plt.ylabel(r'$\eta$ $\rho$ $\sigma_p / m$ $[$days$^{-1}]$')
 
     def set_ticks(self):
@@ -68,6 +119,12 @@ class PlotData:
         minor_ticks = [np.log10(i) for i in range(2, 10)]
         minor_ticks = [i + j for i in minor_ticks for j in range(-100, 0)]
         plt.axes().yaxis.set_minor_locator(FixedLocator(minor_ticks))
+
+        # set ticks size
+        plt.axes().xaxis.set_tick_params(length=8, width=1.5, which='major')
+        plt.axes().xaxis.set_tick_params(length=4, width=1.5, which='minor')
+        plt.axes().yaxis.set_tick_params(length=8, width=1.5, which='major')
+        plt.axes().yaxis.set_tick_params(length=4, width=1.5, which='minor')
 
     def plot_limits(self, upper_limit, kind, linewidth, linestyle, dashes, plot_dots):
         ''' Make a list of the x and y coordinates of the plots, and plot them.

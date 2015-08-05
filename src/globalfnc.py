@@ -10,6 +10,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 import numpy as np
 import math
+from collections import OrderedDict
 from scipy.special import erf, erfinv
 from scipy.stats import chi2
 pi = np.pi
@@ -59,7 +60,7 @@ Color = {"SuperCDMS": 'peru',
          "CDMSlite2013CoGeNTQ": 'cyan', "CDMSSi2012": 'red',
          "CDMSSi2012_EHI": 'firebrick',
          "KIMS2012": 'purple', "PICASSO": 'darkturquoise',
-         "DAMA2010NaSmRebinned_TotRateLimit": 'green',
+         "DAMA2010NaSmRebinned_TotRateLimit": 'black',
          "DAMA2010NaSmRebinned": 'green',
          "DAMA2010ISmRebinned": 'green',
          "SIMPLEModeStage2": 'saddlebrown',
@@ -71,9 +72,23 @@ linestyles = ['-', '--', '-.', ':']
 ''' For some experiments the linestyles are fixed and customized, passed as dashes.
 '''
 line_dashes = {"LUX2013zero": (3, 4), "LUX2013one": (8, 4, 3, 4, 3, 4),
-               "LUX2013three": (8, 4, 3, 4), "LUX2013five": (8, 4), "LUX2013many": (8, 0),
+               "LUX2013three": (8, 4, 3, 4), "LUX2013five": (8, 4), "LUX2013many": None,
                "SHM_eta0": (8, 4), "SHM_eta1": (3, 4)
                }
+''' Legend names
+'''
+legend_names = OrderedDict([("DAMA$_1$", ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]),
+                            ("DAMA$_0", ["DAMA2010NaSmRebinned_TotRateLimit"]),
+                            ("CDMS-II-Si", ["CDMSSi2012", "CDMSSi2012_EHI"]),
+                            ("SuperCDMS", ["SuperCDMS"]),
+                            ("CDMSlite", ["CDMSlite2013CoGeNTQ"]), ("SIMPLE", ["SIMPLE"]),
+                            ("XENON10", ["XENON10"]), ("XENON100", ["XENON100"]),
+                            ("LUX", ["LUX2013zero", "LUX2013one", "LUX2013three",
+                                     "LUX2013five", "LUX2013many"]),
+                            ("PICSSO", ["PICASSO"]), ("KIMS", ["KIMS"]),
+                            ("SHM ($\sigma_p = 10^{-40}$ cm$^2$)",
+                             ["SHM_eta0", "SHM_eta1"])
+                            ])
 
 
 def confidence_level(sigma):
@@ -114,7 +129,7 @@ def FileNameTail(fp, fn, mPhi):
     ''' Gives a file name-tail that is added to each output file, to distinguish
     between different input parameters.
     '''
-    if mPhi == 1000.:
+    if mPhi == mPhiRef:
         mPhi_string = ""
     else:
         mPhi_string = "_mPhi" + str(math.trunc(mPhi))
@@ -151,7 +166,7 @@ def OutputDirectory(output_main_dir, scattering_type, mPhi, delta):
             Full path of output directory.
     '''
     out_dir = output_main_dir
-    if mPhi == 1000.:
+    if mPhi == mPhiRef:
         out_dir += "Contact"
     else:
         out_dir += "LongRange"
@@ -163,7 +178,7 @@ def OutputDirectory(output_main_dir, scattering_type, mPhi, delta):
 
 
 def Output_file_name(exper_name, scattering_type, mPhi, mx, fp, fn, delta, HALO_DEP,
-                     filename_tail, OUTPUT_MAIN_DIR, quenching):
+                     filename_tail, OUTPUT_MAIN_DIR, quenching=None):
     ''' Gives the name of the output file name for the given input parameters.
     Input:
         exper_name: string
@@ -182,9 +197,9 @@ def Output_file_name(exper_name, scattering_type, mPhi, mx, fp, fn, delta, HALO_
             List of confidence levels.
         HALO_DEP: bool
             Whether the analysis is halo-dependent or halo-independent.
-        filename_tail: string, optional
+        filename_tail: string
             Tag to be added to the file name.
-        OUTPUT_MAIN_DIR: string, optional
+        OUTPUT_MAIN_DIR: string
             Name of main output directory.
         quenching: float, optional
             quenching factor, needed for experiments that can have multiple options.
@@ -209,6 +224,48 @@ def Output_file_name(exper_name, scattering_type, mPhi, mx, fp, fn, delta, HALO_
         output_file_no_extension += "_q" + str(quenching)
     print(output_file_no_extension)
     return output_file_no_extension
+
+
+def Plot_file_name(HALO_DEP, scattering_type, mPhi, fp, fn, delta,
+                   filename_tail, OUTPUT_MAIN_DIR, mx=None):
+    ''' Gives the name of the plot file name for the given input parameters.
+    Input:
+        HALO_DEP: bool
+            Whether the analysis is halo-dependent or halo-independent.
+        scattering_type: string
+            'SI' for spin-dependent, 'SDPS' for pseudo-scalar, 'SDAV' for axial-vector.
+        mPhi: float
+            Mass of mediator.
+        fp and fn: float
+            Couplings to proton and neutron.
+        delta: float
+            DM mass split.
+        filename_tail: string
+            Tag to be added to the file name.
+        OUTPUT_MAIN_DIR: string
+            Name of main output directory.
+        mx: float, optional
+            DM mass.
+    '''
+    out_dir = OUTPUT_MAIN_DIR + "PLOTS_"
+    if mPhi == mPhiRef:
+        scattering = "Contact"
+    else:
+        scattering = "LongRange"
+    scattering += scattering_type
+    out_dir += scattering + "_Py/"
+
+    if HALO_DEP:
+        file_name = out_dir + "HaloDep_"
+    else:
+        file_name = out_dir + "HaloIndep_"
+
+    file_name += scattering + "_delta_"
+    if delta < 0:
+        file_name += "neg"
+    file_name += str(math.trunc(abs(delta))) + FileNameTail(fp, fn, mPhi) + \
+        filename_tail + ".pdf"
+    return file_name
 
 
 def Gaussian(x, mu, sigma):

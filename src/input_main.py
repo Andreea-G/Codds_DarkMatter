@@ -50,6 +50,9 @@ class Input:
             Whether the data should be plotted.
         EHI_Method: ndarray of bools, optional
             Whether each step of the EHI Method is to be performed.
+        log_sigma_p: float, optional
+                Log base 10 of the total reference cross-section to a single proton.
+                Only for halo-independent SHM lines.
         OUTPUT_MAIN_DIR: string, optional
             Name of main output directory.
         filename_tail_list: list of strings, optional
@@ -69,6 +72,7 @@ class Input:
                  input_indices=slice(None),
                  scattering_types='SI',
                  RUN_PROGRAM=False, MAKE_REGIONS=False, MAKE_PLOT=False, EHI_METHOD={},
+                 log_sigma_p=None,
                  OUTPUT_MAIN_DIR="../Output/", filename_tail_list=[""], extra_tail="",
                  plot_dots=False,
                  CL_list=[0.9], sigma_dev_list=[1]):
@@ -144,75 +148,105 @@ class Input:
                        if '__' not in a[0] and '_list' not in a[0]])
         return kwargs
 
-    def _Run_HaloIndep(self):
+    def _Run_HaloIndep(self, EXPORT_PLOT, xlim, ylim):
         ''' Run the program for halo-independent analysis.
         '''
         module = import_file(input_filename_list[self.HALO_DEP] + ".py")
-        for self.exper_name, self.scattering_type, self.filename_tail, \
+        for self.scattering_type, self.filename_tail, \
                 (self.mx, self.fn, self.delta, self.mPhi) \
-                in product(self.exper_list, self.scattering_type_list,
+                in product(self.scattering_type_list,
                            self.filename_tail_list, self.input_list):
-            if self.exper_name == "CDMSSi2012" and np.any(self.EHI_METHOD):
-                self.vmin_EHIBand_range = \
-                    module.Vmin_EHIBand_range(self.exper_name, self.mx,
-                                              self.delta, self.mPhi)
-                self.logeta_EHIBand_percent_range = module.logeta_EHIBand_percent_range
-                self.steepness = module.Steepness(self.exper_name, self.mx,
-                                                  self.delta, self.mPhi)
-                self.logeta_guess = module.Logeta_guess(self.exper_name, self.mx,
-                                                        self.delta, self.mPhi)
-            for self.quenching in self.QuenchingList():
-                self.vmin_range = \
-                    module.Vmin_range(self.exper_name.split()[0], self.mx,
-                                      self.delta, mPhi=self.mPhi,
-                                      quenching=self.quenching[0],
-                                      EHI_METHOD=np.any(self.EHI_METHOD))
-                if np.any(self.EHI_METHOD):
+            for self.exper_name in self.exper_list:
+                if self.exper_name == "CDMSSi2012" and np.any(self.EHI_METHOD):
                     self.vmin_EHIBand_range = \
-                        module.Vmin_EHIBand_range(self.exper_name.split()[0], self.mx,
+                        module.Vmin_EHIBand_range(self.exper_name, self.mx,
                                                   self.delta, self.mPhi)
-                print(self.vmin_range)
-                if len(self.quenching) == 1:
-                    self.quenching = self.quenching[0]
-                kwargs = self._GetKwargs()
-                run_program = RunProgram()
-                run_program(**kwargs)
+                    self.logeta_EHIBand_percent_range = \
+                        module.logeta_EHIBand_percent_range
+                    self.steepness = module.Steepness(self.exper_name, self.mx,
+                                                      self.delta, self.mPhi)
+                    self.logeta_guess = module.Logeta_guess(self.exper_name, self.mx,
+                                                            self.delta, self.mPhi)
+                for self.quenching in self.QuenchingList():
+                    self.vmin_range = \
+                        module.Vmin_range(self.exper_name.split()[0], self.mx,
+                                          self.delta, mPhi=self.mPhi,
+                                          quenching=self.quenching[0],
+                                          EHI_METHOD=np.any(self.EHI_METHOD))
+                    if np.any(self.EHI_METHOD):
+                        self.vmin_EHIBand_range = \
+                            module.Vmin_EHIBand_range(self.exper_name.split()[0],
+                                                      self.mx, self.delta, self.mPhi)
+                    print(self.vmin_range)
+                    if len(self.quenching) == 1:
+                        self.quenching = self.quenching[0]
+                    kwargs = self._GetKwargs()
+                    run_program = RunProgram()
+                    run_program(**kwargs)
+            PlotData.make_legend(self.HALO_DEP, self.scattering_type, self.mPhi,
+                                 self.fp, self.fn, self.delta, mx=self.mx,
+                                 log_sigma_p=self.log_sigma_p)
+            if xlim is not None:
+                plt.xlim(xlim)
+            if ylim is not None:
+                plt.ylim(ylim)
+            if EXPORT_PLOT:
+                plot_file = \
+                    Plot_file_name(self.HALO_DEP, self.scattering_type, self.mPhi,
+                                   self.fp, self.fn, self.delta,
+                                   self.filename_tail, self.OUTPUT_MAIN_DIR, mx=self.mx)
+                print(plot_file)
+                plt.savefig(plot_file, bbox_inches='tight')
         return
 
-    def _Run_HaloDep(self):
+    def _Run_HaloDep(self, EXPORT_PLOT, xlim, ylim):
         ''' Run the program for halo-dependent analysis.
         '''
         module = import_file(input_filename_list[self.HALO_DEP] + ".py")
-        for self.exper_name, self.scattering_type, self.filename_tail, \
+        for self.scattering_type, self.filename_tail, \
                 (self.fn, self.delta, self.mPhi) \
-                in product(self.exper_list, self.scattering_type_list,
+                in product(self.scattering_type_list,
                            self.filename_tail_list, self.input_list):
-            for self.quenching in self.QuenchingList():
-                try:
-                    self.mx_range = \
-                        module.DM_mass_range(self.exper_name.split()[0], self.delta,
-                                             self.mPhi, self.quenching[0])
-                except KeyError as key_error:
-                    print('KeyError:', key_error)
-                    continue
-                print(self.mx_range)
-                if len(self.quenching) == 1:
-                    self.quenching = self.quenching[0]
-                kwargs = self._GetKwargs()
-                run_program = RunProgram()
-                try:
-                    run_program(**kwargs)
-                except FileNotFoundError as file_error:
-                    print('FileNotFoundError:', file_error)
+            for self.exper_name in self.exper_list:
+                for self.quenching in self.QuenchingList():
+                    try:
+                        self.mx_range = \
+                            module.DM_mass_range(self.exper_name.split()[0], self.delta,
+                                                 self.mPhi, self.quenching[0])
+                    except KeyError as key_error:
+                        print('KeyError:', key_error)
+                        continue
+                    print(self.mx_range)
+                    if len(self.quenching) == 1:
+                        self.quenching = self.quenching[0]
+                    kwargs = self._GetKwargs()
+                    run_program = RunProgram()
+                    try:
+                        run_program(**kwargs)
+                    except FileNotFoundError as file_error:
+                        print('FileNotFoundError:', file_error)
+            PlotData.make_legend(self.HALO_DEP, self.scattering_type, self.mPhi,
+                                 self.fp, self.fn, self.delta)
+            if xlim is not None:
+                plt.xlim(xlim)
+            if ylim is not None:
+                plt.ylim(ylim)
+            if EXPORT_PLOT:
+                plot_file = \
+                    Plot_file_name(self.HALO_DEP, self.scattering_type, self.mPhi,
+                                   self.fp, self.fn, self.delta,
+                                   self.filename_tail, self.OUTPUT_MAIN_DIR)
+                print(plot_file)
+                plt.savefig(plot_file, bbox_inches='tight')
         return
 
-    def RunProgram(self):
+    def RunProgram(self, EXPORT_PLOT=False, xlim=None, ylim=None):
         ''' Main run of the program.
         '''
         if self.HALO_DEP:
-            self._Run_HaloDep()
+            self._Run_HaloDep(EXPORT_PLOT, xlim, ylim)
         else:
-            self._Run_HaloIndep()
+            self._Run_HaloIndep(EXPORT_PLOT, xlim, ylim)
         return
 
 

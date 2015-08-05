@@ -36,10 +36,11 @@ def main():
     RUN_PROGRAM = F
     MAKE_REGIONS = F
     MAKE_PLOT = T
+    EXPORT_PLOT = T
 
     scattering_types = ['SI']
     input_indices = [1]
-    exper_indices = [1, 2, 3, 4, 5, 10, 12, 21, 22]
+    exper_indices = [0, 1, 2, 3, 4, 5, 10, 11, 12, 21]
     OUTPUT_MAIN_DIR = "../Output_Band/"
     filename_tail_list = [""]
     extra_tail = "_mix"
@@ -56,14 +57,16 @@ def main():
 
     # inp.initial_energy_bin = [3, 6]
     # inp.confidence_levels.extend([confidence_level(s) for s in [3, 5]])
-    inp.log_sigma_p = -41
+    inp.log_sigma_p = -39
 
     try:
         plt.close()
-        inp.RunProgram()
+        xlim = None
+        ylim = [-28, -20]
+        inp.RunProgram(EXPORT_PLOT=EXPORT_PLOT, xlim=xlim, ylim=ylim)
         if MAKE_PLOT or EHI_METHOD.get('ConfidenceBandPlot', F):
-            plt.ylim([-28, -20])
-            plt.show()
+            if not EXPORT_PLOT:
+                plt.show()
 
     finally:
         if inp.RUN_PROGRAM or inp.MAKE_REGIONS:
