@@ -46,6 +46,7 @@ MaximumGapLimit_exper = ["SuperCDMS",
                          "XENON10", "XENON100", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
 GaussianLimit_exper = ["KIMS2012", "PICASSO"]
 BinnedSignal_exper = ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]
+Crosses_exper = ["CDMSSi2012", "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]
 DAMALimit_exper = ["DAMA2010NaSmRebinned_TotRateLimit"]
 Poisson_exper = ["SIMPLEModeStage2"]
 EHImethod_exper = ["CDMSSi2012", "CDMSSiGeArtif", "CDMSSiArtif"]
@@ -81,11 +82,12 @@ legend_names = OrderedDict([("DAMA$_1$", ["DAMA2010NaSmRebinned", "DAMA2010ISmRe
                             ("DAMA$_0", ["DAMA2010NaSmRebinned_TotRateLimit"]),
                             ("CDMS-II-Si", ["CDMSSi2012", "CDMSSi2012_EHI"]),
                             ("SuperCDMS", ["SuperCDMS"]),
-                            ("CDMSlite", ["CDMSlite2013CoGeNTQ"]), ("SIMPLE", ["SIMPLE"]),
+                            ("CDMSlite", ["CDMSlite2013CoGeNTQ"]),
+                            ("SIMPLE", ["SIMPLEModeStage2"]),
                             ("XENON10", ["XENON10"]), ("XENON100", ["XENON100"]),
                             ("LUX", ["LUX2013zero", "LUX2013one", "LUX2013three",
                                      "LUX2013five", "LUX2013many"]),
-                            ("PICSSO", ["PICASSO"]), ("KIMS", ["KIMS"]),
+                            ("PICASSO", ["PICASSO"]), ("KIMS", ["KIMS2012"]),
                             ("SHM ($\sigma_p = 10^{-40}$ cm$^2$)",
                              ["SHM_eta0", "SHM_eta1"])
                             ])
