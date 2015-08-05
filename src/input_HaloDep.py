@@ -5,6 +5,8 @@ Created on Sat Feb 28 21:41:09 2015
 @author: andreea
 """
 
+from main import scattering_types as scattering
+
 
 def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
     ''' Range and number of steps for the DM mass.
@@ -126,31 +128,31 @@ def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
                             }
     else:
         num_steps = 60
-        # for SI
-#        mx_range_options = {(0, 1000.): (3, 30, num_steps),
-#                            (-50, 1000.): (2, 10, num_steps),
-#                            (-200, 1000.): (0.4, 2, num_steps),
-#                            (-500, 1000.): (0.2, 1, num_steps)
-#                           }
-        # for SD
-        mx_range_options = {(0, 1000.): (3, 100, num_steps),
-                            (0, 0.): (3, 130, num_steps),
-                            (-30, 1000.): (1, 100, num_steps),
-                            (-30, 0.): (1, 100, num_steps),
-                            (-50, 1000.): (1, 50, num_steps),
-                            (50, 1000.): (10, 100, num_steps),
-                            (100, 1000.): (30, 100, num_steps),
-                            }
+        if 'SI' in scattering[0]:
+            mx_range_options = {(0, 1000.): (3, 30, num_steps),
+                                (-50, 1000.): (2, 10, num_steps),
+                                (-200, 1000.): (0.4, 2, num_steps),
+                                (-500, 1000.): (0.2, 1, num_steps)
+                                }
+        else:
+            mx_range_options = {(0, 1000.): (3, 100, num_steps),
+                                (0, 0.): (3, 130, num_steps),
+                                (-30, 1000.): (1, 100, num_steps),
+                                (-30, 0.): (1, 100, num_steps),
+                                (-50, 1000.): (1, 50, num_steps),
+                                (50, 1000.): (10, 100, num_steps),
+                                (100, 1000.): (30, 100, num_steps),
+                                }
     return mx_range_options[(delta, mPhi)]
 
 
 ''' List of input values of the form (fn, delta, mPhi).
 '''
-# for SI
-input_list = [(1, 0, 1000.), (1, -50, 1000.), (1, -200, 1000.), (1, -500, 1000.),  # 0 - 3
-              (-0.8, 0, 1000.), (-0.8, -50, 1000.), (-0.8, -200, 1000.), (-0.8, -500, 1000.),  # 4 - 7
-              (-0.7, 0, 1000.), (-0.7, -50, 1000.), (-0.7, -200, 1000.)]  # 8 - 10
-# for SD
-#input_list = [(-1/16.4, 0, 1000.),  # 0
-#              (0, 0, 1000.), (0, -30, 1000.),  (0, -50, 1000.), (0, 0, 0.), (0, -30, 0.),  # 1 - 5
-#              (0, 50, 1000.), (0, 100, 1000.), (0, 100, 0.)]  # 6 - 8
+if 'SI' in scattering[0]:
+    input_list = [(1, 0, 1000.), (1, -50, 1000.), (1, -200, 1000.), (1, -500, 1000.),  # 0 - 3
+                  (-0.8, 0, 1000.), (-0.8, -50, 1000.), (-0.8, -200, 1000.), (-0.8, -500, 1000.),  # 4 - 7
+                  (-0.7, 0, 1000.), (-0.7, -50, 1000.), (-0.7, -200, 1000.)]  # 8 - 10
+else:
+    input_list = [(-1/16.4, 0, 1000.),  # 0
+                  (0, 0, 1000.), (0, -30, 1000.),  (0, -50, 1000.), (0, 0, 0.), (0, -30, 0.),  # 1 - 5
+                  (0, 50, 1000.), (0, 100, 1000.), (0, 100, 0.)]  # 6 - 8

@@ -36,11 +36,11 @@ class Input:
             Indices in the implemented_exper_list that the program will be run for.
         input_indices: slice or list of ints, optional
             Indices in the list of input values that the program will be run for.
-        scattering_type: string, optional
-            'SI' for spin-dependent, 'SDPS' for pseudo-scalar, 'SDAV' for axial-vector.
-        scattering_type_list: list of strings, optional
-            List of scattering types, if more than one. If None, it is set to a list
-            containing one element, scattering_type
+        scattering_types: string or list of strings, optional
+            Type of scattering, or list of types of scattering. Can be
+                - 'SI' (spin-independent)
+                - 'SDAV' (spin-independent, axial-vector)
+                - 'SDPS' (spin-independent, pseudo-scalar).
         RUN_PROGRAM: bool, optional
             Whether the data should be (re-)computed.
         MAKE_REGIONS: bool, optional
@@ -67,7 +67,7 @@ class Input:
     def __init__(self, HALO_DEP,
                  implemented_exper_list, exper_indices=slice(None),
                  input_indices=slice(None),
-                 scattering_type='SI', scattering_type_list=None,
+                 scattering_types='SI',
                  RUN_PROGRAM=False, MAKE_REGIONS=False, MAKE_PLOT=False, EHI_METHOD={},
                  OUTPUT_MAIN_DIR="../Output/", filename_tail_list=[""], extra_tail="",
                  plot_dots=False,
@@ -77,9 +77,9 @@ class Input:
 
         self.implemented_exper_list = np.array(implemented_exper_list)
         self.SetExperList(exper_indices)
-        self.scattering_type_list = scattering_type_list \
-            if scattering_type_list is not None \
-            else [scattering_type]
+        self.scattering_type_list = scattering_types \
+            if isinstance(scattering_types, list) \
+            else [scattering_types]
         self.filename_tail_list = filename_tail_list
         self.extra_tail = extra_tail  # for EHI method
         self.input_list = np.array(module.input_list)[input_indices]
