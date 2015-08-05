@@ -165,6 +165,38 @@ class PlotData:
                          color=Color[self.exper_name.split()[0]])
             return x1, interp(x1)
 
+    def plot_crosses(self, crosses, linewidth=3, plot_show=True):
+        int_resp = crosses[0]
+
+        def xy_points(indices):
+            x = crosses[indices[0]]
+            xerr_left, xerr_right = crosses[indices[1]], crosses[indices[2]]
+            y = np.log10(crosses[indices[3]])
+            yerr_up = np.log10(crosses[indices[3]] + crosses[indices[4]]) - y
+            yerr_low = y - np.log10(crosses[indices[3]] - crosses[indices[5]])
+            yerr_low = np.array([ye if ye == ye else 100
+                                 for ye in yerr_low])
+            xerr = [xerr_left, xerr_right]
+            yerr = [yerr_low, yerr_up]
+            return x, y, xerr, yerr
+
+        if self.exper_name == "CDMSSi2012":
+            indices = [1, 2, 2, 3, 5, 6]
+        elif "DAMA" in self.exper_name:
+            indices = [1, 2, 3, 4, 5, 5]
+        else:
+            print('No crosses available for this experiment')
+            return
+
+        x, y, xerr, yerr = xy_points(indices)
+        print(x, y, xerr, yerr)
+        plt.errorbar(x, y, xerr=xerr, yerr=yerr,
+                     ecolor=Color[self.exper_name], linewidth=0, elinewidth=3,
+                     capsize=linewidth + 1, capthick=linewidth)
+
+        if plot_show:
+            plt.show()
+
     def __call__(self, upper_limit, lower_limit=None, kind=None, linewidth=3,
                  fill=True, alpha=0.4, plot_dots=True, plot_show=True):
         ''' Make plots for the upper limits.
@@ -375,8 +407,8 @@ class RunProgram:
                               output_file_upper)
 
     def plot_limits(self, exper_name, confidence_levels, HALO_DEP, plot_dots):
-        plot_limits = PlotData(exper_name, HALO_DEP, plot_close=False)
-        if exper_name.split()[0] in BinnedSignal_exper:
+        plot_data = PlotData(exper_name, HALO_DEP, plot_close=False)
+        if HALO_DEP and exper_name.split()[0] in BinnedSignal_exper:
             PlotData.count[exper_name] = -1
             for index, CL in enumerate(confidence_levels):
                 output_file_regions = self.output_file_no_extension + \
@@ -385,15 +417,24 @@ class RunProgram:
                 output_file_upper = output_file_regions + "_upper_limit.dat"
                 lower_limit = np.loadtxt(output_file_lower)
                 upper_limit = np.loadtxt(output_file_upper)
-                plot_limits(upper_limit, lower_limit=lower_limit, fill=(index < 2),
-                            plot_dots=plot_dots, plot_show=False)
+                plot_data(upper_limit, lower_limit=lower_limit, fill=(index < 2),
+                          plot_dots=plot_dots, plot_show=False)
                 if index < 2:
                     PlotData.count[exper_name] -= 1
         else:
             output_file = self.output_file_no_extension + ".dat"
             upper_limit = np.loadtxt(output_file)
             # print("upper_limit = ", upper_limit)
-            plot_limits(upper_limit, plot_dots=plot_dots, plot_show=False)
+            plot_data(upper_limit, plot_dots=plot_dots, plot_show=False)
+
+    def plot_crosses(self, exper_name, HALO_DEP):
+        plot_data = PlotData(exper_name, HALO_DEP, plot_close=False)
+        output_file = self.output_file_no_extension + ".dat"
+        if exper_name == "CDMSSi2012":
+            output_file = output_file.replace("UpperLimit", "BinResponseBoxlike")
+        output_file = output_file.replace("CDMSSi2012", "CDMSSi2013")
+        crosses = np.loadtxt(output_file)
+        plot_data.plot_crosses(crosses, plot_show=False)
 
     def plot_EHI_band(self, exper_name, confidence_levels, HALO_DEP, extra_tail,
                       plot_dots):
@@ -540,7 +581,14 @@ class RunProgram:
 
         # make plot
         if MAKE_PLOT and not np.any(EHI_METHOD[:-1]):
-            self.plot_limits(exper_name, confidence_levels, HALO_DEP, plot_dots)
+            try:
+                self.plot_limits(exper_name, confidence_levels, HALO_DEP, plot_dots)
+            except np.linalg.linalg.LinAlgError:
+                pass
+
+        # make halo-independent crosses
+        if not HALO_DEP and exper_name in Crosses_exper:
+            self.plot_crosses(exper_name, HALO_DEP)
 
         # make band plot
         if EHI_METHOD.ConfidenceBandPlot and exper_name == "CDMSSi2012":
