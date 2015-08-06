@@ -11,6 +11,8 @@ from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, ScalarFormatter, FuncFormatter
 from matplotlib import rc, rcParams
+rcParams['text.usetex'] = True  # needed to use LaTeX for labels and legends
+rcParams['text.latex.preamble'] = [r'\boldmath']  # needed for bold labels and legends
 
 
 class PlotData:
@@ -44,19 +46,20 @@ class PlotData:
     @staticmethod
     def make_legend(HALO_DEP, scattering_type, mPhi, fp, fn, delta, mx=None,
                     log_sigma_p=None, fontsize=13):
+        rc('font', family='serif', weight='extra bold')
         # parameters
         legends = []
         if HALO_DEP:
             legends.extend(["SHM",
-                            "$v_\circ$ = " + str(vobs) + " km/s",
-                            "$v_0$ = " + str(v0bar) + " km/s",
-                            "$v_{esc}$ = " + str(vesc) + " km/s",
+                            "$v_\odot$ = " + str(round(vobs)) + " km/s",
+                            "$v_0$ = " + str(round(v0bar)) + " km/s",
+                            "$v_\mathrm{esc}$ = " + str(round(vesc)) + " km/s",
                             ""])
         if mPhi == mPhiRef:
             legends.append(r"Contact")
         else:
-            legends.append(r"${m_\phi = " + str(mPhi) + r"}$ MeV")
-        legends.append(r"${\delta = " + str(delta) + r"}$ keV")
+            legends.append(r"${m_\phi = " + str(round(mPhi)) + r"}$ MeV")
+        legends.append(r"${\delta = " + str(int(delta)) + r"}$ keV")
         if mx is not None:
             legends.append(r"${m = " + str(mx) + r"}$ GeV")
         if scattering_type == "SI":
@@ -79,6 +82,7 @@ class PlotData:
             legends = [name if "SHM" not in name
                        else name.replace("-40", str(log_sigma_p))
                        for name in legends]
+        legends = [r"\textbf{" + name + "}" for name in legends]
         legend_exper = plt.legend(legends, loc=3, frameon=False,
                                   prop={'size': fontsize},
                                   handlelength=0, handletextpad=0)
@@ -97,7 +101,7 @@ class PlotData:
     def set_axes_labels(self, fontsize=20):
         ''' Set axis labels, depending on whether it is for halo-dependent or not.
         '''
-        rc('font', family='serif', size=fontsize)
+        rc('font', family='serif', size=fontsize, weight='bold')
         if self.HALO_DEP:
             plt.xlabel(r'$m$ [GeV]')
             plt.ylabel(r'$\sigma_p$ [cm$^2$]')
@@ -126,7 +130,8 @@ class PlotData:
         plt.axes().yaxis.set_tick_params(length=8, width=1.5, which='major')
         plt.axes().yaxis.set_tick_params(length=4, width=1.5, which='minor')
 
-    def plot_limits(self, upper_limit, kind, linewidth, linestyle, dashes, plot_dots):
+    def plot_limits(self, upper_limit, kind, linewidth, linestyle, dashes, plot_dots,
+                    alpha=1):
         ''' Make a list of the x and y coordinates of the plots, and plot them.
         '''
         if upper_limit.size == 0:   # nothing to plot
@@ -138,7 +143,7 @@ class PlotData:
             else:
                 x = [upper_limit[0]]
             y = [upper_limit[1]]
-            plt.plot(x, y, "o")
+            plt.plot(x, y, "o", alpha=alpha)
             return x, y
         else:   # more than one point, so decide on the interpolation order and plot
             if self.HALO_DEP:
@@ -159,13 +164,13 @@ class PlotData:
                 plt.plot(x, y, "o")
             if dashes is not None:
                 plt.plot(x1, interp(x1), dashes=dashes, linewidth=linewidth,
-                         color=Color[self.exper_name.split()[0]])
+                         color=Color[self.exper_name.split()[0]], alpha=alpha)
             else:
                 plt.plot(x1, interp(x1), linestyle=linestyle,  linewidth=linewidth,
-                         color=Color[self.exper_name.split()[0]])
+                         color=Color[self.exper_name.split()[0]], alpha=alpha)
             return x1, interp(x1)
 
-    def plot_crosses(self, crosses, linewidth=3, plot_show=True):
+    def plot_crosses(self, crosses, linewidth=3, plot_show=True, alpha=1):
         int_resp = crosses[0]
 
         def xy_points(indices):
@@ -190,15 +195,15 @@ class PlotData:
 
         x, y, xerr, yerr = xy_points(indices)
         print(x, y, xerr, yerr)
-        plt.errorbar(x, y, xerr=xerr, yerr=yerr,
-                     ecolor=Color[self.exper_name], linewidth=0, elinewidth=3,
+        plt.errorbar(x, y, xerr=xerr, yerr=yerr, ecolor=Color[self.exper_name],
+                     alpha=alpha,  linewidth=0, elinewidth=3,
                      capsize=linewidth + 1, capthick=linewidth)
 
         if plot_show:
             plt.show()
 
     def __call__(self, upper_limit, lower_limit=None, kind=None, linewidth=3,
-                 fill=True, alpha=0.4, plot_dots=True, plot_show=True):
+                 fill=True, alpha=1, plot_dots=True, plot_show=True):
         ''' Make plots for the upper limits.
         Input:
             upper_limit: list of lists
@@ -211,6 +216,8 @@ class PlotData:
                 Width of the plotted line.
             fill: bool, optional
                 If there is a lower_limit, fill between the upper and lower limit.
+            alpha: float, optional
+                Transparency parameter from 0 to 1.
             plot_dots: bool, optional
                 Whether the plot should show the data points or just the interpolation.
             plot_show: bool, optional
@@ -222,10 +229,10 @@ class PlotData:
             linewidth = 0
 
         x_upper, y_upper = self.plot_limits(upper_limit, kind, linewidth, linestyle,
-                                            dashes, plot_dots)
+                                            dashes, plot_dots, alpha=alpha)
         if lower_limit is not None:
             x_lower, y_lower = self.plot_limits(lower_limit, kind, linewidth, linestyle,
-                                                dashes, plot_dots)
+                                                dashes, plot_dots, alpha=alpha)
             if fill:
                 plt.fill_between(x_lower, y_lower, y_upper,
                                  color=Color[self.exper_name.split()[0]], alpha=alpha)
@@ -406,7 +413,7 @@ class RunProgram:
             self.exper.Region(delta, CL, output_file, output_file_lower,
                               output_file_upper)
 
-    def plot_limits(self, exper_name, confidence_levels, HALO_DEP, plot_dots):
+    def plot_limits(self, exper_name, confidence_levels, HALO_DEP, plot_dots, alpha=1):
         plot_data = PlotData(exper_name, HALO_DEP, plot_close=False)
         if HALO_DEP and exper_name.split()[0] in BinnedSignal_exper:
             PlotData.count[exper_name] = -1
@@ -418,7 +425,7 @@ class RunProgram:
                 lower_limit = np.loadtxt(output_file_lower)
                 upper_limit = np.loadtxt(output_file_upper)
                 plot_data(upper_limit, lower_limit=lower_limit, fill=(index < 2),
-                          plot_dots=plot_dots, plot_show=False)
+                          alpha=alpha, plot_dots=plot_dots, plot_show=False)
                 if index < 2:
                     PlotData.count[exper_name] -= 1
         else:
@@ -427,14 +434,14 @@ class RunProgram:
             # print("upper_limit = ", upper_limit)
             plot_data(upper_limit, plot_dots=plot_dots, plot_show=False)
 
-    def plot_crosses(self, exper_name, HALO_DEP):
+    def plot_crosses(self, exper_name, HALO_DEP, alpha=1):
         plot_data = PlotData(exper_name, HALO_DEP, plot_close=False)
         output_file = self.output_file_no_extension + ".dat"
         if exper_name == "CDMSSi2012":
             output_file = output_file.replace("UpperLimit", "BinResponseBoxlike")
         output_file = output_file.replace("CDMSSi2012", "CDMSSi2013")
         crosses = np.loadtxt(output_file)
-        plot_data.plot_crosses(crosses, plot_show=False)
+        plot_data.plot_crosses(crosses, alpha=alpha, plot_show=False)
 
     def plot_EHI_band(self, exper_name, confidence_levels, HALO_DEP, extra_tail,
                       plot_dots):
@@ -582,7 +589,9 @@ class RunProgram:
         # make plot
         if MAKE_PLOT and not np.any(EHI_METHOD[:-1]):
             try:
-                self.plot_limits(exper_name, confidence_levels, HALO_DEP, plot_dots)
+                print(quenching)
+                self.plot_limits(exper_name, confidence_levels, HALO_DEP, plot_dots,
+                                 alpha=transparency.get(quenching, 1))
             except np.linalg.linalg.LinAlgError:
                 pass
 

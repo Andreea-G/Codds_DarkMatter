@@ -76,10 +76,13 @@ line_dashes = {"LUX2013zero": (3, 4), "LUX2013one": (8, 4, 3, 4, 3, 4),
                "LUX2013three": (8, 4, 3, 4), "LUX2013five": (8, 4), "LUX2013many": None,
                "SHM_eta0": (8, 4), "SHM_eta1": (3, 4)
                }
-''' Legend names
+''' Legend names, in order of appearence in the legend for the correspomding experiments
+that appear in the plot.
 '''
-legend_names = OrderedDict([("DAMA$_1$", ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]),
-                            ("DAMA$_0", ["DAMA2010NaSmRebinned_TotRateLimit"]),
+legend_names = OrderedDict([("DAMA$_0", ["DAMA2010NaSmRebinned_TotRateLimit"]),
+                            ("DAMA$_1$", ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned",
+                                          "DAMA2010NaSmRebinned DAMA2010ISmRebinned",
+                                          "DAMA2010ISmRebinned DAMA2010NaSmRebinned"]),
                             ("CDMS-II-Si", ["CDMSSi2012", "CDMSSi2012_EHI"]),
                             ("SuperCDMS", ["SuperCDMS"]),
                             ("CDMSlite", ["CDMSlite2013CoGeNTQ"]),
@@ -88,9 +91,16 @@ legend_names = OrderedDict([("DAMA$_1$", ["DAMA2010NaSmRebinned", "DAMA2010ISmRe
                             ("LUX", ["LUX2013zero", "LUX2013one", "LUX2013three",
                                      "LUX2013five", "LUX2013many"]),
                             ("PICASSO", ["PICASSO"]), ("KIMS", ["KIMS2012"]),
-                            ("SHM ($\sigma_p = 10^{-40}$ cm$^2$)",
+                            ("SHM $(\sigma_p = 10^{-40}\mathrm{ cm}^2)$",
                              ["SHM_eta0", "SHM_eta1"])
                             ])
+''' Transparency parameter for filling regions, depending on the quenching factor.
+'''
+transp_list = [0.6, 0.4]
+transparency = {0.4: transp_list[0], 0.09: transp_list[0],
+                (0.4, 0.09): transp_list[0], (0.09, 0.4): transp_list[0],
+                0.3: transp_list[1], 0.06: transp_list[1],
+                (0.3, 0.06): transp_list[1], (0.06, 0.3): transp_list[1]}
 
 
 def confidence_level(sigma):
@@ -338,7 +348,8 @@ def GaussianFFSD(ER, A, mT):
     return np.exp(-x**2 / 4.)
 
 ''' Form factor options are used to select the correct FF depending on the type of
-interaction (spin-independent, spin-dependent with axial-vector or pseudo-scalar coupling).
+interaction (spin-independent, spin-dependent with axial-vector or pseudo-scalar
+coupling).
 '''
 FFSI_options = {'HelmFF': HelmFF,
                 }
@@ -462,7 +473,8 @@ def eta1Maxwellian(vmin, vobs, v0bar, vesc):
     ''' Same as eta0Maxwellian, but this is the modulation velocity integral
     eta1 = d eta0 / d vobs * delta_v.
         delta_v = v_Earth * cos(gamma) where the velocity of the Earth is
-    v_Earth = 30 km/s and is inclined at an angle of gamma = 60 deg wrt the galactic plane.
+    v_Earth = 30 km/s and is inclined at an angle of gamma = 60 deg wrt the
+    galactic plane.
     Returns:
         eta1: float
     '''
