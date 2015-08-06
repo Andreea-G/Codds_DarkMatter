@@ -2,10 +2,8 @@
 """
 Created on Sat Feb 28 21:41:09 2015
 
-@author: andreea
+@author: Andreea
 """
-
-from main import scattering_types as scattering
 
 
 def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
@@ -148,7 +146,8 @@ def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
 
 ''' List of input values of the form (fn, delta, mPhi).
 '''
-if 'SI' in scattering[0]:
+scattering = 'SI'
+if scattering == 'SI':
     input_list = [(1, 0, 1000.), (1, -50, 1000.), (1, -200, 1000.), (1, -500, 1000.),  # 0 - 3
                   (-0.8, 0, 1000.), (-0.8, -50, 1000.), (-0.8, -200, 1000.), (-0.8, -500, 1000.),  # 4 - 7
                   (-0.7, 0, 1000.), (-0.7, -50, 1000.), (-0.7, -200, 1000.)]  # 8 - 10
