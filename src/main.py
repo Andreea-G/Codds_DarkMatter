@@ -14,10 +14,10 @@ def main():
         ["SuperCDMS",  # 0
          "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many",  # 1 - 5
          "SIMPLEModeStage2", "PICASSO", "KIMS2012", "XENON10", "XENON100",  # 6 - 10
-         "CDMSlite2013CoGeNTQ", "CDMSSi2012", "CDMSSiGeArtif", "CDMSSiArtif", "CDMSSi2013",  # 11 - 15
-         "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned", "DAMA2010NaSmRebinned_TotRateLimit",  # 16 - 18
-         "DAMA2010NaSmRebinned DAMA2010ISmRebinned", "DAMA2010ISmRebinned DAMA2010NaSmRebinned",  # 19 - 20
-         "SHM_eta0", "SHM_eta1"]  # 21 - 22
+         "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned", "DAMA2010NaSmRebinned_TotRateLimit",  # 11 - 13
+         "DAMA2010NaSmRebinned DAMA2010ISmRebinned", "DAMA2010ISmRebinned DAMA2010NaSmRebinned",  # 14 - 15
+         "CDMSlite2013CoGeNTQ", "CDMSSi2012", "CDMSSiGeArtif", "CDMSSiArtif",  # 16 - 19
+         "SHM_eta0", "SHM_eta1"]  # 20 - 21
 
     # Give input parameters
 
@@ -40,7 +40,7 @@ def main():
 
     scattering_types = ['SI']
     input_indices = [1]
-    exper_indices = [0, 1, 2, 3, 4, 5, 10, 11, 12, 21]
+    exper_indices = [0, 1, 2, 3, 4, 5, 10, 16, 17, 20]
     OUTPUT_MAIN_DIR = "../Output_Band/"
     filename_tail_list = [""]
     extra_tail = "_mix"
@@ -58,10 +58,12 @@ def main():
     # inp.initial_energy_bin = [3, 6]
     # inp.confidence_levels.extend([confidence_level(s) for s in [3, 5]])
     inp.log_sigma_p = -39
+    # inp.qDAMANa_list = [0.3]
 
     try:
         plt.close()
         xlim = None
+        # ylim = None
         ylim = [-28, -20]
         inp.RunProgram(EXPORT_PLOT=EXPORT_PLOT, xlim=xlim, ylim=ylim)
         if MAKE_PLOT or EHI_METHOD.get('ConfidenceBandPlot', F):
