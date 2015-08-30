@@ -21,7 +21,7 @@ def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
         (vmin_min, vmin_max, vmin_step): tuple (float, float, int)
              DM mass range and number or steps
     """
-    if exper_name == "superCDMS":
+    if exper_name == "SuperCDMS":
         num_steps = 60
         mx_range_options = {(0, 1000.): (5, 100, num_steps),
 #        mx_range_options = {(0, 1000.): (7, 100, num_steps),
