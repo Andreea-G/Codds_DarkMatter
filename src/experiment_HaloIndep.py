@@ -17,7 +17,7 @@ import os
 
 
 class Experiment_HaloIndep(Experiment):
-    ''' Base class that implements the halo-independent analysis common to all
+    """ Base class that implements the halo-independent analysis common to all
     experiments, using vmin as independent variable in the integration.
     Input:
         exper_name: string
@@ -29,7 +29,7 @@ class Experiment_HaloIndep(Experiment):
                 - 'SDPS' (spin-independent, pseudo-scalar)
         mPhi: float, optional
             The mass of the mediator. If not given, it corresponds to contact interaction.
-    '''
+    """
     def __init__(self, exper_name, scattering_type, mPhi=mPhiRef):
         Experiment.__init__(self, exper_name, scattering_type, mPhi)
         if self.energy_resolution_type == "Dirac":
@@ -38,7 +38,7 @@ class Experiment_HaloIndep(Experiment):
             self.Response = self._Response_Finite
 
     def DifferentialResponse(self, Eee, qER, const_factor):
-        ''' Differential response function d**2 R / (d Eee d ER)
+        """ Differential response function d**2 R / (d Eee d ER)
             NOT including the velocity integral eta0
         Input:
             Eee: float or ndarray
@@ -47,7 +47,7 @@ class Experiment_HaloIndep(Experiment):
                 q * ER for quenching factor q and recoil energy ER.
             const_factor: ndarray
                 Factors entering the differential response that do not depend on Eee.
-        '''
+        """
         self.count_diffresponse_calls += 1
         r_list = const_factor * self.Efficiency(Eee) * \
             np.array([self.ResolutionFunction(Eee, qer, self.EnergyResolution(qer))
@@ -55,11 +55,11 @@ class Experiment_HaloIndep(Experiment):
         return r_list.sum()
 
     def ConstFactor(self, vmin, mx, fp, fn, delta, sign):
-        ''' Collects the factors that don't depend on the measured energy Eee,
+        """ Collects the factors that don't depend on the measured energy Eee,
         so they only need to be computed once in Response function.
         Returns:
             (ER, qER, const_factor): tuple
-        '''
+        """
         ER = ERecoilBranch(vmin, self.mT, mx, delta, sign)
         q = self.QuenchingFactor(ER)
         qER = q * ER
@@ -70,20 +70,20 @@ class Experiment_HaloIndep(Experiment):
         return (ER, qER, const_factor)
 
     def DifferentialResponse_Full(self, vmin, Eee, mx, fp, fn, delta, sign):
-        ''' Differential response function d**2 R / (d Eee d ER)
+        """ Differential response function d**2 R / (d Eee d ER)
             NOT including the velocity integral eta0
             Same as DifferentialResponse, but computed given full input parameters,
         instead of the pre-computed const_factor.
-        '''
+        """
         (ER, qER, const_factor) = self.ConstFactor(vmin, mx, fp, fn, delta, sign)
         return self.DifferentialResponse(Eee, qER, const_factor)
 
     def _Response_Finite(self, vmin, Eee1, Eee2, mx, fp, fn, delta):
-        ''' Response function integral d**2 R / (d Eee d ER) between measured energies
+        """ Response function integral d**2 R / (d Eee d ER) between measured energies
         Eee1 and Eee2.
             NOT including eta0.
             For any finite resolution function (i.e. other than Dirac Delta).
-        '''
+        """
         self.count_response_calls += 1
         if delta == 0:
             branches = [1]
@@ -100,11 +100,11 @@ class Experiment_HaloIndep(Experiment):
         return 0
 
     def _Response_Dirac(self, vmin, Eee1, Eee2, mx, fp, fn, delta):
-        ''' Response function integral d**2 R / (d Eee d ER) between measured energies
+        """ Response function integral d**2 R / (d Eee d ER) between measured energies
         Eee1 and Eee2.
             NOT including eta0.
             For Dirac Delta resolution function.
-        '''
+        """
         self.count_response_calls += 1
         if delta == 0:
             branches = [1]
@@ -127,11 +127,11 @@ class Experiment_HaloIndep(Experiment):
         return r_list_sum
 
     def IntegratedResponse(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
-        ''' Integrated Response Function between measured energies Eee1 and Eee2,
+        """ Integrated Response Function between measured energies Eee1 and Eee2,
         and all recoil energies ER.
             NOT including eta0.
             For any finite resolution function (i.e. other than Dirac Delta).
-        '''
+        """
         midpoints = []
         integr = integrate.quad(self.Response, vmin1, vmin2,
                                 args=(Eee1, Eee2, mx, fp, fn, delta), points=midpoints,
@@ -140,7 +140,7 @@ class Experiment_HaloIndep(Experiment):
 
 
 class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
-    ''' Class for experiments using the Maximum Gap Method.
+    """ Class for experiments using the Maximum Gap Method.
     Input:
         exper_name: string
             Name of experiment.
@@ -151,7 +151,7 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
         quenching_factor: float, optional
             Quenching factor. If not given, the default used is specified in the data
             modules.
-    '''
+    """
     def __init__(self, exper_name, scattering_type, mPhi=mPhiRef, quenching_factor=None):
         super().__init__(exper_name, scattering_type, mPhi)
         module = import_file(INPUT_DIR + exper_name + ".py")
@@ -218,7 +218,7 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
 
 
 class PoissonExperiment_HaloIndep(Experiment_HaloIndep):
-    ''' Class for experiments with Poisson analysis.
+    """ Class for experiments with Poisson analysis.
     Input:
         exper_name: string
             Name of experiment.
@@ -229,7 +229,7 @@ class PoissonExperiment_HaloIndep(Experiment_HaloIndep):
         quenching_factor: float, optional
             Quenching factor. If not given, the default used is specified in the data
             modules.
-    '''
+    """
     def __init__(self, exper_name, scattering_type, mPhi=mPhiRef, quenching_factor=None):
         super().__init__(exper_name, scattering_type, mPhi)
         module = import_file(INPUT_DIR + exper_name + ".py")
@@ -264,7 +264,7 @@ class PoissonExperiment_HaloIndep(Experiment_HaloIndep):
 
 
 class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
-    ''' Class for experiments with Gaussian analysis.
+    """ Class for experiments with Gaussian analysis.
     Input:
         exper_name: string
             Name of experiment.
@@ -275,7 +275,7 @@ class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
         quenching_factor: float, optional
             Quenching factor. If not given, the default used is specified in the data
             modules.
-    '''
+    """
     def __init__(self, exper_name, scattering_type, mPhi=mPhiRef, quenching_factor=None):
         super().__init__(exper_name, scattering_type, mPhi)
         module = import_file(INPUT_DIR + exper_name + ".py")
@@ -317,7 +317,7 @@ class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
 
 
 class Crosses_HaloIndep(Experiment_HaloIndep):
-    ''' Class for finding the crosses for experients with potential signal and
+    """ Class for finding the crosses for experients with potential signal and
     binned data.
     Input:
         exper_name: string
@@ -329,7 +329,7 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
         quenching_factor: float, optional
             Quenching factor. If not given, the default used is specified in the data
             modules.
-    '''
+    """
     def __init__(self, exper_name, scattering_type, mPhi=mPhiRef, quenching_factor=None):
         super().__init__(exper_name, scattering_type, mPhi)
         module = import_file(INPUT_DIR + exper_name + ".py")
@@ -502,12 +502,12 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
 
 
 class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
-    ''' Class for finding the best-fit regions for the DAMA experiment
+    """ Class for finding the best-fit regions for the DAMA experiment
     when considering the combined analysis of Na and I.
     Constructor:
         A list or tuple of 2 experiment names must be given, and, if not None, then
     a list or tuple of 2 quenching_factors, one for Na and one for I.
-    '''
+    """
     def __init__(self, exper_name, scattering_type, mPhi=mPhiRef, quenching_factor=None):
         exper_name = exper_name.split()
         super().__init__(exper_name[0], scattering_type, mPhi)

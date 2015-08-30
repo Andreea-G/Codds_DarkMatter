@@ -26,7 +26,7 @@ EHIBools.__new__.__defaults__ = tuple([F] * len_EHIBools)
 
 
 class Input:
-    ''' Class implementing the input parameters to be passed to run_program().
+    """ Class implementing the input parameters to be passed to run_program().
     Input:
         HALO_DEP: bool, optional
             Whether the analysis is halo-dependent or halo-independent.
@@ -66,7 +66,7 @@ class Input:
         sigma_dev_list: list, optional
             List of how many sigma deviations away. This then gets converted into
             confidence levels.
-    '''
+    """
     def __init__(self, HALO_DEP,
                  implemented_exper_list, exper_indices=slice(None),
                  input_indices=slice(None),
@@ -137,20 +137,20 @@ class Input:
         return zip(*q)
 
     def _GetKwargs(self):
-        ''' Collects the input parameters that are to be passed to run_program() are the
+        """ Collects the input parameters that are to be passed to run_program() are the
         member variables of this class, that are not ending in '_list' and are not hidden.
         Returns:
             kwargs: dictionary
                 Keyward arguments that will be passed as input to run_program().
-        '''
+        """
         attributes = inspect.getmembers(self, lambda a: not(inspect.isroutine(a)))
         kwargs = dict([a for a in attributes
                        if '__' not in a[0] and '_list' not in a[0]])
         return kwargs
 
     def _Run_HaloIndep(self, EXPORT_PLOT, xlim, ylim):
-        ''' Run the program for halo-independent analysis.
-        '''
+        """ Run the program for halo-independent analysis.
+        """
         module = import_file(input_filename_list[self.HALO_DEP] + ".py")
         for self.scattering_type, self.filename_tail, \
                 (self.mx, self.fn, self.delta, self.mPhi) \
@@ -200,8 +200,8 @@ class Input:
         return
 
     def _Run_HaloDep(self, EXPORT_PLOT, xlim, ylim):
-        ''' Run the program for halo-dependent analysis.
-        '''
+        """ Run the program for halo-dependent analysis.
+        """
         module = import_file(input_filename_list[self.HALO_DEP] + ".py")
         for self.scattering_type, self.filename_tail, \
                 (self.fn, self.delta, self.mPhi) \
@@ -241,8 +241,8 @@ class Input:
         return
 
     def RunProgram(self, EXPORT_PLOT=False, xlim=None, ylim=None):
-        ''' Main run of the program.
-        '''
+        """ Main run of the program.
+        """
         if self.HALO_DEP:
             self._Run_HaloDep(EXPORT_PLOT, xlim, ylim)
         else:

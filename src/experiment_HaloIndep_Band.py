@@ -28,12 +28,12 @@ ALLOW_MOVE = T
 
 
 class ConstraintsFunction(object):
-    ''' Class to implement the constraints function that will be passed as an argunent
+    """ Class to implement the constraints function that will be passed as an argunent
     to the minimization routines.
     Input:
         args: Arguments needed for calculating the constraints:
             vminStar, logetaStar, vminStar_index
-    '''
+    """
     def __init__(self, *args):
         self.vminStar = args[0]
         self.logetaStar = args[1]
@@ -41,7 +41,7 @@ class ConstraintsFunction(object):
         self.vmin_max = 2000
 
     def __call__(self, x, close=True):
-        '''
+        """
         Input:
             x: ndarray
         Returns:
@@ -52,7 +52,7 @@ class ConstraintsFunction(object):
              9 - 12: sorted array: 2 * (x.size/2 - 1) constraints = 4 for x.size/2 = 3
             13 - 15: vminStar_index: x.size/2 constraints = 3 for x.size/2 = 3
             16 - 18: vminStar and logetaStar: x.size/2 constraints = 3 for x.size/2 = 3
-        '''
+        """
         constraints = np.concatenate([x[:x.size/2], self.vmin_max - x[:x.size/2], -x[x.size/2:],
                                       np.diff(x[:x.size/2]), np.diff(-x[x.size/2:]),
                                       (x[:x.size/2] - self.vminStar) * (-x[x.size/2:] + self.logetaStar),
@@ -70,7 +70,7 @@ class ConstraintsFunction(object):
 
 
 class Experiment_EHI(Experiment_HaloIndep):
-    ''' Class implementing the extended maximum likelihood halo-independent (EHI)
+    """ Class implementing the extended maximum likelihood halo-independent (EHI)
     method to obtain the confidence band for experiments with potential signals and
     unbinned data (arXiv:1507.03902).
     Input:
@@ -86,7 +86,7 @@ class Experiment_EHI(Experiment_HaloIndep):
         method: str, optional
             Type of minimization solver to be passed as a parameter to the minimization
                 routine. Can be 'SLSQP' or 'COBYLA'.
-    '''
+    """
     def __init__(self, expername, scattering_type, mPhi=mPhiRef, method='SLSQP'):
         super().__init__(expername, scattering_type, mPhi)
         module = import_file(INPUT_DIR + expername + ".py")
@@ -96,15 +96,15 @@ class Experiment_EHI(Experiment_HaloIndep):
         self.method = method
 
     def _VMinSortedList(self, mx, fp, fn, delta):
-        ''' Computes the list of vmin corresponsing to measured recoil energies,
+        """ Computes the list of vmin corresponsing to measured recoil energies,
         sorted in increasing order. Will be useful as starting guesses.
-        '''
+        """
         self.vmin_sorted_list = np.sort(VMin(self.ERecoilList, self.mT[0], mx, delta))
         return
 
     def ResponseTables(self, vmin_min, vmin_max, vmin_step, mx, fp, fn, delta,
                        output_file_tail):
-        ''' Computes response tables
+        """ Computes response tables
             - self.diff_response_tab is a table of [vmin, DifferentialResponse(Eee_i)]
         pairs for each vmin in the range [vminmin, vminmax], corresponding to measured
         recoil energies Eee_i. It is a 3D matrix where
@@ -126,7 +126,7 @@ class Experiment_EHI(Experiment_HaloIndep):
                 Tag to be added to the file name since the results for
                 self.vmin_sorted_list, self.diff_response_tab and self.response_tab
                 are each written to files.
-        '''
+        """
         self._VMinSortedList(mx, fp, fn, delta)
         file = output_file_tail + "_VminSortedList.dat"
         print(file)
@@ -193,7 +193,7 @@ class Experiment_EHI(Experiment_HaloIndep):
 
     def PlotTable(self, func, dimension=0, xlim=None, ylim=None,
                   title=None, plot_close=True, plot_show=True, show_zero_axis=False):
-        ''' Plots response tables.
+        """ Plots response tables.
         Input:
             func: callable
                 Function or list of functions of v that should be plotted.
@@ -208,7 +208,7 @@ class Experiment_EHI(Experiment_HaloIndep):
                 Whether to call plt.close() before and plt.show() after.
             show_zero_axis: bool
                 Whether to show a horizontal line at zero.
-        '''
+        """
         if plot_close:
             plt.close()
         if dimension == 0:
@@ -235,8 +235,8 @@ class Experiment_EHI(Experiment_HaloIndep):
             plt.show()
 
     def ImportResponseTables(self, output_file_tail, plot=True):
-        ''' Imports the data for the response tables from files.
-        '''
+        """ Imports the data for the response tables from files.
+        """
         file = output_file_tail + "_VminSortedList.dat"
         with open(file, 'r') as f_handle:
             self.vmin_sorted_list = np.loadtxt(f_handle)
@@ -282,7 +282,7 @@ class Experiment_EHI(Experiment_HaloIndep):
 
     def _MinusLogLikelihood(self, vars_list, vminStar=None, logetaStar=None,
                             vminStar_index=None):
-        ''' Compute -log(L)
+        """ Compute -log(L)
         Input:
             vars_list: ndarray
                 List of variables [vmin_1, ..., vmin_No, log(eta_1), ..., log(eta_No)]
@@ -290,7 +290,7 @@ class Experiment_EHI(Experiment_HaloIndep):
                 Values of fixed vmin^* and log(eta)^*.
         Returns:
             -log(L): float
-        '''
+        """
         if vminStar is None:
             vmin_list_w0 = vars_list[: vars_list.size/2]
             logeta_list = vars_list[vars_list.size/2:]
@@ -314,7 +314,7 @@ class Experiment_EHI(Experiment_HaloIndep):
 
     def MinusLogLikelihood(self, vars_list, constr_func=None, vminStar=None,
                            logetaStar=None, vminStar_index=None):
-        ''' Computes -log(L) and tests whether constraints are satisfied.
+        """ Computes -log(L) and tests whether constraints are satisfied.
         Input:
             vars_list: ndarray
                 List of variables [vmin_1, ..., vmin_No, log(eta_1), ..., log(eta_No)].
@@ -330,7 +330,7 @@ class Experiment_EHI(Experiment_HaloIndep):
             -log(L) if all constraints are valid, and the result of an artificial
                 function that grows with the invalid constraints if not all constraints
                 are valid.
-        '''
+        """
         constraints = constr_func(vars_list)
         constr_not_valid = constraints < 0
         if DEBUG_FULL:
@@ -356,7 +356,7 @@ class Experiment_EHI(Experiment_HaloIndep):
                 raise
 
     def OptimalLikelihood(self, output_file_tail, logeta_guess):
-        ''' Finds the best-fit piecewise constant eta function corresponding to the
+        """ Finds the best-fit piecewise constant eta function corresponding to the
         minimum MinusLogLikelihood, and prints the results to file (value of the minimum
         MinusLogLikelihood and the corresponding values of vmin, logeta steps.
         Input:
@@ -364,7 +364,7 @@ class Experiment_EHI(Experiment_HaloIndep):
                 Tag to be added to the file name.
             logeta_guess: float
                 Guess for the value of log(eta) in the minimization procedure.
-        '''
+        """
         self.ImportResponseTables(output_file_tail, plot=False)
         vars_guess = np.append(self.vmin_sorted_list,
                                logeta_guess * np.ones(self.vmin_sorted_list.size))
@@ -372,9 +372,9 @@ class Experiment_EHI(Experiment_HaloIndep):
         vmin_max = self.vmin_linspace[-1]
 
         def constr_func(x, vmin_max=vmin_max):
-            ''' 0 -  8: bounds: 3 * (x.size/2) constraints = 9 for x.size/2 = 3
+            """ 0 -  8: bounds: 3 * (x.size/2) constraints = 9 for x.size/2 = 3
                 9 - 12: sorted array: 2 * (x.size/2 - 1) constraints = 4 for x.size/2 = 3
-            '''
+            """
             constraints = np.concatenate([x[:x.size/2], vmin_max - x[:x.size/2],
                                           -x[x.size/2:],
                                           np.diff(x[:x.size/2]), np.diff(-x[x.size/2:])])
@@ -409,14 +409,14 @@ class Experiment_EHI(Experiment_HaloIndep):
         return
 
     def ImportOptimalLikelihood(self, output_file_tail, plot=False):
-        ''' Import the minumum -log(L) and the locations of the steps in the best-fit
+        """ Import the minumum -log(L) and the locations of the steps in the best-fit
         logeta function.
         Input:
             output_file_tail: string
                 Tag to be added to the file name.
             plot: bool, optional
                 Whether to plot response tables.
-        '''
+        """
         self.ImportResponseTables(output_file_tail, plot=False)
         file = output_file_tail + "_GloballyOptimalLikelihood.dat"
         with open(file, 'r') as f_handle:
@@ -455,8 +455,8 @@ class Experiment_EHI(Experiment_HaloIndep):
                           xlim_percentage=(0., 1.1), ylim_percentage=(1.01, 0.99),
                           mark=None, color=None, linewidth=1,
                           plot_close=True, plot_show=True):
-        ''' Plots a step-like function, given the location of the steps.
-        '''
+        """ Plots a step-like function, given the location of the steps.
+        """
         if plot_close:
             plt.close()
         print(vmin_list)
@@ -482,8 +482,8 @@ class Experiment_EHI(Experiment_HaloIndep):
     def PlotOptimum(self, xlim_percentage=(0., 1.1), ylim_percentage=(1.01, 0.99),
                     color='red', linewidth=1,
                     plot_close=True, plot_show=True):
-        ''' Plots the best-fit eta(vmin) step function.
-        '''
+        """ Plots the best-fit eta(vmin) step function.
+        """
         self._PlotStepFunction(self.optimal_vmin, self.optimal_logeta,
                                xlim_percentage=xlim_percentage,
                                ylim_percentage=ylim_percentage,
@@ -494,8 +494,8 @@ class Experiment_EHI(Experiment_HaloIndep):
     def PlotConstrainedOptimum(self, vminStar, logetaStar, vminStar_index,
                                xlim_percentage=(0., 1.1), ylim_percentage=(1.01, 0.99),
                                plot_close=True, plot_show=True):
-        ''' Plots the eta(vmin) function given the location of vminStar and logetaStar.
-        '''
+        """ Plots the eta(vmin) function given the location of vminStar and logetaStar.
+        """
         self._PlotStepFunction(self.optimal_vmin, self.optimal_logeta,
                                plot_close=plot_close, plot_show=False)
         x = np.insert(self.constr_optimal_vmin, vminStar_index, vminStar)
@@ -510,7 +510,7 @@ class Experiment_EHI(Experiment_HaloIndep):
         return
 
     def _ConstrainedOptimalLikelihood(self, vminStar, logetaStar, vminStar_index):
-        ''' Finds the constrained minimum MinusLogLikelihood for given vminStar,
+        """ Finds the constrained minimum MinusLogLikelihood for given vminStar,
         logetaStar and vminStar_index.
         Input:
             vminStar, logetaStar: float
@@ -521,7 +521,7 @@ class Experiment_EHI(Experiment_HaloIndep):
         Returns:
             constr_optimal_logl: float
                 The constrained minimum MinusLogLikelihood
-        '''
+        """
         if DEBUG:
             print("~~~~~ vminStar_index =", vminStar_index)
         vmin_guess_left = np.array([self.optimal_vmin[ind]
@@ -645,7 +645,7 @@ class Experiment_EHI(Experiment_HaloIndep):
         return constr_optimum_log_likelihood
 
     def ConstrainedOptimalLikelihood(self, vminStar, logetaStar):
-        ''' Finds the constrained minimum MinusLogLikelihood for given vminStar,
+        """ Finds the constrained minimum MinusLogLikelihood for given vminStar,
         logetaStar. Finds the minimum for all vminStar_index, and picks the best one.
         Input:
             vminStar, logetaStar: float
@@ -655,7 +655,7 @@ class Experiment_EHI(Experiment_HaloIndep):
         Returns:
             constr_optimal_logl: float
                 The constrained minimum MinusLogLikelihood
-        '''
+        """
         vminStar_index = 0
         while vminStar_index < self.optimal_vmin.size and \
                 vminStar > self.optimal_vmin[vminStar_index]:
@@ -758,7 +758,7 @@ class Experiment_EHI(Experiment_HaloIndep):
 
     def VminSamplingList(self, output_file_tail, vmin_min, vmin_max, vmin_num_steps,
                          steepness_vmin=1.5, steepness_vmin_center=2.5, plot=False):
-        ''' Finds a non-linear way to sample the vmin range, such that more points are
+        """ Finds a non-linear way to sample the vmin range, such that more points are
         sampled near the location of the steps of the best-fit logeta function, and
         fewer in between. This is done by building a function of vmin that is steeper
         near the steps and flatter elsewhere, and the steeper this function the more
@@ -779,7 +779,7 @@ class Experiment_EHI(Experiment_HaloIndep):
                 and the rightmost step.
             plot: bool, optional
                 Whether to plot intermediate results such as the sampling function.
-        '''
+        """
         self.ImportOptimalLikelihood(output_file_tail)
         xmin = vmin_min
         xmax = vmin_max
@@ -870,14 +870,14 @@ class Experiment_EHI(Experiment_HaloIndep):
         return
 
     def OptimumStepFunction(self, vmin):
-        ''' Best-fit logeta as a function of vmin for the optimal log(L).
+        """ Best-fit logeta as a function of vmin for the optimal log(L).
         Input:
             vmin: float
                 Value of vmin for which to evaluate logeta.
         Returns:
             logeta: float
                 log(eta(vmin)) for the best-fit piecewise constant function.
-        '''
+        """
         index = 0
         while index < self.optimal_vmin.size and vmin > self.optimal_vmin[index]:
             index += 1
@@ -888,7 +888,7 @@ class Experiment_EHI(Experiment_HaloIndep):
     def VminLogetaSamplingTable(self, output_file_tail, logeta_percent_minus,
                                 logeta_percent_plus, logeta_num_steps,
                                 linear_sampling=True, steepness_logeta=1, plot=False):
-        ''' Finds a non-linear way to sample both the vmin and logeta range, such that
+        """ Finds a non-linear way to sample both the vmin and logeta range, such that
         more points are sampled near the location of the steps of the best-fit logeta
         function, and fewer in between. This uses the sampling in vmin done by
         VminSamplingList, and computes a non-linear sampling in logeta in a similar way
@@ -907,7 +907,7 @@ class Experiment_EHI(Experiment_HaloIndep):
                 Parameter related to the steepness of this sampling function in logeta.
             plot: bool, optional
                 Whether to plot intermediate results such as the sampling function.
-        '''
+        """
         print(self.optimal_vmin)
         print(self.optimal_logeta)
 
@@ -958,8 +958,8 @@ class Experiment_EHI(Experiment_HaloIndep):
         return
 
     def PlotSamplingTable(self, plot_close=False, plot_show=True, plot_optimum=True):
-        ''' Plots the sampling points in the vmin-logeta plane.
-        '''
+        """ Plots the sampling points in the vmin-logeta plane.
+        """
         if plot_close:
             plt.close()
         print("sampling_size =", self.vmin_logeta_sampling_table.shape)
@@ -973,7 +973,7 @@ class Experiment_EHI(Experiment_HaloIndep):
         return
 
     def GetLikelihoodTable(self, index, output_file_tail, logeta_index_range, extra_tail):
-        ''' Prints to file lists of the form [logetaStar_ij, logL_ij] needed for
+        """ Prints to file lists of the form [logetaStar_ij, logL_ij] needed for
         1D interpolation, where i is the index corresponding to vminStar_i and j is
         the index for each logetaStar. Each file corresponds to a different index i.
             Here only one file is written for a specific vminStar.
@@ -987,7 +987,7 @@ class Experiment_EHI(Experiment_HaloIndep):
                 If this is None, then the whole list of logetaStar is used.
             extra_tail: string
                 Additional tail to be added to filenames.
-        '''
+        """
         print('index =', index)
         print('output_file_tail =', output_file_tail)
         vminStar = self.vmin_logeta_sampling_table[index, 0, 0]
@@ -1022,7 +1022,7 @@ class Experiment_EHI(Experiment_HaloIndep):
 
     def LogLikelihoodList(self, output_file_tail, extra_tail="", processes=None,
                           vmin_index_list=None, logeta_index_range=None):
-        ''' Loops thorugh the list of all vminStar and calls GetLikelihoodTable,
+        """ Loops thorugh the list of all vminStar and calls GetLikelihoodTable,
         which will print the likelihood tables to files.
         Input:
             output_file_tail: string
@@ -1037,7 +1037,7 @@ class Experiment_EHI(Experiment_HaloIndep):
             logeta_index_range: tuple, optional
                 Atuple (index0, index1) between which logetaStar will be considered.
                 If not given, then the whole list of logetaStar is used.
-        '''
+        """
         if vmin_index_list is None:
             vmin_index_list = range(0, self.vmin_logeta_sampling_table.shape[0])
         else:
@@ -1065,7 +1065,7 @@ class Experiment_EHI(Experiment_HaloIndep):
 
     def ConfidenceBand(self, output_file_tail, delta_logL, interpolation_order,
                        extra_tail="", multiplot=True):
-        ''' Compute the confidence band.
+        """ Compute the confidence band.
         Input:
             output_file_tail: string
                 Tag to be added to the file name.
@@ -1080,7 +1080,7 @@ class Experiment_EHI(Experiment_HaloIndep):
             multiplot: bool, optional
                 Whether to plot log(L) as a function of logeta for each vmin, and the
                 horizontal line corresponding to a given delta_logL.
-        '''
+        """
         print("self.vmin_sampling_list =", self.vmin_sampling_list)
         self.vmin_logeta_band_low = []
         self.vmin_logeta_band_up = []
@@ -1203,8 +1203,8 @@ class Experiment_EHI(Experiment_HaloIndep):
         return
 
     def PlotConfidenceBand(self):
-        ''' Plot the confidence band and the best-fit function.
-        '''
+        """ Plot the confidence band and the best-fit function.
+        """
         plt.close()
         try:
             plt.plot(self.vmin_logeta_band_low[:, 0], self.vmin_logeta_band_low[:, 1], 'o-')
@@ -1217,7 +1217,7 @@ class Experiment_EHI(Experiment_HaloIndep):
         self.PlotOptimum(ylim_percentage=(1.2, 0.8), plot_close=F, plot_show=T)
 
     def ImportConfidenceBand(self, output_file_tail, delta_logL, extra_tail=""):
-        ''' Import the confidence band from file.
+        """ Import the confidence band from file.
         Input:
             output_file_tail: string
                 Tag to be added to the file name.
@@ -1226,7 +1226,7 @@ class Experiment_EHI(Experiment_HaloIndep):
                 unconstrained global minimum of MinusLogLikelihood.
             extra_tail: string, optional
                 Additional tail to be added to filenames.
-        '''
+        """
         delta_logL = round(delta_logL, 1)
         file = output_file_tail + "_FoxBand_low_deltalogL_" + str(delta_logL) + \
             extra_tail + ".dat"

@@ -23,7 +23,7 @@ def fun(f, q_in, q_out, verbose):
 
 
 def parmap(f, X, processes=multiprocessing.cpu_count(), verbose=True):
-    ''' Used instead of Pool.map function for parallel programming.
+    """ Used instead of Pool.map function for parallel programming.
         Works with lambdas and with member functions of classes.
     Input:
         f: callable
@@ -39,7 +39,7 @@ def parmap(f, X, processes=multiprocessing.cpu_count(), verbose=True):
     Returns:
         res: list
             List of f(x) for each x in X.
-    '''
+    """
     if processes is None:
         processes = multiprocessing.cpu_count()
     print("Number of processes = ", processes)

@@ -13,7 +13,7 @@ import parallel_map as par
 
 
 class Experiment_HaloIndep_ER(Experiment):
-    ''' Base class that implements the halo-independent analysis common to all
+    """ Base class that implements the halo-independent analysis common to all
     experiments, using the recoil energy ER as independent variable in the integration.
     Input:
         exper_name: string
@@ -25,7 +25,7 @@ class Experiment_HaloIndep_ER(Experiment):
                 - 'SDPS' (spin-independent, pseudo-scalar)
         mPhi: float, optional
             The mass of the mediator.
-    '''
+    """
     def __init__(self, expername, scattering_type, mPhi=mPhiRef):
         Experiment.__init__(self, expername, scattering_type, mPhi)
         if self.energy_resolution_type == "Dirac":
@@ -34,7 +34,7 @@ class Experiment_HaloIndep_ER(Experiment):
             self.IntegratedResponse = self._IntegratedResponse_Finite
 
     def DifferentialResponse(self, Eee, qER, const_factor):
-        ''' Differential response function d**2 R / (d Eee d vmin) in [1/kg/keV/(km/s)].
+        """ Differential response function d**2 R / (d Eee d vmin) in [1/kg/keV/(km/s)].
             NOT including the velocity integral eta0.
         Input:
             Eee: float or ndarray
@@ -43,18 +43,18 @@ class Experiment_HaloIndep_ER(Experiment):
                 q * ER for quenching factor q and recoil energy ER.
             const_factor: float or ndarray
                 Factors entering the differential response that do not depend on Eee.
-        '''
+        """
         self.count_diffresponse_calls += 1
         r_list = const_factor * self.Efficiency(Eee) * \
             self.ResolutionFunction(Eee, qER, self.EnergyResolution(qER))
         return r_list.sum()
 
     def ConstFactor(self, ER, ER1, ER2, mx, fp, fn, delta, sign):
-        ''' Collects the factors that don't depend on the measured energy Eee,
+        """ Collects the factors that don't depend on the measured energy Eee,
         so they only need to be computed once in Response function.
         Returns:
             (ER, qER, const_factor): tuple
-        '''
+        """
         qER = ER * self.QuenchingFactor(ER)
         efficiencyER = self.Efficiency_ER(ER)
         inrange = np.array([1 if (er1 - ER) * (ER-er2) >= 0 else 0
@@ -64,20 +64,20 @@ class Experiment_HaloIndep_ER(Experiment):
         return (qER, const_factor)
 
     def DifferentialResponse_Full(self, ER, Eee, ER1, ER2, mx, fp, fn, delta, sign):
-        ''' Differential response function d**2 R / (d Eee d ER)
+        """ Differential response function d**2 R / (d Eee d ER)
             NOT including the velocity integral eta0
             Same as DifferentialResponse, but computed given full input parameters,
         instead of the pre-computed const_factor.
-        '''
+        """
         (qER, const_factor) = self.ConstFactor(ER, ER1, ER2, mx, fp, fn, delta, sign)
         return self.DifferentialResponse(Eee, qER, const_factor)
 
     def _Response_Finite(self, ER, Eee1, Eee2, ER1, ER2, sign, mx, fp, fn, delta):
-        ''' Response function integral d**2 R / (d Eee d ER) between measured energies
+        """ Response function integral d**2 R / (d Eee d ER) between measured energies
         Eee1 and Eee2.
             NOT including eta0.
             For any finite resolution function (i.e. other than Dirac Delta).
-        '''
+        """
         self.count_response_calls += 1
         (qER, const_factor) = self.ConstFactor(ER, ER1, ER2,
                                                mx, fp, fn, delta, sign)
@@ -87,11 +87,11 @@ class Experiment_HaloIndep_ER(Experiment):
         return result
 
     def Response_Dirac(self, ER, Eee1, Eee2, ER1, ER2, sign, mx, fp, fn, delta):
-        ''' Response function integral d**2 R / (d Eee d ER) between measured energies
+        """ Response function integral d**2 R / (d Eee d ER) between measured energies
         Eee1 and Eee2.
             NOT including eta0.
             For Dirac Delta resolution function.
-        '''
+        """
         self.count_response_calls += 1
         qER = ER * self.QuenchingFactor(ER)
         integrated_delta = 1. if Eee1 <= qER < Eee2 else 0.
@@ -107,10 +107,10 @@ class Experiment_HaloIndep_ER(Experiment):
         return r_list_sum
 
     def _IntegratedResponse_Dirac(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
-        ''' Integrated Response Function between measured energies Eee1 and Eee2,
+        """ Integrated Response Function between measured energies Eee1 and Eee2,
         and all recoil energies ER.
             NOT including eta0.
-        '''
+        """
         vdelta = VminDelta(self.mT, mx, delta)
         if delta > 0:
             if vmin2 < min(vdelta):
@@ -140,10 +140,10 @@ class Experiment_HaloIndep_ER(Experiment):
         return result
 
     def _IntegratedResponse_Finite(self, vmin1, vmin2, Eee1, Eee2, mx, fp, fn, delta):
-        ''' Integrated Response Function between measured energies Eee1 and Eee2,
+        """ Integrated Response Function between measured energies Eee1 and Eee2,
         and all recoil energies ER.
             NOT including eta0.
-        '''
+        """
         vdelta = VminDelta(self.mT, mx, delta)
         if delta > 0:
             if vmin2 < min(vdelta):

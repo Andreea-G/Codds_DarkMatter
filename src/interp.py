@@ -10,14 +10,14 @@ import numpy as np
 
 
 class interp1d:
-    '''
+    """
     This is based off of scipy.interpolate.interp1d, but is restricted to linear
     interpolation and lacks most of the checks and robustness of the scipy version.
     It is a faster, but must be run correctly (undefined behavior otherwise).
     Input for initialization:
         x, y: ndarray
             Two numpy.arrays x and y sorted in increasing order by x.
-    '''
+    """
     def __init__(self, x, y, kind="linear"):
         self.x = x
         self.y = y

@@ -8,7 +8,7 @@ from globalfnc import VMin
 
 
 def Vmin_range(exper_name, mx, delta, mPhi=1000., quenching=None, EHI_METHOD=False):
-    ''' Range and number of steps for vmin.
+    """ Range and number of steps for vmin.
     Input:
         exper_name: string
             Name of experiment.
@@ -25,7 +25,7 @@ def Vmin_range(exper_name, mx, delta, mPhi=1000., quenching=None, EHI_METHOD=Fal
     Returns:
         (mx_min, mx_max, num_steps): tuple (float, float, int)
             DM mass range and number or steps.
-    '''
+    """
     vmin_range_options = {}
     if exper_name == "CDMSSi2012" and EHI_METHOD:
         vmin_step = vmin_min = 1
@@ -65,7 +65,7 @@ def Vmin_range(exper_name, mx, delta, mPhi=1000., quenching=None, EHI_METHOD=Fal
 
 
 def Steepness(exper_name, mx, delta, mPhi=1000.):
-    ''' Steepness parameters used for nonlinear sampling in vminStar and logetaStar,
+    """ Steepness parameters used for nonlinear sampling in vminStar and logetaStar,
     for the EHI method. The higher the steepnesses the more points are taken close to
     the steps in the piecewise constant best-fit logeta(vmin) function.
     Input:
@@ -80,7 +80,7 @@ def Steepness(exper_name, mx, delta, mPhi=1000.):
     Returns:
         steepness: tuple, optional
             (steepness_vmin, steepness_vmin_center, steepness_logeta)
-    '''
+    """
     if exper_name != "CDMSSi2012":
         return None
     steepness_options = {(9., 0, 1000.): (1., 2.5, 1),
@@ -92,7 +92,7 @@ def Steepness(exper_name, mx, delta, mPhi=1000.):
 
 
 def Logeta_guess(exper_name, mx, delta, mPhi=1000.):
-    ''' Guessing value of logeta for the best-fit piecewise-constant logeta(vmin)
+    """ Guessing value of logeta for the best-fit piecewise-constant logeta(vmin)
     function, for the EHI method.
     Input:
         exper_name: string
@@ -105,7 +105,7 @@ def Logeta_guess(exper_name, mx, delta, mPhi=1000.):
             Mass of mediator.
     Returns:
         logeta_guess: float
-    '''
+    """
     if exper_name != "CDMSSi2012":
         return None
     logeta_options = {(9., 0, 1000.): -21,
@@ -116,7 +116,7 @@ def Logeta_guess(exper_name, mx, delta, mPhi=1000.):
 
 
 def Vmin_EHIBand_range(exper_name, mx, delta, mPhi=1000.):
-    ''' VminStar range and number of steps, used for calculating the EHI confidence band.
+    """ VminStar range and number of steps, used for calculating the EHI confidence band.
     Input:
         exper_name: string
             Name of experiment.
@@ -128,7 +128,7 @@ def Vmin_EHIBand_range(exper_name, mx, delta, mPhi=1000.):
             Mass of mediator.
     Returns:
         (vmin_Band_min, vmin_Band_max, vmin_Band_numsteps): tuple (float, float, int)
-    '''
+    """
     if exper_name != "CDMSSi2012":
         return None
     options = {(9., 0, 1000.): (0, 1000, 100),
@@ -138,8 +138,8 @@ def Vmin_EHIBand_range(exper_name, mx, delta, mPhi=1000.):
     return options[(mx, delta, mPhi)]
 
 
-''' List of input values of the form (mx, fn, delta, mPhi).
-'''
+""" List of input values of the form (mx, fn, delta, mPhi).
+"""
 input_list = [(9., 1, 0., 1000.), (9., -0.8, 0., 1000.), (9., -0.7, 0., 1000.),  # 0 - 2
               (3.5, 1, -50, 1000.), (3.5, -0.8, -50, 1000.), (3.5, -0.7, -50, 1000.),  # 3 - 5
               (1.3, 1, -200, 1000), (1.3, -0.8, -200, 1000), (1.3, -0.7, -200, 1000),  # 6 - 8

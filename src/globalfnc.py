@@ -39,8 +39,8 @@ if False:   # alternative velocities; kept for reference
     vobs = v0bar + 12
     vesc = 544 - 3 * 39
 
-''' List of experiment names corresponding to each type of statistical analysis.
-'''
+""" List of experiment names corresponding to each type of statistical analysis.
+"""
 MaximumGapLimit_exper = ["SuperCDMS",
                          "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many",
                          "XENON10", "XENON100", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
@@ -52,8 +52,8 @@ Poisson_exper = ["SIMPLEModeStage2"]
 EHImethod_exper = ["CDMSSi2012", "CDMSSiGeArtif", "CDMSSiArtif"]
 SHM_line = ["SHM_eta0", "SHM_eta1"]
 
-''' Colors for plotting.
-'''
+""" Colors for plotting.
+"""
 Color = {"SuperCDMS": 'peru',
          "LUX2013zero": 'magenta', "LUX2013one": 'magenta', "LUX2013three": 'magenta',
          "LUX2013five": 'magenta', "LUX2013many": 'magenta',
@@ -67,18 +67,18 @@ Color = {"SuperCDMS": 'peru',
          "SIMPLEModeStage2": 'saddlebrown',
          "SHM_eta0": 'gray', "SHM_eta1": 'gray'
          }
-''' Linestyles get cicled through for each experiment name.
-'''
+""" Linestyles get cicled through for each experiment name.
+"""
 linestyles = ['-', '--', '-.', ':']
-''' For some experiments the linestyles are fixed and customized, passed as dashes.
-'''
+""" For some experiments the linestyles are fixed and customized, passed as dashes.
+"""
 line_dashes = {"LUX2013zero": (3, 4), "LUX2013one": (8, 4, 3, 4, 3, 4),
                "LUX2013three": (8, 4, 3, 4), "LUX2013five": (8, 4), "LUX2013many": None,
                "SHM_eta0": (8, 4), "SHM_eta1": (3, 4)
                }
-''' Legend names, in order of appearence in the legend for the correspomding experiments
+""" Legend names, in order of appearence in the legend for the correspomding experiments
 that appear in the plot.
-'''
+"""
 legend_names = OrderedDict([("DAMA$_0", ["DAMA2010NaSmRebinned_TotRateLimit"]),
                             ("DAMA$_1$", ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned",
                                           "DAMA2010NaSmRebinned DAMA2010ISmRebinned",
@@ -94,8 +94,8 @@ legend_names = OrderedDict([("DAMA$_0", ["DAMA2010NaSmRebinned_TotRateLimit"]),
                             ("SHM $(\sigma_p = 10^{-40}\mathrm{ cm}^2)$",
                              ["SHM_eta0", "SHM_eta1"])
                             ])
-''' Transparency parameter for filling regions, depending on the quenching factor.
-'''
+""" Transparency parameter for filling regions, depending on the quenching factor.
+"""
 transp_list = [0.6, 0.4]
 transparency = {0.4: transp_list[0], 0.09: transp_list[0],
                 (0.4, 0.09): transp_list[0], (0.09, 0.4): transp_list[0],
@@ -121,8 +121,8 @@ def chi_squared1(CL=ConfidenceLevel):
 
 
 def import_file(full_path_to_module):
-    ''' Imports Python module from file.
-    '''
+    """ Imports Python module from file.
+    """
     import os
     import sys
     directory, module_name = os.path.split(full_path_to_module)
@@ -138,9 +138,9 @@ def import_file(full_path_to_module):
 
 
 def FileNameTail(fp, fn, mPhi):
-    ''' Gives a file name-tail that is added to each output file, to distinguish
+    """ Gives a file name-tail that is added to each output file, to distinguish
     between different input parameters.
-    '''
+    """
     if mPhi == mPhiRef:
         mPhi_string = ""
     else:
@@ -163,7 +163,7 @@ def FileNameTail(fp, fn, mPhi):
 
 
 def OutputDirectory(output_main_dir, scattering_type, mPhi, delta):
-    ''' Gives the name of the output directory for the given input parameters.
+    """ Gives the name of the output directory for the given input parameters.
     Input:
         output_main_dir: string, optional
             Name of main output directory.
@@ -176,7 +176,7 @@ def OutputDirectory(output_main_dir, scattering_type, mPhi, delta):
     Returns:
         out_dir: string
             Full path of output directory.
-    '''
+    """
     out_dir = output_main_dir
     if mPhi == mPhiRef:
         out_dir += "Contact"
@@ -191,7 +191,7 @@ def OutputDirectory(output_main_dir, scattering_type, mPhi, delta):
 
 def Output_file_name(exper_name, scattering_type, mPhi, mx, fp, fn, delta, HALO_DEP,
                      filename_tail, OUTPUT_MAIN_DIR, quenching=None):
-    ''' Gives the name of the output file name for the given input parameters.
+    """ Gives the name of the output file name for the given input parameters.
     Input:
         exper_name: string
             Name of experiment.
@@ -215,7 +215,7 @@ def Output_file_name(exper_name, scattering_type, mPhi, mx, fp, fn, delta, HALO_
             Name of main output directory.
         quenching: float, optional
             quenching factor, needed for experiments that can have multiple options.
-    '''
+    """
     output_dir = OutputDirectory(OUTPUT_MAIN_DIR, scattering_type, mPhi, delta)
     output_file_no_extension = "./" + output_dir + "UpperLimit_" + exper_name
 
@@ -240,7 +240,7 @@ def Output_file_name(exper_name, scattering_type, mPhi, mx, fp, fn, delta, HALO_
 
 def Plot_file_name(HALO_DEP, scattering_type, mPhi, fp, fn, delta,
                    filename_tail, OUTPUT_MAIN_DIR, mx=None):
-    ''' Gives the name of the plot file name for the given input parameters.
+    """ Gives the name of the plot file name for the given input parameters.
     Input:
         HALO_DEP: bool
             Whether the analysis is halo-dependent or halo-independent.
@@ -258,7 +258,7 @@ def Plot_file_name(HALO_DEP, scattering_type, mPhi, fp, fn, delta,
             Name of main output directory.
         mx: float, optional
             DM mass.
-    '''
+    """
     out_dir = OUTPUT_MAIN_DIR + "PLOTS_"
     if mPhi == mPhiRef:
         scattering = "Contact"
@@ -281,16 +281,16 @@ def Plot_file_name(HALO_DEP, scattering_type, mPhi, fp, fn, delta,
 
 
 def Gaussian(x, mu, sigma):
-    ''' Gaussian resolution function.
-    '''
+    """ Gaussian resolution function.
+    """
     return np.exp(-(x-mu)**2 / (2 * sigma**2)) / (np.sqrt(2 * pi) * sigma)
 
 
 def GPoisson(x, nu, sigma):
-    ''' Resolution function for the Xe experiment; it is a combination of
+    """ Resolution function for the Xe experiment; it is a combination of
     Poisson and Gaussian resolution.
         nu is the expected # of events.
-    '''
+    """
     eps = 1.e-4
     n = 1
     add = nu * np.exp(-(x-1.)**2 / (2 * sigma**2))
@@ -307,7 +307,7 @@ def GPoisson(x, nu, sigma):
 
 
 def HelmFF(ER, A, mT):
-    ''' Helm Form Factor. See http://arxiv.org/abs/hep-ph/0608035.
+    """ Helm Form Factor. See http://arxiv.org/abs/hep-ph/0608035.
     Input:
         ER: float
             Recoil energy.
@@ -315,7 +315,7 @@ def HelmFF(ER, A, mT):
             Target mass number.
         mT: float
             Target nuclide mass.
-    '''
+    """
     q = np.sqrt(2e-6 * mT * ER)
     s = 0.9
     ha = 0.52
@@ -333,7 +333,7 @@ def HelmFF(ER, A, mT):
 
 
 def GaussianFFSD(ER, A, mT):
-    ''' Gaussian Form Factor for spin-dependent interactions.
+    """ Gaussian Form Factor for spin-dependent interactions.
     Input:
         ER: float
             Recoil energy.
@@ -341,16 +341,16 @@ def GaussianFFSD(ER, A, mT):
             Target mass number.
         mT: float
             Target nuclide mass.
-    '''
+    """
     q = np.sqrt(2e-6 * mT * ER)
     R = 0.92 * A**(1./3) + 2.68 - 0.78 * np.sqrt((A**(1./3) - 3.8)**2 + 0.2)
     x = np.abs(q * R * fermiGeV)
     return np.exp(-x**2 / 4.)
 
-''' Form factor options are used to select the correct FF depending on the type of
+""" Form factor options are used to select the correct FF depending on the type of
 interaction (spin-independent, spin-dependent with axial-vector or pseudo-scalar
 coupling).
-'''
+"""
 FFSI_options = {'HelmFF': HelmFF,
                 }
 FFSD_options = {'GaussianFFSD': GaussianFFSD,
@@ -368,7 +368,7 @@ def ERecoil_ratio(mT_1, mT_2, mx, quenching_1, quenching_2):
 
 
 def VMin(ER, mT, mx, delta):
-    ''' Minimum velocity for a given recoil energy.
+    """ Minimum velocity for a given recoil energy.
     Input:
         ER: float
             Recoil energy.
@@ -380,7 +380,7 @@ def VMin(ER, mT, mx, delta):
             DM mass split.
     Returns:
         vmin: float
-    '''
+    """
     muT = mx * mT / (mx + mT)
     return SpeedOfLight * 1.e-3 / np.sqrt(2. * ER * mT) * abs(delta + ER * mT / muT)
 
@@ -392,7 +392,7 @@ def VminDelta(mT, mx, delta):
 
 
 def ERecoilBranch(vmin, mT, mx, delta, sign):
-    ''' Recoil energy for given vmin.
+    """ Recoil energy for given vmin.
     Input:
         vmin: float
             Minimum DM velocity vmin.
@@ -407,7 +407,7 @@ def ERecoilBranch(vmin, mT, mx, delta, sign):
             Corresponds to the upper and lower branch, respectively.
     Returns:
         ER: float
-    '''
+    """
     muT = mx * mT / (mx + mT)
     return 1.e6 * muT**2 / (2.*mT) * \
         (vmin / SpeedOfLight +
@@ -415,7 +415,7 @@ def ERecoilBranch(vmin, mT, mx, delta, sign):
 
 
 def dERecoildVmin(vmin, mT, mx, delta, sign):
-    ''' Derivative of recoil energy ER with respect to velocity vmin
+    """ Derivative of recoil energy ER with respect to velocity vmin
     Input:
         Input:
         vmin: float
@@ -431,14 +431,14 @@ def dERecoildVmin(vmin, mT, mx, delta, sign):
             Corresponds to the upper and lower branch, respectively.
     Returns:
         d ER/d vmin: float
-    '''
+    """
     muT = mx * mT / (mx + mT)
     sqrt_factor = np.sqrt(1. - 2.*delta / (muT * vmin**2) * SpeedOfLight**2 * 1.e-6)
     return sign * muT**2 * vmin / mT * (1. + sign * sqrt_factor)**2 / sqrt_factor
 
 
 def eta0Maxwellian(vmin, vobs, v0bar, vesc):
-    ''' Velocity integral eta0 in a Standard Halo Model with Maxwellian velocity
+    """ Velocity integral eta0 in a Standard Halo Model with Maxwellian velocity
     distribution.
     Input:
         vmin: float
@@ -451,7 +451,7 @@ def eta0Maxwellian(vmin, vobs, v0bar, vesc):
             Excape velocity.
     Returns:
         eta0: float
-    '''
+    """
     x = vmin/v0bar
     y = vobs/v0bar
     z = vesc/v0bar
@@ -470,14 +470,14 @@ def eta0Maxwellian(vmin, vobs, v0bar, vesc):
 
 
 def eta1Maxwellian(vmin, vobs, v0bar, vesc):
-    ''' Same as eta0Maxwellian, but this is the modulation velocity integral
+    """ Same as eta0Maxwellian, but this is the modulation velocity integral
     eta1 = d eta0 / d vobs * delta_v.
         delta_v = v_Earth * cos(gamma) where the velocity of the Earth is
     v_Earth = 30 km/s and is inclined at an angle of gamma = 60 deg wrt the
     galactic plane.
     Returns:
         eta1: float
-    '''
+    """
     x = vmin/v0bar
     y = vobs/v0bar
     z = vesc/v0bar
@@ -498,14 +498,14 @@ def eta1Maxwellian(vmin, vobs, v0bar, vesc):
 
 
 def MaximumGapC0scaled(x, mu_over_x):
-    ''' Scaled probability C0 of the maximum gap size being smaller than a particular
+    """ Scaled probability C0 of the maximum gap size being smaller than a particular
     value of x. Based on Maximum Gap Method (Eq 2 of PHYSICAL REVIEW D 66, 032005, 2002).
     Input:
         x: float
             The size of the maximum gap in the random experiment.
         mu_over_x: float
             mu/x, where mu is the total expected number of events.
-    '''
+    """
     if mu_over_x < 1.:
         return 1.
     elif 1. <= mu_over_x < 2.:
@@ -518,13 +518,13 @@ def MaximumGapC0scaled(x, mu_over_x):
 
 
 def Rebin_data(data, error):
-    ''' Rebins the data from multiple bins into a single bin.
+    """ Rebins the data from multiple bins into a single bin.
     Input:
         data, error: ndarray
             Lists containing the data and error from each bin.
     Returns:
         data_rebinned, error_rebinned: float
-    '''
+    """
     data_rebinned = sum(data)
     error_rebinned = np.sqrt(sum(error**2))
     return data_rebinned, error_rebinned

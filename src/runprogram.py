@@ -16,7 +16,7 @@ rcParams['text.latex.preamble'] = [r'\boldmath']  # needed for bold labels and l
 
 
 class PlotData:
-    ''' Class to plot the data.
+    """ Class to plot the data.
     Input:
         exper_name: string
             Name of experiment.
@@ -25,7 +25,7 @@ class PlotData:
         plot_close: bool, optional
             Whether the plot should be cleared and started from scratch, or new limits
             should be added to a previous plot.
-    '''
+    """
     count = defaultdict(lambda: -1)
     exper_plotted = set()
 
@@ -99,8 +99,8 @@ class PlotData:
         return linestyle, dashes
 
     def set_axes_labels(self, fontsize=20):
-        ''' Set axis labels, depending on whether it is for halo-dependent or not.
-        '''
+        """ Set axis labels, depending on whether it is for halo-dependent or not.
+        """
         rc('font', family='serif', size=fontsize, weight='bold')
         if self.HALO_DEP:
             plt.xlabel(r'$m$ [GeV]')
@@ -132,8 +132,8 @@ class PlotData:
 
     def plot_limits(self, upper_limit, kind, linewidth, linestyle, dashes, plot_dots,
                     alpha=1):
-        ''' Make a list of the x and y coordinates of the plots, and plot them.
-        '''
+        """ Make a list of the x and y coordinates of the plots, and plot them.
+        """
         if upper_limit.size == 0:   # nothing to plot
             print("upper_limit is empty!")
             return None, None
@@ -204,7 +204,7 @@ class PlotData:
 
     def __call__(self, upper_limit, lower_limit=None, kind=None, linewidth=3,
                  fill=True, alpha=1, plot_dots=True, plot_show=True):
-        ''' Make plots for the upper limits.
+        """ Make plots for the upper limits.
         Input:
             upper_limit: list of lists
                 List of x and y coordinates for points representing the upper limit.
@@ -222,7 +222,7 @@ class PlotData:
                 Whether the plot should show the data points or just the interpolation.
             plot_show: bool, optional
                 Whether the plot should be shown or not.
-        '''
+        """
         linestyle, dashes = self.get_linestyle()
 
         if lower_limit is not None and fill:
@@ -242,13 +242,13 @@ class PlotData:
 
 
 class RunProgram:
-    ''' Class implementing the main run of the program.
-    '''
+    """ Class implementing the main run of the program.
+    """
     def init_experiment(self, exper_name, scattering_type, mPhi, delta, HALO_DEP,
                         EHI_METHOD, log_sigma_p, quenching):
-        '''Select which experiment class we must use, depending on what statistical
+        """Select which experiment class we must use, depending on what statistical
         analysis we need, and initialize the experiment.
-        '''
+        """
         print('name = ', exper_name)
         if HALO_DEP:
             print('Halo Dependent')
@@ -300,8 +300,8 @@ class RunProgram:
                      logeta_guess, HALO_DEP, EHI_METHOD, vmin_EHIBand_range,
                      logeta_EHIBand_percent_range, steepness, confidence_levels,
                      vmin_index_list, logeta_index_range, extra_tail):
-        '''(Re-)compute the data.
-        '''
+        """(Re-)compute the data.
+        """
         output_file = self.output_file_no_extension + "_temp.dat"
         f_handle = open(output_file, 'w')   # clear the file first
         f_handle.close()
@@ -401,9 +401,9 @@ class RunProgram:
             np.savetxt(output_file, upper_limit)
 
     def make_regions(self, delta, confidence_levels):
-        ''' Make regions for halo-dependent analysis and experiments with potential DM
+        """ Make regions for halo-dependent analysis and experiments with potential DM
         signal.
-        '''
+        """
         output_file = self.output_file_no_extension + ".dat"
         for CL in confidence_levels:
             output_file_regions = self.output_file_no_extension + \
@@ -488,7 +488,7 @@ class RunProgram:
                  vmin_index_list=None, logeta_index_range=None, log_sigma_p=None,
                  OUTPUT_MAIN_DIR="Output/", filename_tail="", extra_tail="",
                  plot_dots=True, quenching=None):
-        ''' Main run of the program.
+        """ Main run of the program.
         Input:
             exper_name: string
                 Name of experiment.
@@ -565,7 +565,7 @@ class RunProgram:
                 Whether the plot should show the data points or just the interpolation.
             quenching: float, optional
                 quenching factor, needed for experiments that can have multiple options.
-        '''
+        """
         # initialize the experiment class
         self.init_experiment(exper_name, scattering_type, mPhi, delta, HALO_DEP,
                              EHI_METHOD, log_sigma_p, quenching)

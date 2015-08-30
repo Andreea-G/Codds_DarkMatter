@@ -7,8 +7,8 @@ Created on Sat Nov 22 17:20:30 2014
 import numpy as np
 from globalfnc import *
 
-''' Haxton Form Factors FFSigmaPPJ and FFSigmaPJ (See Appendix A.3. of http://arxiv.org/abs/1203.3542)
-'''
+""" Haxton Form Factors FFSigmaPPJ and FFSigmaPJ (See Appendix A.3. of http://arxiv.org/abs/1203.3542)
+"""
 FFSigmaPPJ = {(19, 9): np.array([[lambda y: 0.90278 + y * (-2.37144 + y * (2.3531 + y * (-1.04517 + 0.175359 * y))),
                                   lambda y: -0.0165506 + y * (0.050948 + y * (-0.0510308 + y * (0.0199287 - 0.00236734 * y)))],
                                  [lambda y: -0.0165506 + y * (0.050948 + y * (-0.0510308 + y * (0.0199287 - 0.00236734 * y))),
@@ -63,13 +63,13 @@ FFSigmaPJ = {(19, 9): np.array([[lambda y: 1.80556 + y * (-4.8508 + y * (4.87922
 
 
 def FFElementQ(Z):
-    ''' Checks if the Haxton Form Factors above have been implemented for the element
+    """ Checks if the Haxton Form Factors above have been implemented for the element
     with atomic number Z.
     Input:
         Z: ndarray
             List or atomic numbers.
     Returns:
         1 if yes and 0 if not.
-    '''
+    """
     check = [math.trunc(z) in np.array([9, 11, 32, 53, 54]) for z in Z]
     return np.array([1 if c else 0 for c in check])
