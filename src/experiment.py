@@ -6,7 +6,7 @@ Created on Thu Nov 20 22:52:11 2014
 """
 
 from globalfnc import *
-from haxtonFF import *
+from formfactors_eft import *
 import numpy as np
 from numpy import pi
 from scipy import integrate, interpolate
@@ -91,12 +91,12 @@ class Experiment:
                       for A, Z in zip(self.A, self.Z)])
         # form factor
         self.FF = FF_options[self.scattering_type][module.FF[scattering_type]]
-        # tests if it's been implemented in Haxton paper
+        # tests if it's been implemented in Fitzpatrick et al paper
         self.ffelemQ = FFElementQ(self.Z)
         if (self.ffelemQ == 1).all():
-            print("Haxton")
-            self._CrossSectionFactors_SDAV = self._CrossSectionFactors_SDAV_Haxton
-            self._CrossSectionFactors_SDPS = self._CrossSectionFactors_SDPS_Haxton
+            print("Effective Field Theory")
+            self._CrossSectionFactors_SDAV = self._CrossSectionFactors_SDAV_EFT
+            self._CrossSectionFactors_SDPS = self._CrossSectionFactors_SDPS_EFT
         else:
             print("mixed")
             self._CrossSectionFactors_SDAV = self._CrossSectionFactors_SDAV_Mixed
@@ -130,7 +130,7 @@ class Experiment:
 
     def _FormFactor(self, ER):
         """ Form factor including spin-dependence for the spin-dependent interaction, when
-        the Haxton FF is not used.
+        the EFT FF is not used.
         Input:
             ER: float or ndarray
                 Recoil energy.
@@ -178,9 +178,9 @@ class Experiment:
                            self._FFSigmaPJ_function_list[i, N1, N2](y[i]))
         return l * np.exp(-2. * y)
 
-    def _CrossSectionFactors_SDPS_Haxton(self, ER, mx, fp, fn, delta):
+    def _CrossSectionFactors_SDPS_EFT(self, ER, mx, fp, fn, delta):
         """ Factors specific to the cross-section for the spin-dependent pseudo-scalar
-        interaction, with Haxton form factors.
+        interaction, with EFT form factors.
             Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
         """
         mu_p = ProtonMass * mx / (ProtonMass + mx)
@@ -193,7 +193,7 @@ class Experiment:
 
     def _CrossSectionFactors_SDPS_Mixed(self, ER, mx, fp, fn, delta):
         """ Factors specific to the cross-section for the spin-dependent pseudo-scalar
-        interaction, with mixed form factors (some target elements from Haxton,
+        interaction, with mixed form factors (some target elements from EFT paper,
         and some not).
             Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
         """
@@ -207,9 +207,9 @@ class Experiment:
              (1 - self.ffelemQ) * (self.SpScaled + self.SnScaled * fn/fp)**2 *
              self._FormFactor(ER))
 
-    def _CrossSectionFactors_SDAV_Haxton(self, ER, mx, fp, fn, delta):
+    def _CrossSectionFactors_SDAV_EFT(self, ER, mx, fp, fn, delta):
         """ Factors specific to the cross-section for the spin-dependent axial-vector
-        interaction, with Haxton form factors.
+        interaction, with EFT form factors.
             Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
         """
         mu_p = ProtonMass * mx / (ProtonMass + mx)
@@ -221,7 +221,7 @@ class Experiment:
 
     def _CrossSectionFactors_SDAV_Mixed(self, ER, mx, fp, fn, delta):
         """ Factors specific to the cross-section for the spin-dependent axial-vector
-        interaction, with mixed form factors (some target elements from Haxton,
+        interaction, with mixed form factors (some target elements from EFT paper,
         and some not).
             Correspond to 1/sigma_p * 1/mT * v**2 * d sigma / d ER.
         """
