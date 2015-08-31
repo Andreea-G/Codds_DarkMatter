@@ -50,9 +50,6 @@ class Input:
             Whether the data should be plotted.
         EHI_Method: ndarray of bools, optional
             Whether each step of the EHI Method is to be performed.
-        log_sigma_p: float, optional
-                Log base 10 of the total reference cross-section to a single proton.
-                Only for halo-independent SHM lines.
         OUTPUT_MAIN_DIR: string, optional
             Name of main output directory.
         filename_tail_list: list of strings, optional
@@ -72,7 +69,6 @@ class Input:
                  input_indices=slice(None),
                  scattering_types='SI',
                  RUN_PROGRAM=False, MAKE_REGIONS=False, MAKE_PLOT=False, EHI_METHOD={},
-                 log_sigma_p=None,
                  OUTPUT_MAIN_DIR="../Output/", filename_tail_list=[""], extra_tail="",
                  plot_dots=False,
                  CL_list=[0.9], sigma_dev_list=[1]):
@@ -156,6 +152,7 @@ class Input:
                 (self.mx, self.fn, self.delta, self.mPhi) \
                 in product(self.scattering_type_list,
                            self.filename_tail_list, self.input_list):
+            self.log_sigma_p = None
             for self.exper_name in self.exper_list:
                 if self.exper_name == "CDMSSi2012" and np.any(self.EHI_METHOD):
                     self.vmin_EHIBand_range = \
@@ -167,6 +164,9 @@ class Input:
                                                       self.delta, self.mPhi)
                     self.logeta_guess = module.Logeta_guess(self.exper_name, self.mx,
                                                             self.delta, self.mPhi)
+                if "SHM_eta" in self.exper_name:
+                    self.log_sigma_p = module.Log_sigma_p(self.mx, self.delta,
+                                                          self.fn/self.fp)
                 for self.quenching in self.QuenchingList():
                     self.vmin_range = \
                         module.Vmin_range(self.exper_name.split()[0], self.mx,

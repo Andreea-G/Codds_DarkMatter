@@ -64,6 +64,29 @@ def Vmin_range(exper_name, mx, delta, mPhi=1000., quenching=None, EHI_METHOD=Fal
     return vmin_range_options.get((mx, delta, mPhi), default)
 
 
+def Log_sigma_p(mx, delta, fn):
+    """ Log base 10 of the total reference cross-section to a single proton.
+    Only for halo-independent SHM lines.
+    Input:
+        mx: float
+            DM mass.
+        delta: float
+            DM mass split.
+        fn: float
+            Coupling to neutron.
+    Returns:
+        log_sigma_p: float
+    """
+    sigma_p_options = {(9., 0, 1.): -41,
+                       (9., 0, -0.7): -40,
+                       (9., 0, -0.8): -39,
+                       (3.5, -50, -0.8): -40,
+                       (1.3, -200, -0.8): -41
+                       }
+    default = -40
+    return sigma_p_options.get((mx, delta, fn), default)
+
+
 def Steepness(exper_name, mx, delta, mPhi=1000.):
     """ Steepness parameters used for nonlinear sampling in vminStar and logetaStar,
     for the EHI method. The higher the steepnesses the more points are taken close to

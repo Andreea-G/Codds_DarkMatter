@@ -38,8 +38,10 @@ def main():
     MAKE_PLOT = T
     EXPORT_PLOT = T
 
-    scattering_types = ['SI']
+    scattering_types = ['SI']  # may be 'SI', 'SDAV', 'SDPS'
+    # indices of input_list which can be found in input files
     input_indices = [1]
+    # indices of implemented_exper_list
     exper_indices = [0, 1, 2, 3, 4, 5, 10, 16, 17, 20]
     OUTPUT_MAIN_DIR = "../Output_Band/"
     filename_tail_list = [""]
@@ -52,12 +54,11 @@ def main():
                 filename_tail_list=filename_tail_list, extra_tail=extra_tail,
                 plot_dots=plot_dots)
 
-    # Add additional parameters that will be passed to run_program as member variables
-    # of the inp class
+    # Add or override additional parameters that will be passed to run_program as
+    # member variables of the inp class
 
-    # inp.initial_energy_bin = [3, 6]
+    # inp.initial_energy_bin = [3, 6]  # For combined DAMA halo-indep analysis
     # inp.confidence_levels.extend([confidence_level(s) for s in [3, 5]])
-    inp.log_sigma_p = -39
     # inp.qDAMANa_list = [0.3]
 
     try:
