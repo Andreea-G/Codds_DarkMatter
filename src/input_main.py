@@ -186,17 +186,19 @@ class Input:
             PlotData.make_legend(self.HALO_DEP, self.scattering_type, self.mPhi,
                                  self.fp, self.fn, self.delta, mx=self.mx,
                                  log_sigma_p=self.log_sigma_p)
-            if xlim is not None:
-                plt.xlim(xlim)
-            if ylim is not None:
-                plt.ylim(ylim)
-            if EXPORT_PLOT:
-                plot_file = \
-                    Plot_file_name(self.HALO_DEP, self.scattering_type, self.mPhi,
-                                   self.fp, self.fn, self.delta,
-                                   self.filename_tail, self.OUTPUT_MAIN_DIR, mx=self.mx)
-                print(plot_file)
-                plt.savefig(plot_file, bbox_inches='tight')
+            if self.MAKE_PLOT or self.EHI_METHOD.ConfidenceBandPlot:
+                if xlim is not None:
+                    plt.xlim(xlim)
+                if ylim is not None:
+                    plt.ylim(ylim)
+                if EXPORT_PLOT:
+                    plot_file = \
+                        Plot_file_name(self.HALO_DEP, self.scattering_type, self.mPhi,
+                                       self.fp, self.fn, self.delta,
+                                       self.filename_tail, self.OUTPUT_MAIN_DIR, mx=self.mx)
+                    print(plot_file)
+                    plt.savefig(plot_file, bbox_inches='tight')
+                    PlotData.reset()
         return
 
     def _Run_HaloDep(self, EXPORT_PLOT, xlim, ylim):
@@ -227,17 +229,19 @@ class Input:
                         print('FileNotFoundError:', file_error)
             PlotData.make_legend(self.HALO_DEP, self.scattering_type, self.mPhi,
                                  self.fp, self.fn, self.delta)
-            if xlim is not None:
-                plt.xlim(xlim)
-            if ylim is not None:
-                plt.ylim(ylim)
-            if EXPORT_PLOT:
-                plot_file = \
-                    Plot_file_name(self.HALO_DEP, self.scattering_type, self.mPhi,
-                                   self.fp, self.fn, self.delta,
-                                   self.filename_tail, self.OUTPUT_MAIN_DIR)
-                print(plot_file)
-                plt.savefig(plot_file, bbox_inches='tight')
+            if self.MAKE_PLOT or self.EHI_METHOD.ConfidenceBandPlot:
+                if xlim is not None:
+                    plt.xlim(xlim)
+                if ylim is not None:
+                    plt.ylim(ylim)
+                if EXPORT_PLOT:
+                    plot_file = \
+                        Plot_file_name(self.HALO_DEP, self.scattering_type, self.mPhi,
+                                       self.fp, self.fn, self.delta,
+                                       self.filename_tail, self.OUTPUT_MAIN_DIR)
+                    print(plot_file)
+                    plt.savefig(plot_file, bbox_inches='tight')
+                    PlotData.reset()
         return
 
     def RunProgram(self, EXPORT_PLOT=False, xlim=None, ylim=None):

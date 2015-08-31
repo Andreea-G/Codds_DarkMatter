@@ -44,6 +44,12 @@ class PlotData:
         self.set_ticks()
 
     @staticmethod
+    def reset():
+        PlotData.count = defaultdict(lambda: -1)
+        PlotData.exper_plotted = set()
+        plt.close()
+
+    @staticmethod
     def make_legend(HALO_DEP, scattering_type, mPhi, fp, fn, delta, mx=None,
                     log_sigma_p=None, fontsize=13):
         rc('font', family='serif', weight='extra bold')
@@ -596,7 +602,7 @@ class RunProgram:
                 pass
 
         # make halo-independent crosses
-        if not HALO_DEP and exper_name in Crosses_exper:
+        if MAKE_PLOT and not HALO_DEP and exper_name in Crosses_exper:
             self.plot_crosses(exper_name, HALO_DEP)
 
         # make band plot
