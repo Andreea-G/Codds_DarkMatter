@@ -1,9 +1,22 @@
-# -*- coding: utf-8 -*-
 """
+Copyright (c) 2015 Andreea Georgescu
+
 Created on Wed Nov 19 00:18:55 2014
 
-@author: Andreea
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
+
 from __future__ import absolute_import
 from __future__ import division
 import numpy as np
@@ -36,7 +49,7 @@ target_nuclide_mass_list = np.array([65.134, 66.995, 67.9278, 68.8571, 70.7203])
 
 num_target_nuclides = target_nuclide_mass_list.size
 
-def QuenchingFactor(e): 
+def QuenchingFactor(e):
     return (1 + 69./3 * 0.19935 * e**0.1204)/(1 + 69./3)
 
 Ethreshold = 0.17

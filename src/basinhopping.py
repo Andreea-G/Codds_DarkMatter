@@ -1,8 +1,59 @@
 """
-This is a close replica of the scipy.optimize.basinhopping global optimization algorithm.
-Added feature: It can use take_step function to also change minimizer_kwargs,
-in addition to randomly displacing the coordinates.
+Copyright (c) 2015 Andreea Georgescu
+
+Created on Thu Nov 20 22:52:11 2014
+
+This file is a close replica of the scipy.optimize.basinhopping global
+optimization algorithm. Added feature: It can use take_step function to
+also change minimizer_kwargs, in addition to randomly displacing the
+coordinates.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+SciPy license:
+
+Copyright (c) 2001, 2002 Enthought, Inc.
+All rights reserved.
+
+Copyright (c) 2003-2013 SciPy Developers.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+    Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+    Neither the name of Enthought nor the names of the SciPy Developers may
+    be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+
 
 from __future__ import division, print_function, absolute_import
 
@@ -48,7 +99,7 @@ class BasinHoppingRunner(object):
         This function displaces the coordinates randomly.  Signature should
         be ``x_new = step_taking(x)``.  Note that `x` may be modified in-place.
     adapt_kwargs: callable
-        This function displaces the local minimizer arguments, 
+        This function displaces the local minimizer arguments,
         ``self.minimizer.kwargs``. Signature should be
         ``self.minimizer.kwargs = self.adapt_kwargs()``.
     accept_tests : list of callables
@@ -60,7 +111,6 @@ class BasinHoppingRunner(object):
         escape from a local minimum that ``basinhopping`` is trapped in.
     disp : bool, optional
         Display status messages.
-
     """
     def __init__(self, x0, minimizer, step_taking, adapt_kwargs, accept_tests, disp=False):
         self.x = np.copy(x0)
@@ -107,7 +157,7 @@ class BasinHoppingRunner(object):
         # algorithm might change x in place
         x_after_step = np.copy(self.x)
         x_after_step = self.step_taking(x_after_step)
-        
+
         # Adjust the arguments to the minimizer
         self.minimizer.kwargs = self.adapt_kwargs()
 
@@ -263,7 +313,7 @@ class AdaptiveKwargs(object):
     """
     Class to implement adaptive minimizer kwargs.
     Default class does nothing (kwargs are not modified).
-    User-defined classes could allow the arguments to the minimizer function to be varied. 
+    User-defined classes could allow the arguments to the minimizer function to be varied.
     Useful for situations where a very small change in args could lead to convergence or
     a better global minimum.
     It is called immediately after the take_step function in the algorithm.
@@ -324,8 +374,8 @@ class Metropolis(object):
 
 
 def basinhopping(func, x0, niter=100, T=1.0, stepsize=0.5,
-                 minimizer_kwargs=None, take_step=None, adapt_kwargs = None, 
-                 accept_test=None, callback=None, interval=50, disp=False, 
+                 minimizer_kwargs=None, take_step=None, adapt_kwargs = None,
+                 accept_test=None, callback=None, interval=50, disp=False,
                  niter_success=None):
     """
     Find the global minimum of a function using the basin-hopping algorithm
@@ -366,9 +416,9 @@ def basinhopping(func, x0, niter=100, T=1.0, stepsize=0.5,
         ``take_step.stepsize`` in order to try to optimize the global minimum
         search.
     adapt_kwargs : callable ``adapt_kwargs(**kwargs)``, optional
-        Replace the default routine for adapting the minimizer_kwargs with this 
+        Replace the default routine for adapting the minimizer_kwargs with this
         routine. The default routine does nothing (leaves kwargs unmodified), but in some situations
-        the local minimization routine can be succesful if the arguments ``args`` are changed 
+        the local minimization routine can be succesful if the arguments ``args`` are changed
         even by a small amount.
     accept_test : callable, ``accept_test(f_new=f_new, x_new=x_new, f_old=fold, x_old=x_old)``, optional
         Define a test which will be used to judge whether or not to accept the
