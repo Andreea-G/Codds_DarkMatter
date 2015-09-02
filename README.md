@@ -1,4 +1,4 @@
-## Data Analysis for Dark Matter Direct Detection Experiments
+## CoddsDM: Comparisons of data from direct searches for Dark Matter
 
 ### Description 
 
