@@ -1,4 +1,4 @@
-## CoddsDM: Comparisons of data from direct searches for Dark Matter
+## CoddsDM: Comparing data from direct searches for Dark Matter
 
 ### Description 
 
@@ -6,10 +6,12 @@ This program is used to analyze the data produced by Direct Detection (DD) exper
 energy deposited within a detector by the collisions between nuclei in a target material and 
 Weakly Interactive Massive Particles (WIMPs) belonging to the dark halo of our galaxy. 
 The goal of this code is to compare data from various DD experiments and asses the compatibility between 
-them in a statistically meaningful way.
+them in a statistically meaningful way. 
 
 The underlying theory and description of the analysis can be found in many papers, a fraction of which are 
 listed under the References section below.
+
+This program computes best-fit regions and upper limits as described in the references, and produces the figures.
 
 At present, it contains the implementation of the analysis for the following types of WIMP interactions:
 
@@ -18,7 +20,7 @@ At present, it contains the implementation of the analysis for the following typ
 
 - Isospin-conserving or isospin-violating interactions
 
-- Elastic or inelastic scattering (both exothermic and endothermic)
+- Elastic or inelastic scattering (both exothermic and endothermic) [[1](#1404.7484),[2](#1507.03902),[3](#1502.07682),[5](#1306.5273)]
 
 - Contact or long-range interactions (arbitrary mass of the mediator) [[3](#1502.07682)]
 
@@ -26,9 +28,9 @@ At present, it contains the implementation of the analysis for the following typ
 
 Types of analyses implemented:
 
-- Analysis assuming the Standard Halo Model (SHM) [[1](#1404.7484),[2](#1507.03902),[3](#1502.07682)]
+- Analysis assuming the Standard Halo Model (SHM) [[1](#1404.7484),[2](#1507.03902),[3](#1502.07682)].
 
-- Halo-independent analysis [[1](#1404.7484),[2](#1507.03902),[3](#1502.07682),[5](#1306.5273)]
+- Halo-independent analysis [[1](#1404.7484),[2](#1507.03902),[3](#1502.07682),[5](#1306.5273)].
 
 - Extended maximum likelihood halo-independent analysis (EHI), a recent method for experiments with 
 possible dark matter signals and unbinned data [[2](#1507.03902)]
@@ -75,4 +77,29 @@ Licensed under GNU GPL version 2 or any later version
 
 http://www.gnu.org/licenses/
 
-Please consider citing this program if it contributes to a project that leads to a scientific publication.
+Please consider citing this program if it contributes to a project that leads to a scientific publication. 
+
+    A. Georgescu, “CoddsDM: Comparing data from direct searches for Dark Matter”, 
+    GitHub repository (2015), https://github.com/Andreea-G/Codds_DarkMatter
+
+LaTeX:
+
+    \bibitem{Georgescu:CoddsDM} 
+      A.~Georgescu,
+      ``CoddsDM: Comparing data from direct searches for Dark Matter'',
+      GitHub repository (2015), \url{https://github.com/Andreea-G/Codds_DarkMatter}
+
+BibTeX:
+
+    @misc{Georgescu:CoddsDM,
+     author={Georgescu, A.},
+     title="{``CoddsDM:~Comparing data from direct searches for Dark Matter''}",
+     howpublished={GitHub repository},
+     year={2015},
+     note={\url{https://github.com/Andreea-G/Codds_DarkMatter}}
+    }
+
+
+### Disclaimer
+
+The experimental data found in the Data directory was obtained from the experimental publications cited within the references given here. Often times, this was done by extracting the data directly from their published figures. Since the data is constantly changing and evolving, the files in the Data directory serve only as examples. For any future publication, you are REQUIRED to obtain your own data directly from the latest experimental publications, and of course, you are REQUIRED to cite its origin. You may not cite this program as the origin of experimental data.
