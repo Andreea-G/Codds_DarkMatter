@@ -1,6 +1,13 @@
+# Figure file names with dots create problems in LaTeX. 
+# This script replaces the dots by underscores in the file names 
+# of pdf files (except the final dot before the pdf extension).
+# Input: 
+#    Figures folder path relative to the location of this script.
+# Warning: be careful not to run this on the wrong folders...
+
 FOLDER=$1
 pushd $FOLDER
-for f in *.*; do g=${f%%.*}_${f#*.}; mv $f $g; done
+for f in *.pdf; do g=${f%%.*}_${f#*.}; mv $f $g; done
 for f in *_pdf; do g=${f%_pdf}.pdf; mv $f $g; done
 popd
 

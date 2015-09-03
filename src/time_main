@@ -1,0 +1,10 @@
+# Run main.py and measure the execution time
+
+echo "starting time: $(date +%H:%M:%S)"; 
+start=$(date +%s); 
+python main.py; 
+end=$(date +%s); 
+let t=$end-$start; 
+let m=$t/60; 
+let s=$t%60;
+echo "running time: $m:$s"
