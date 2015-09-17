@@ -163,7 +163,7 @@ class Experiment_EHI(Experiment_HaloIndep):
             curly_H = np.zeros((1, len(self.ERecoilList)))
             for sign in branches:
                 (ER, qER, const_factor) = self.ConstFactor(vmin, mx, fp, fn, delta, sign)
-                v_delta = 0  # TODO! generalize to endothermic
+                v_delta = VminDelta(self.mT, mx, delta)
                 diff_resp_list += np.array([self.DifferentialResponse(Eee, qER, const_factor)
                                             for Eee in self.ERecoilList])
                 resp += integrate.quad(self.DifferentialResponse, self.Ethreshold, self.Emaximum,
@@ -173,7 +173,7 @@ class Experiment_EHI(Experiment_HaloIndep):
                                                      epsrel=PRECISSION, epsabs=0)[0]
                                       for Eee in self.ERecoilList]])
             xi += self.Exposure * \
-                self.IntegratedResponse_Other(vmin_prev, vmin,
+                self.IntegratedResponse(vmin_prev, vmin,
                                               self.Ethreshold, self.Emaximum,
                                               mx, fp, fn, delta)
             vmin_prev = vmin
@@ -656,7 +656,7 @@ class Experiment_EHI(Experiment_HaloIndep):
 
         return constr_optimum_log_likelihood
 
-    def ConstrainedOptimalLikelihood(self, vminStar, logetaStar):
+    def ConstrainedOptimalLikelihood(self, vminStar, logetaStar, plot=False):
         """ Finds the constrained minimum MinusLogLikelihood for given vminStar,
         logetaStar. Finds the minimum for all vminStar_index, and picks the best one.
         Input:

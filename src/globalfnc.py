@@ -88,7 +88,7 @@ line_dashes = {"LUX2013zero": (3, 4), "LUX2013one": (8, 4, 3, 4, 3, 4),
                "LUX2013three": (8, 4, 3, 4), "LUX2013five": (8, 4), "LUX2013many": None,
                "SHM_eta0": (8, 4), "SHM_eta1": (3, 4)
                }
-""" Legend names, in order of appearence in the legend for the correspomding experiments
+""" Legend names, in order of appearence in the legend for the corresponding experiments
 that appear in the plot.
 """
 legend_names = OrderedDict([("DAMA$_0", ["DAMA2010NaSmRebinned_TotRateLimit"]),
