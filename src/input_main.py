@@ -136,9 +136,9 @@ class Input:
 
     def QuenchingList(self):
         quenching_list = {"KIMS2012": self.qKIMS_list,
-                          "DAMA2010NaSmRebinned": self.qDAMANa_list,
-                          "DAMA2010ISmRebinned": self.qDAMAI_list,
-                          "DAMA2010NaSmRebinned_TotRateLimit": self.qDAMANa_Rate_list,
+                          "DAMA2010Na": self.qDAMANa_list,
+                          "DAMA2010I": self.qDAMAI_list,
+                          "DAMA2010Na_TotRateLimit": self.qDAMANa_Rate_list,
                           }
         q = [quenching_list.get(exp, [None]) for exp in self.exper_name.split()]
         print('q =', repr(q))

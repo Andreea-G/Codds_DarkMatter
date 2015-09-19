@@ -23,7 +23,7 @@ import numpy as np
 from interp import interp1d
 pi = np.pi
 
-name = "DAMA2010NaSmRebinned_TotRateLimit"
+name = "DAMA2010Na_TotRateLimit"
 modulated = False
 
 energy_resolution_type = "Gaussian"

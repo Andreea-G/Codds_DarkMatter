@@ -57,9 +57,9 @@ MaximumGapLimit_exper = ["SuperCDMS",
                          "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many",
                          "XENON10", "XENON100", "CDMSlite2013CoGeNTQ", "CDMSSi2012"]
 GaussianLimit_exper = ["KIMS2012", "PICASSO"]
-BinnedSignal_exper = ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]
-Crosses_exper = ["CDMSSi2012", "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned"]
-DAMALimit_exper = ["DAMA2010NaSmRebinned_TotRateLimit"]
+BinnedSignal_exper = ["DAMA2010Na", "DAMA2010I"]
+Crosses_exper = ["CDMSSi2012", "DAMA2010Na", "DAMA2010I"]
+DAMALimit_exper = ["DAMA2010Na_TotRateLimit"]
 Poisson_exper = ["SIMPLEModeStage2"]
 EHImethod_exper = ["CDMSSi2012", "CDMSSiGeArtif", "CDMSSiArtif"]
 SHM_line = ["SHM_eta0", "SHM_eta1"]
@@ -73,9 +73,9 @@ Color = {"SuperCDMS": 'peru',
          "CDMSlite2013CoGeNTQ": 'cyan', "CDMSSi2012": 'red',
          "CDMSSi2012_EHI": 'firebrick',
          "KIMS2012": 'purple', "PICASSO": 'darkturquoise',
-         "DAMA2010NaSmRebinned_TotRateLimit": 'black',
-         "DAMA2010NaSmRebinned": 'green',
-         "DAMA2010ISmRebinned": 'green',
+         "DAMA2010Na_TotRateLimit": 'black',
+         "DAMA2010Na": 'green',
+         "DAMA2010I": 'green',
          "SIMPLEModeStage2": 'saddlebrown',
          "SHM_eta0": 'gray', "SHM_eta1": 'gray'
          }
@@ -91,10 +91,10 @@ line_dashes = {"LUX2013zero": (3, 4), "LUX2013one": (8, 4, 3, 4, 3, 4),
 """ Legend names, in order of appearence in the legend for the corresponding experiments
 that appear in the plot.
 """
-legend_names = OrderedDict([("DAMA$_0", ["DAMA2010NaSmRebinned_TotRateLimit"]),
-                            ("DAMA$_1$", ["DAMA2010NaSmRebinned", "DAMA2010ISmRebinned",
-                                          "DAMA2010NaSmRebinned DAMA2010ISmRebinned",
-                                          "DAMA2010ISmRebinned DAMA2010NaSmRebinned"]),
+legend_names = OrderedDict([("DAMA$_0", ["DAMA2010Na_TotRateLimit"]),
+                            ("DAMA$_1$", ["DAMA2010Na", "DAMA2010I",
+                                          "DAMA2010Na DAMA2010I",
+                                          "DAMA2010I DAMA2010Na"]),
                             ("CDMS-II-Si", ["CDMSSi2012", "CDMSSi2012_EHI"]),
                             ("SuperCDMS", ["SuperCDMS"]),
                             ("CDMSlite", ["CDMSlite2013CoGeNTQ"]),
