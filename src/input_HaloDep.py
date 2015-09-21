@@ -78,7 +78,7 @@ def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
                             (50, 1000.): (18, 100, num_steps),
                             (100, 1000.): (30, 100, num_steps),
                             }
-    elif exper_name == "DAMA2010NaSmRebinned":
+    elif exper_name == "DAMA2010Na":
         num_steps = 60
         if quenching == 0.4:
             mx_range_options = {(0, 1000.): (5, 25, num_steps),
@@ -97,7 +97,7 @@ def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
                                 (-30, 0.): (2.5, 4, num_steps),
                                 (-50, 1000.): (1.9, 3.5, num_steps),
                                 }
-    elif exper_name == "DAMA2010ISmRebinned":
+    elif exper_name == "DAMA2010I":
         num_steps = 80
         if quenching == 0.06:
             mx_range_options = {(0, 1000.): (30, 100, num_steps),
@@ -127,7 +127,7 @@ def DM_mass_range(exper_name, delta, mPhi=1000., quenching=None):
                                 (100, 0.): (30, 300, num_steps),
 #                                (100, 0.): (42, 65, num_steps),
                                 }
-    elif exper_name == "DAMA2010NaSmRebinned_TotRateLimit":
+    elif exper_name == "DAMA2010Na_TotRateLimit":
         num_steps = 60
 #        mx_range_options = {(0, 1000.): (3, 15, num_steps),
         mx_range_options = {(0, 1000.): (3, 20, num_steps),

@@ -22,7 +22,7 @@ from __future__ import division
 import numpy as np
 pi = np.pi
 
-name = "DAMA2010ISmRebinned"
+name = "DAMA2010I"
 modulated = True
 
 energy_resolution_type = "Gaussian"

@@ -26,8 +26,8 @@ def main():
         ["SuperCDMS",  # 0
          "LUX2013zero", "LUX2013one", "LUX2013three", "LUX2013five", "LUX2013many",  # 1 - 5
          "SIMPLEModeStage2", "PICASSO", "KIMS2012", "XENON10", "XENON100",  # 6 - 10
-         "DAMA2010NaSmRebinned", "DAMA2010ISmRebinned", "DAMA2010NaSmRebinned_TotRateLimit",  # 11 - 13
-         "DAMA2010NaSmRebinned DAMA2010ISmRebinned", "DAMA2010ISmRebinned DAMA2010NaSmRebinned",  # 14 - 15
+         "DAMA2010Na", "DAMA2010I", "DAMA2010Na_TotRateLimit",  # 11 - 13
+         "DAMA2010Na DAMA2010I", "DAMA2010I DAMA2010Na",  # 14 - 15
          "CDMSlite2013CoGeNTQ", "CDMSSi2012", "CDMSSiGeArtif", "CDMSSiArtif",  # 16 - 19
          "SHM_eta0", "SHM_eta1"]  # 20 - 21
 
