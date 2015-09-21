@@ -23,6 +23,7 @@ import numpy as np
 #from scipy.interpolate import interp1d
 from interp import interp1d
 from scipy import sqrt
+
 #from scipy.optimize import curve_fit
 #import matplotlib.pyplot as plt
 
@@ -92,5 +93,7 @@ BinEdges = np.array([7, 9, 11, 13])
 BinData = np.array([len([e for e in ERecoilList
                          if e > BinEdges[k] and e < BinEdges[k+1]])
                     for k in range(len(BinEdges) - 1)]) / Exposure
-BinError = sqrt(BinData/Exposure)
+BinError = sqrt(np.array([len([e for e in ERecoilList
+                          if e > BinEdges[k] and e < BinEdges[k+1]])
+                     for k in range(len(BinEdges) - 1)]) / Exposure)
 
