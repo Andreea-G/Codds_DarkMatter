@@ -422,9 +422,11 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
         print('resp_min =', resp_min)
         print('int_resp =', int_resp)
 
+
+
         def integrated_response(r):
             return int_resp_left(r) + int_resp_right(r) - resp_max -\
-                ConfidenceLevel * int_resp
+                        ConfidenceLevel * int_resp
 
         print(integrated_response(resp_min * 1.1), integrated_response(resp_max * 0.9))
 
@@ -445,9 +447,9 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
               vmin_interp_right(response_CL))
         print('vmin_center =', vmin_center)
         print('vmin_error =', vmin_error_left, vmin_error_right)
-
-        os.system("say 'Plot'")
-        plt.show()
+        
+#        os.system("say 'Plot'")
+#        plt.show()
 
         return (int_resp, vmin_center, vmin_error_left, vmin_error_right)
 
@@ -459,6 +461,7 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
                    'mx': mx, 'fp': fp, 'fn': fn, 'delta': delta, 'vmax': vmax,
                    'output_file': output_file}
                   for Eee1, Eee2 in zip(self.BinEdges_left, self.BinEdges_right))
+        
         return np.array(par.parmap(self._Box, kwargs, processes))
 
     def _Rebin(self, index=9):
@@ -473,16 +476,22 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
         self.BinEdges_right = self.BinEdges[1:]
 
     def UpperLimit(self, mx, fp, fn, delta, vmin_min, vmin_max, vmin_step,
-                   output_file, rebin=True, processes=None, **unused_kwargs):
+                   output_file, rebin=False, processes=None, **unused_kwargs):
         if rebin:
             self._Rebin()
-        box_table = self._Boxes(mx, fp, fn, delta, vmax=vmin_max, processes=processes)
+        
+        box_table = self._Boxes(mx, fp, fn, delta, vmax=vmin_max, processes=None)
+       
         int_resp_list = box_table[:, 0]
         vmin_center_list = box_table[:, 1]
         vmin_error_left_list = box_table[:, 2]
         vmin_error_right_list = box_table[:, 3]
         eta_list = self.BinData / int_resp_list
         eta_error_list = self.BinError / int_resp_list
+        print('Bin Data',self.BinData)
+        print('Bin Error',self.BinError)
+        print('eta error',eta_list)
+        print('eta error list',eta_error_list)
         result = np.array([int_resp_list, vmin_center_list, vmin_error_left_list,
                            vmin_error_right_list, eta_list, eta_error_list])
         print(result)
