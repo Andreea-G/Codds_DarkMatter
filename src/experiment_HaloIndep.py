@@ -24,6 +24,7 @@ from experiment import *
 from experiment_HaloIndep_er import *
 import parallel_map as par
 from scipy.linalg import det, inv
+from LambertWAlg import *
 from scipy.optimize import brentq
 import os
 
@@ -198,7 +199,8 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
                 result = [np.inf]
             else:
                 mu_over_x = mu_scaled / x_scaled
-                y_guess = np.real(-lambertw(-0.1 / mu_over_x, -1))
+               
+                y_guess = np.real(-w0Lambert(-0.1 / mu_over_x,-1))
                 y = fsolve(lambda x: MaximumGapC0scaled(x, mu_over_x) - ConfidenceLevel,
                            y_guess)
                 result = y / x_scaled / self.Exposure
@@ -300,6 +302,9 @@ class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
         self.Expected_limit = module.Expected_limit * self.BinSize
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor
+
+        print('BinData',self.BinData)
+        print('BinError',self.BinError)
 
     def _GaussianUpperBound(self, vmin, mx, fp, fn, delta):
         int_response = \
