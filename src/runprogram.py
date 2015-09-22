@@ -221,7 +221,7 @@ class PlotData:
             plt.show()
 
     def __call__(self, upper_limit, lower_limit=None, kind=None, linewidth=3,
-                 fill=True, alpha=1, plot_dots=True, plot_show=True):
+                 fill=True, alpha=1, plot_dots=False, plot_show=False):
         """ Make plots for the upper limits.
         Input:
             upper_limit: list of lists
@@ -338,12 +338,15 @@ class RunProgram:
                     self.exper.UpperLimit(mx, fp, fn, delta, vmin_min, vmin_max,
                                           vmin_step, output_file,
                                         initial_energy_bin=initial_energy_bin)
-                if Make_Crosses==True:
+                elif Make_Crosses==True and Make_Limits==False:
                     output_file = output_file.replace("UpperLimit", "BinResponseBoxlike")
                     crosses= \
-                    self.exper.UpperLimit(mx, fp, fn, delta, vmin_min, vmin_max,
+                        self.exper.UpperLimit(mx, fp, fn, delta, vmin_min, vmin_max,
                                         vmin_step, output_file,
                                           initial_energy_bin=initial_energy_bin)
+        
+                    
+            
             
             else:
                 if EHI_METHOD.ResponseTables:
@@ -427,7 +430,7 @@ class RunProgram:
             output_file = self.output_file_no_extension + ".dat"
             print(output_file)  # write to file
             np.savetxt(output_file, upper_limit)
-        if Make_Crosses==True:
+        if Make_Crosses==True and Make_Limits==False:
             output_file = self.output_file_no_extension + ".dat"
             output_file = output_file.replace("UpperLimit", "BinResponseBoxlike")
             print(output_file)  # write to file
@@ -609,11 +612,21 @@ class RunProgram:
 
         # (re-)compute the data
         if RUN_PROGRAM:
+        
             self.compute_data(mx, fp, fn, delta, mx_range, vmin_range, initial_energy_bin,
                               logeta_guess, HALO_DEP, Make_Crosses, Make_Limits, EHI_METHOD,
                               vmin_EHIBand_range,
                               logeta_EHIBand_percent_range, steepness, confidence_levels,
                               vmin_index_list, logeta_index_range, extra_tail)
+            if Make_Limits==True and Make_Crosses==True:
+                self.init_experiment(exper_name, scattering_type, mPhi, delta, HALO_DEP,
+                                     EHI_METHOD, Make_Crosses, F, log_sigma_p, quenching)
+                self.compute_data(mx, fp, fn, delta, mx_range, vmin_range, initial_energy_bin,
+                                  logeta_guess, HALO_DEP, Make_Crosses, F, EHI_METHOD,
+                                  vmin_EHIBand_range,
+                                  logeta_EHIBand_percent_range, steepness, confidence_levels,
+                                  vmin_index_list, logeta_index_range, extra_tail)
+        
 
         # make regions
         if MAKE_REGIONS and HALO_DEP and exper_name.split()[0] in BinnedSignal_exper:
