@@ -618,7 +618,7 @@ class RunProgram:
                               vmin_EHIBand_range,
                               logeta_EHIBand_percent_range, steepness, confidence_levels,
                               vmin_index_list, logeta_index_range, extra_tail)
-            if Make_Limits==True and Make_Crosses==True:
+            if Make_Limits==True and Make_Crosses==True and exper_name=="CDMSSi2012":
                 self.init_experiment(exper_name, scattering_type, mPhi, delta, HALO_DEP,
                                      EHI_METHOD, Make_Crosses, F, log_sigma_p, quenching)
                 self.compute_data(mx, fp, fn, delta, mx_range, vmin_range, initial_energy_bin,
@@ -642,7 +642,9 @@ class RunProgram:
                 pass
 
         # make halo-independent crosses
-        if MAKE_PLOT and not HALO_DEP and Make_Crosses==True:
+        if MAKE_PLOT and not HALO_DEP and Make_Crosses==True and \
+                (exper_name=="CDMSSi2012" or exper_name.split()[0]== "DAMA2010Na" or \
+                 exper_name.split()[0]== "DAMA2010I"):
             self.plot_crosses(exper_name, HALO_DEP)
 
         # make band plot
