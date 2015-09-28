@@ -24,6 +24,7 @@ from experiment import *
 from experiment_HaloIndep_er import *
 import parallel_map as par
 from scipy.linalg import det, inv
+#from scipy.special import lambertw
 from lambertw import *
 from scipy.optimize import brentq
 import os
