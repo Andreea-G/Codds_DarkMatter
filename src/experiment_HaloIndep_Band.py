@@ -164,7 +164,7 @@ class Experiment_EHI(Experiment_HaloIndep):
 
             for sign in branches:
 
-                (ER, qER, const_factor) = self.ConstFactor(vmin,mx,fp,fn,delta,sign)
+                (ER, qER, const_factor) = self.ConstFactor(vmin, mx, fp, fn, delta, sign)
                 v_delta = min(VminDelta(self.mT, mx, delta))
                 diff_resp_list += np.array([self.DifferentialResponse(Eee, qER, const_factor)
                                             for Eee in self.ERecoilList])
@@ -177,8 +177,8 @@ class Experiment_EHI(Experiment_HaloIndep):
                                       for Eee in self.ERecoilList]])
             xi += self.Exposure * \
                 self.IntegratedResponse(vmin_prev, vmin,
-                                              self.Ethreshold, self.Emaximum,
-                                              mx, fp, fn, delta)
+                                        self.Ethreshold, self.Emaximum,
+                                        mx, fp, fn, delta)
             vmin_prev = vmin
             self.diff_response_tab = \
                 np.append(self.diff_response_tab, diff_resp_list.transpose(), axis=1)

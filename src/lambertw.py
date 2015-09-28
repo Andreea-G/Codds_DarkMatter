@@ -40,16 +40,16 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
 
-"""
+
 In case lambertw.py is not correctly installed this can be used.
 """
-
 import math
 
-def w0Lambert(x,k): # Lambert W function using Newton's method
-    eps = 0.00000001 # max error allowed
+
+def w0Lambert(x, k):
+    eps = 0.00000001  # max error allowed
+
     if k != -1:
         w = 1
     elif k == -1:
@@ -57,10 +57,9 @@ def w0Lambert(x,k): # Lambert W function using Newton's method
 
     while True:
         ew = math.exp(w)
-        f=w*ew-x
-        wNew = w - f/((ew*(w+1.)-(w+2.)*f/(2.*w+2.)))
-        if abs(w - wNew) <= eps: break
+        f = w * ew - x
+        wNew = w - f/((ew * (w + 1.) - (w + 2.) * f/(2. * w + 2.)))
+        if abs(w - wNew) <= eps:
+            break
         w = wNew
     return w
-
-

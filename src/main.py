@@ -34,14 +34,14 @@ def main():
     # Give input parameters
 
     EHI_METHOD = {}
-    #EHI_METHOD['ResponseTables'] = T
-    #EHI_METHOD['OptimalLikelihood'] = T
-    #EHI_METHOD['ImportOptimalLikelihood'] = T
-    #EHI_METHOD['ConstrainedOptimalLikelihood'] = T
-    #EHI_METHOD['VminLogetaSamplingTable'] = T
-    #EHI_METHOD['LogLikelihoodList'] = T
-    #EHI_METHOD['ConfidenceBand'] = T
-    #EHI_METHOD['ConfidenceBandPlot'] = T
+    # EHI_METHOD['ResponseTables'] = T
+    # EHI_METHOD['OptimalLikelihood'] = T
+    # EHI_METHOD['ImportOptimalLikelihood'] = T
+    # EHI_METHOD['ConstrainedOptimalLikelihood'] = T
+    # EHI_METHOD['VminLogetaSamplingTable'] = T
+    # EHI_METHOD['LogLikelihoodList'] = T
+    # EHI_METHOD['ConfidenceBand'] = T
+    # EHI_METHOD['ConfidenceBandPlot'] = T
 
     HALO_DEP = F
     plot_dots = F
@@ -52,13 +52,13 @@ def main():
     MAKE_PLOT = T
     EXPORT_PLOT = F
 
-    #Note, when running Make_Crosses, Rebin in Experiment_HaloIndep.py may need to be False for CDMS-SI
+    # Note, when running Make_Crosses, Rebin in Experiment_HaloIndep.py may need to be False for CDMS-SI
 
     scattering_types = ['SI']  # may be 'SI', 'SDAV', 'SDPS'
     # indices of input_list which can be found in input files
     input_indices = [0]
     # indices of implemented_exper_list
-    exper_indices = [0,17]
+    exper_indices = [0, 17]
     OUTPUT_MAIN_DIR = "../Output_Band/"
     filename_tail_list = [""]
     extra_tail = "_mix"

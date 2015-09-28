@@ -24,7 +24,7 @@ from experiment import *
 from experiment_HaloIndep_er import *
 import parallel_map as par
 from scipy.linalg import det, inv
-#from scipy.special import lambertw
+# from scipy.special import lambertw
 from lambertw import *
 from scipy.optimize import brentq
 import os
@@ -202,7 +202,7 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
             else:
                 mu_over_x = mu_scaled / x_scaled
 
-                y_guess = np.real(-lambertw(-0.1 / mu_over_x,-1))
+                y_guess = np.real(-lambertw(-0.1 / mu_over_x, -1))
                 y = fsolve(lambda x: MaximumGapC0scaled(x, mu_over_x) - ConfidenceLevel,
                            y_guess)
                 result = y / x_scaled / self.Exposure
@@ -305,8 +305,8 @@ class GaussianExperiment_HaloIndep(Experiment_HaloIndep):
         if quenching_factor is not None:
             self.QuenchingFactor = lambda e: quenching_factor
 
-        print('BinData',self.BinData)
-        print('BinError',self.BinError)
+        print('BinData', self.BinData)
+        print('BinError', self.BinError)
 
     def _GaussianUpperBound(self, vmin, mx, fp, fn, delta):
         int_response = \
@@ -429,8 +429,6 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
         print('resp_min =', resp_min)
         print('int_resp =', int_resp)
 
-
-
         def integrated_response(r):
             return int_resp_left(r) + int_resp_right(r) - resp_max -\
                         ConfidenceLevel * int_resp
@@ -495,10 +493,10 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
         vmin_error_right_list = box_table[:, 3]
         eta_list = self.BinData / int_resp_list
         eta_error_list = self.BinError / int_resp_list
-        print('Bin Data',self.BinData)
-        print('Bin Error',self.BinError)
-        print('eta error',eta_list)
-        print('eta error list',eta_error_list)
+        print('Bin Data', self.BinData)
+        print('Bin Error', self.BinError)
+        print('eta error', eta_list)
+        print('eta error list', eta_error_list)
         result = np.array([int_resp_list, vmin_center_list, vmin_error_left_list,
                            vmin_error_right_list, eta_list, eta_error_list])
         print(result)
@@ -646,6 +644,7 @@ class Crosses_HaloIndep_Combined(Crosses_HaloIndep, Experiment_HaloIndep):
         with open(output_file, 'ab') as f_handle:
             np.savetxt(f_handle, result)
         return result
+
 
 class Standard_Halo_Model:
     def __init__(self, exper_name, log_sigma_p):
