@@ -182,7 +182,7 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
                         self.ElistMaxGap[:-1], self.ElistMaxGap[1:])))
 
     def MaximumGapUpperBound(self, vmin_min, vmin_max, vmin_step, mx, fp, fn, delta,
-                             output_file, processes):
+                             output_file, processes=None):
         vmin_list = np.linspace(vmin_min, vmin_max, (vmin_max - vmin_min)/vmin_step + 1)
         vmin_list0 = np.insert(vmin_list, 0, 0.)
         xtable = np.zeros(self.ElistMaxGap.size - 1)
@@ -468,7 +468,7 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
                    'output_file': output_file}
                   for Eee1, Eee2 in zip(self.BinEdges_left, self.BinEdges_right))
 
-        return np.array(par.parmap(self._Box, kwargs, processes=None))
+        return np.array(par.parmap(self._Box, kwargs, processes))
 
     def _Rebin(self, index=9):
         self.BinEdges = np.append(self.BinEdges[:index + 1],  self.BinEdges[-1])
