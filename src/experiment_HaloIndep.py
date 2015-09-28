@@ -24,7 +24,7 @@ from experiment import *
 from experiment_HaloIndep_er import *
 import parallel_map as par
 from scipy.linalg import det, inv
-from LambertWAlg import *
+from lambertw import lambertw
 from scipy.optimize import brentq
 import os
 
@@ -73,6 +73,7 @@ class Experiment_HaloIndep(Experiment):
         Returns:
             (ER, qER, const_factor): tuple
         """
+
         ER = ERecoilBranch(vmin, self.mT, mx, delta, sign)
         q = self.QuenchingFactor(ER)
         qER = q * ER
@@ -181,7 +182,7 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
                         self.ElistMaxGap[:-1], self.ElistMaxGap[1:])))
 
     def MaximumGapUpperBound(self, vmin_min, vmin_max, vmin_step, mx, fp, fn, delta,
-                             output_file, processes=None):
+                             output_file, processes):
         vmin_list = np.linspace(vmin_min, vmin_max, (vmin_max - vmin_min)/vmin_step + 1)
         vmin_list0 = np.insert(vmin_list, 0, 0.)
         xtable = np.zeros(self.ElistMaxGap.size - 1)
@@ -199,8 +200,8 @@ class MaxGapExperiment_HaloIndep(Experiment_HaloIndep):
                 result = [np.inf]
             else:
                 mu_over_x = mu_scaled / x_scaled
-               
-                y_guess = np.real(-w0Lambert(-0.1 / mu_over_x,-1))
+
+                y_guess = np.real(-lambertw(-0.1 / mu_over_x,-1))
                 y = fsolve(lambda x: MaximumGapC0scaled(x, mu_over_x) - ConfidenceLevel,
                            y_guess)
                 result = y / x_scaled / self.Exposure
@@ -452,7 +453,7 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
               vmin_interp_right(response_CL))
         print('vmin_center =', vmin_center)
         print('vmin_error =', vmin_error_left, vmin_error_right)
-        
+
 #        os.system("say 'Plot'")
 #        plt.show()
 
@@ -466,8 +467,8 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
                    'mx': mx, 'fp': fp, 'fn': fn, 'delta': delta, 'vmax': vmax,
                    'output_file': output_file}
                   for Eee1, Eee2 in zip(self.BinEdges_left, self.BinEdges_right))
-        
-        return np.array(par.parmap(self._Box, kwargs, processes))
+
+        return np.array(par.parmap(self._Box, kwargs, processes=None))
 
     def _Rebin(self, index=9):
         self.BinEdges = np.append(self.BinEdges[:index + 1],  self.BinEdges[-1])
@@ -484,9 +485,9 @@ class Crosses_HaloIndep(Experiment_HaloIndep):
                    output_file, rebin=False, processes=None, **unused_kwargs):
         if rebin:
             self._Rebin()
-        
-        box_table = self._Boxes(mx, fp, fn, delta, vmax=vmin_max, processes=None)
-       
+
+        box_table = self._Boxes(mx, fp, fn, delta, vmax=vmin_max, processes=processes)
+
         int_resp_list = box_table[:, 0]
         vmin_center_list = box_table[:, 1]
         vmin_error_left_list = box_table[:, 2]
