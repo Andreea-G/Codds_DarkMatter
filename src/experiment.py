@@ -23,7 +23,7 @@ import numpy as np
 from numpy import pi
 from scipy import integrate, interpolate
 from scipy.optimize import fsolve, minimize
-from lambertw import lambertw
+from lambertw import *
 import parallel_map as par
 import matplotlib.pyplot as plt
 
