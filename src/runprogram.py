@@ -196,7 +196,7 @@ class PlotData:
             xerr_left, xerr_right = crosses[indices[1]], crosses[indices[2]]
             y = np.log10(crosses[indices[3]])
             yerr_up = np.log10(crosses[indices[3]] + crosses[indices[4]]) - y
-            yerr_low = y - np.log10(crosses[indices[3]] - crosses[indices[5]])
+            yerr_low = -(y - np.log10(crosses[indices[3]] + crosses[indices[5]]))
             yerr_low = np.array([ye if ye == ye else 100
                                  for ye in yerr_low])
             xerr = [xerr_left, xerr_right]
@@ -204,7 +204,7 @@ class PlotData:
             return x, y, xerr, yerr
 
         if self.exper_name == "CDMSSi2012":
-            indices = [1, 2, 2, 3, 5, 6]
+            indices = [1, 2, 3, 4, 5, 5]
         elif "DAMA" in self.exper_name:
             indices = [1, 2, 3, 4, 5, 5]
         else:
@@ -221,7 +221,7 @@ class PlotData:
             plt.show()
 
     def __call__(self, upper_limit, lower_limit=None, kind=None, linewidth=3,
-                 fill=True, alpha=1, plot_dots=True, plot_show=True):
+                 fill=True, alpha=1, plot_dots=False, plot_show=False):
         """ Make plots for the upper limits.
         Input:
             upper_limit: list of lists
@@ -263,10 +263,11 @@ class RunProgram:
     """ Class implementing the main run of the program.
     """
     def init_experiment(self, exper_name, scattering_type, mPhi, delta, HALO_DEP,
-                        EHI_METHOD, log_sigma_p, quenching):
+                        EHI_METHOD, MAKE_CROSSES, MAKE_LIMITS, log_sigma_p, quenching):
         """Select which experiment class we must use, depending on what statistical
         analysis we need, and initialize the experiment.
         """
+
         print('name = ', exper_name)
         if HALO_DEP:
             print('Halo Dependent')
@@ -290,15 +291,15 @@ class RunProgram:
             if exper_name in EHImethod_exper and np.any(EHI_METHOD):
                 print('EHI Method')
                 class_name = Experiment_EHI
-            elif exper_name in MaximumGapLimit_exper:
+            elif exper_name in MaximumGapLimit_exper and MAKE_LIMITS:
                 class_name = MaxGapExperiment_HaloIndep
-            elif exper_name in Poisson_exper:
+            elif exper_name in Poisson_exper and MAKE_LIMITS:
                 class_name = PoissonExperiment_HaloIndep
-            elif exper_name in GaussianLimit_exper:
+            elif exper_name in GaussianLimit_exper and MAKE_LIMITS:
                 class_name = GaussianExperiment_HaloIndep
-            elif exper_name in BinnedSignal_exper:
+            elif exper_name in Crosses_exper and MAKE_CROSSES:
                 class_name = Crosses_HaloIndep
-            elif exper_name.split()[0] in BinnedSignal_exper:
+            elif exper_name.split()[0] in Crosses_exper and MAKE_CROSSES:
                 class_name = Crosses_HaloIndep_Combined
             elif exper_name in SHM_line:
                 class_name = Standard_Halo_Model
@@ -315,8 +316,9 @@ class RunProgram:
             self.exper = class_name(exper_name, scattering_type, mPhi, quenching)
 
     def compute_data(self, mx, fp, fn, delta, mx_range, vmin_range, initial_energy_bin,
-                     logeta_guess, HALO_DEP, EHI_METHOD, vmin_EHIBand_range,
-                     logeta_EHIBand_percent_range, steepness, confidence_levels,
+                     logeta_guess, HALO_DEP, MAKE_CROSSES, MAKE_LIMITS, EHI_METHOD,
+                     vmin_EHIBand_range, logeta_EHIBand_percent_range, steepness,
+                     confidence_levels,
                      vmin_index_list, logeta_index_range, extra_tail):
         """(Re-)compute the data.
         """
@@ -331,10 +333,18 @@ class RunProgram:
         else:
             (vmin_min, vmin_max, vmin_step) = vmin_range
             if not np.any(EHI_METHOD):
-                upper_limit = \
-                    self.exper.UpperLimit(mx, fp, fn, delta, vmin_min, vmin_max,
-                                          vmin_step, output_file,
-                                          initial_energy_bin=initial_energy_bin)
+                if MAKE_LIMITS:
+                    upper_limit = \
+                        self.exper.UpperLimit(mx, fp, fn, delta, vmin_min, vmin_max,
+                                              vmin_step, output_file,
+                                              initial_energy_bin=initial_energy_bin)
+                elif MAKE_CROSSES and not MAKE_LIMITS:
+                    output_file = output_file.replace("UpperLimit", "BinResponseBoxlike")
+                    crosses = \
+                        self.exper.UpperLimit(mx, fp, fn, delta, vmin_min, vmin_max,
+                                              vmin_step, output_file,
+                                              initial_energy_bin=initial_energy_bin)
+
             else:
                 if EHI_METHOD.ResponseTables:
                     self.exper.ResponseTables(vmin_min, vmin_max, vmin_step, mx, fp, fn,
@@ -410,13 +420,18 @@ class RunProgram:
                                                   extra_tail=extra_tail,
                                                   multiplot=multiplot)
 
-        if HALO_DEP or not np.any(EHI_METHOD):
+        if HALO_DEP or not np.any(EHI_METHOD) and MAKE_LIMITS:
             print("upper_limit = ", upper_limit)
             # print("diff response calls = ", self.exper.count_diffresponse_calls)
             # print("response calls = ", self.exper.count_response_calls)
             output_file = self.output_file_no_extension + ".dat"
             print(output_file)  # write to file
             np.savetxt(output_file, upper_limit)
+        if MAKE_CROSSES and not MAKE_LIMITS:
+            output_file = self.output_file_no_extension + ".dat"
+            output_file = output_file.replace("UpperLimit", "BinResponseBoxlike")
+            print(output_file)  # write to file
+            np.savetxt(output_file, crosses)
 
     def make_regions(self, delta, confidence_levels):
         """ Make regions for halo-dependent analysis and experiments with potential DM
@@ -455,9 +470,7 @@ class RunProgram:
     def plot_crosses(self, exper_name, HALO_DEP, alpha=1):
         plot_data = PlotData(exper_name, HALO_DEP, plot_close=False)
         output_file = self.output_file_no_extension + ".dat"
-        if exper_name == "CDMSSi2012":
-            output_file = output_file.replace("UpperLimit", "BinResponseBoxlike")
-        output_file = output_file.replace("CDMSSi2012", "CDMSSi2013")
+        output_file = output_file.replace("UpperLimit", "BinResponseBoxlike")
         crosses = np.loadtxt(output_file)
         plot_data.plot_crosses(crosses, alpha=alpha, plot_show=False)
 
@@ -499,7 +512,8 @@ class RunProgram:
 
     def __call__(self, exper_name, scattering_type, mPhi, fp, fn, delta,
                  confidence_levels,
-                 HALO_DEP, RUN_PROGRAM, MAKE_REGIONS, MAKE_PLOT, EHI_METHOD,
+                 HALO_DEP, RUN_PROGRAM, MAKE_REGIONS, MAKE_CROSSES,
+                 MAKE_PLOT, EHI_METHOD, MAKE_LIMITS,
                  mx=None, mx_range=None, vmin_range=None, initial_energy_bin=None,
                  vmin_EHIBand_range=None, logeta_EHIBand_percent_range=None,
                  steepness=None, logeta_guess=None,
@@ -586,7 +600,7 @@ class RunProgram:
         """
         # initialize the experiment class
         self.init_experiment(exper_name, scattering_type, mPhi, delta, HALO_DEP,
-                             EHI_METHOD, log_sigma_p, quenching)
+                             EHI_METHOD, MAKE_CROSSES, MAKE_LIMITS, log_sigma_p, quenching)
 
         # get the file name specific to the parameters used for this run
         self.output_file_no_extension = \
@@ -595,17 +609,27 @@ class RunProgram:
 
         # (re-)compute the data
         if RUN_PROGRAM:
+
             self.compute_data(mx, fp, fn, delta, mx_range, vmin_range, initial_energy_bin,
-                              logeta_guess, HALO_DEP, EHI_METHOD, vmin_EHIBand_range,
+                              logeta_guess, HALO_DEP, MAKE_CROSSES, MAKE_LIMITS, EHI_METHOD,
+                              vmin_EHIBand_range,
                               logeta_EHIBand_percent_range, steepness, confidence_levels,
                               vmin_index_list, logeta_index_range, extra_tail)
+            if MAKE_LIMITS and MAKE_CROSSES and exper_name == "CDMSSi2012":
+                self.init_experiment(exper_name, scattering_type, mPhi, delta, HALO_DEP,
+                                     EHI_METHOD, MAKE_CROSSES, F, log_sigma_p, quenching)
+                self.compute_data(mx, fp, fn, delta, mx_range, vmin_range, initial_energy_bin,
+                                  logeta_guess, HALO_DEP, MAKE_CROSSES, F, EHI_METHOD,
+                                  vmin_EHIBand_range,
+                                  logeta_EHIBand_percent_range, steepness, confidence_levels,
+                                  vmin_index_list, logeta_index_range, extra_tail)
 
         # make regions
         if MAKE_REGIONS and HALO_DEP and exper_name.split()[0] in BinnedSignal_exper:
             self.make_regions(delta, confidence_levels)
 
         # make plot
-        if MAKE_PLOT and not np.any(EHI_METHOD[:-1]):
+        if MAKE_PLOT and not np.any(EHI_METHOD[:-1]) and MAKE_LIMITS:
             try:
                 print(quenching)
                 self.plot_limits(exper_name, confidence_levels, HALO_DEP, plot_dots,
@@ -614,7 +638,9 @@ class RunProgram:
                 pass
 
         # make halo-independent crosses
-        if MAKE_PLOT and not HALO_DEP and exper_name in Crosses_exper:
+        if MAKE_PLOT and not HALO_DEP and MAKE_CROSSES and \
+                (exper_name == "CDMSSi2012" or exper_name.split()[0] == "DAMA2010Na" or
+                 exper_name.split()[0] == "DAMA2010I"):
             self.plot_crosses(exper_name, HALO_DEP)
 
         # make band plot

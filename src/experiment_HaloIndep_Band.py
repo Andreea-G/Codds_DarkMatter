@@ -161,21 +161,24 @@ class Experiment_EHI(Experiment_HaloIndep):
             diff_resp_list = np.zeros((1, len(self.ERecoilList)))
             resp = 0
             curly_H = np.zeros((1, len(self.ERecoilList)))
+
             for sign in branches:
+
                 (ER, qER, const_factor) = self.ConstFactor(vmin, mx, fp, fn, delta, sign)
-                v_delta = VminDelta(self.mT, mx, delta)
+                v_delta = min(VminDelta(self.mT, mx, delta))
                 diff_resp_list += np.array([self.DifferentialResponse(Eee, qER, const_factor)
                                             for Eee in self.ERecoilList])
                 resp += integrate.quad(self.DifferentialResponse, self.Ethreshold, self.Emaximum,
                                        args=(qER, const_factor), epsrel=PRECISSION, epsabs=0)[0]
+
                 curly_H += np.array([[integrate.quad(self.DifferentialResponse_Full, v_delta, vmin,
                                                      args=(Eee, mx, fp, fn, delta, sign),
                                                      epsrel=PRECISSION, epsabs=0)[0]
                                       for Eee in self.ERecoilList]])
             xi += self.Exposure * \
                 self.IntegratedResponse(vmin_prev, vmin,
-                                              self.Ethreshold, self.Emaximum,
-                                              mx, fp, fn, delta)
+                                        self.Ethreshold, self.Emaximum,
+                                        mx, fp, fn, delta)
             vmin_prev = vmin
             self.diff_response_tab = \
                 np.append(self.diff_response_tab, diff_resp_list.transpose(), axis=1)

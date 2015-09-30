@@ -80,7 +80,8 @@ class Input:
                  implemented_exper_list, exper_indices=slice(None),
                  input_indices=slice(None),
                  scattering_types='SI',
-                 RUN_PROGRAM=False, MAKE_REGIONS=False, MAKE_PLOT=False, EHI_METHOD={},
+                 RUN_PROGRAM=False, MAKE_REGIONS=False, MAKE_CROSSES=False,
+                 MAKE_LIMITS=False, MAKE_PLOT=False, EHI_METHOD={},
                  OUTPUT_MAIN_DIR="../Output/", filename_tail_list=[""], extra_tail="",
                  plot_dots=False,
                  CL_list=[0.9], sigma_dev_list=[1]):
@@ -101,6 +102,8 @@ class Input:
         self.plot_dots = plot_dots
         self.RUN_PROGRAM = RUN_PROGRAM
         self.MAKE_REGIONS = MAKE_REGIONS
+        self.MAKE_CROSSES = MAKE_CROSSES
+        self.MAKE_LIMITS = MAKE_LIMITS
         self.HALO_DEP = HALO_DEP
         self.EHI_METHOD = EHIBools(**EHI_METHOD)
 

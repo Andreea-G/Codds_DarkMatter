@@ -23,7 +23,8 @@ import numpy as np
 from numpy import pi
 from scipy import integrate, interpolate
 from scipy.optimize import fsolve, minimize
-from scipy.special import lambertw
+# from scipy.special import lambertw
+from lambertw import *
 import parallel_map as par
 import matplotlib.pyplot as plt
 
@@ -528,11 +529,13 @@ class MaxGapExperiment(Experiment):
         else:
             mu_over_x = mu_scaled / x_scaled
             y_guess = np.real(-lambertw(-0.1 / mu_over_x, -1))
+
             y = fsolve(lambda x:
                        MaximumGapC0scaled(x, mu_over_x) - ConfidenceLevel, y_guess)
             result = y / x_scaled / self.Exposure
         print("mx = ", mx, "   mu_over_x = ", mu_over_x)
         print("xtable = ", xtable)
+        print("yguess =", y_guess)
         print("result = ", result[0])
         to_print = np.log10(np.array([[mx, result[0]]]))
         with open(output_file, 'ab') as f_handle:
